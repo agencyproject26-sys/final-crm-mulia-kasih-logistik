@@ -16,27 +16,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Customer {
-  id: string;
-  company: string;
-  pic: string;
-  phone: string;
-  email: string;
-  city: string;
-  type: "eksportir" | "importir" | "keduanya";
-  status: "aktif" | "tidak_aktif";
-}
-
-const customers: Customer[] = [
-  { id: "C001", company: "PT Maju Bersama", pic: "Ahmad Fadli", phone: "08123456789", email: "ahmad@majubersama.com", city: "Jakarta", type: "eksportir", status: "aktif" },
-  { id: "C002", company: "CV Sejahtera", pic: "Budi Santoso", phone: "08234567890", email: "budi@sejahtera.com", city: "Surabaya", type: "importir", status: "aktif" },
-  { id: "C003", company: "PT Global Trade", pic: "Cahyo Wibowo", phone: "08345678901", email: "cahyo@globaltrade.com", city: "Semarang", type: "keduanya", status: "aktif" },
-  { id: "C004", company: "PT Indo Cargo", pic: "Dedi Kurniawan", phone: "08456789012", email: "dedi@indocargo.com", city: "Makassar", type: "eksportir", status: "tidak_aktif" },
-  { id: "C005", company: "CV Mandiri", pic: "Eko Prasetyo", phone: "08567890123", email: "eko@mandiri.com", city: "Bandung", type: "importir", status: "aktif" },
-];
+import {
+  useCustomers,
+  useCreateCustomer,
+  useUpdateCustomer,
+  useDeleteCustomer,
+  Customer,
+  CustomerInput,
+} from "@/hooks/useCustomers";
+import { CustomerDialog } from "@/components/master/CustomerDialog";
+import { CustomerDetailDialog } from "@/components/master/CustomerDetailDialog";
+import { DeleteCustomerDialog } from "@/components/master/DeleteCustomerDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const typeLabels = {
   eksportir: "Eksportir",
@@ -46,13 +39,65 @@ const typeLabels = {
 
 export default function Pelanggan() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  const { data: customers = [], isLoading } = useCustomers();
+  const createCustomer = useCreateCustomer();
+  const updateCustomer = useUpdateCustomer();
+  const deleteCustomer = useDeleteCustomer();
 
   const filteredCustomers = customers.filter(
     (customer) =>
-      customer.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.pic.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.city.toLowerCase().includes(searchQuery.toLowerCase())
+      customer.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (customer.pic_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      (customer.city?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
   );
+
+  const handleAddClick = () => {
+    setSelectedCustomer(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditClick = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsDialogOpen(true);
+  };
+
+  const handleViewClick = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsDetailOpen(true);
+  };
+
+  const handleDeleteClick = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsDeleteOpen(true);
+  };
+
+  const handleSubmit = (data: CustomerInput) => {
+    if (selectedCustomer) {
+      updateCustomer.mutate(
+        { id: selectedCustomer.id, ...data },
+        {
+          onSuccess: () => setIsDialogOpen(false),
+        }
+      );
+    } else {
+      createCustomer.mutate(data, {
+        onSuccess: () => setIsDialogOpen(false),
+      });
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (selectedCustomer) {
+      deleteCustomer.mutate(selectedCustomer.id, {
+        onSuccess: () => setIsDeleteOpen(false),
+      });
+    }
+  };
 
   return (
     <MainLayout title="Master Pelanggan" subtitle="Kelola data pelanggan Anda">
@@ -68,7 +113,10 @@ export default function Pelanggan() {
               className="pl-9"
             />
           </div>
-          <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+          <Button
+            onClick={handleAddClick}
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Tambah Pelanggan
           </Button>
@@ -79,7 +127,6 @@ export default function Pelanggan() {
           <Table>
             <TableHeader>
               <TableRow className="table-header">
-                <TableHead className="w-[100px]">ID</TableHead>
                 <TableHead>Perusahaan</TableHead>
                 <TableHead>PIC</TableHead>
                 <TableHead>Telepon</TableHead>
@@ -90,57 +137,88 @@ export default function Pelanggan() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCustomers.map((customer) => (
-                <TableRow key={customer.id} className="hover:bg-muted/50">
-                  <TableCell className="font-medium">{customer.id}</TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{customer.company}</p>
-                      <p className="text-sm text-muted-foreground">{customer.email}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{customer.pic}</TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>{customer.city}</TableCell>
-                  <TableCell>
-                    <span className="status-badge status-badge-info">
-                      {typeLabels[customer.type]}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        "status-badge",
-                        customer.status === "aktif"
-                          ? "status-badge-success"
-                          : "status-badge-destructive"
-                      )}
-                    >
-                      {customer.status === "aktif" ? "Aktif" : "Tidak Aktif"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="h-4 w-4 mr-2" /> Lihat
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="h-4 w-4 mr-2" /> Hapus
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-40" />
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-14" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredCustomers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    {searchQuery
+                      ? "Tidak ada pelanggan yang ditemukan"
+                      : "Belum ada data pelanggan"}
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredCustomers.map((customer) => (
+                  <TableRow key={customer.id} className="hover:bg-muted/50">
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{customer.company_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {customer.email || "-"}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>{customer.pic_name || "-"}</TableCell>
+                    <TableCell>{customer.phone || "-"}</TableCell>
+                    <TableCell>{customer.city || "-"}</TableCell>
+                    <TableCell>
+                      <span className="status-badge status-badge-info">
+                        {typeLabels[customer.customer_type]}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          "status-badge",
+                          customer.status === "aktif"
+                            ? "status-badge-success"
+                            : "status-badge-destructive"
+                        )}
+                      >
+                        {customer.status === "aktif" ? "Aktif" : "Tidak Aktif"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewClick(customer)}>
+                            <Eye className="h-4 w-4 mr-2" /> Lihat
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditClick(customer)}>
+                            <Edit className="h-4 w-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => handleDeleteClick(customer)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Hapus
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
@@ -150,16 +228,31 @@ export default function Pelanggan() {
           <p className="text-sm text-muted-foreground">
             Menampilkan {filteredCustomers.length} dari {customers.length} pelanggan
           </p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled>
-              Sebelumnya
-            </Button>
-            <Button variant="outline" size="sm">
-              Selanjutnya
-            </Button>
-          </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <CustomerDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        customer={selectedCustomer}
+        onSubmit={handleSubmit}
+        isLoading={createCustomer.isPending || updateCustomer.isPending}
+      />
+
+      <CustomerDetailDialog
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        customer={selectedCustomer}
+      />
+
+      <DeleteCustomerDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        customer={selectedCustomer}
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteCustomer.isPending}
+      />
     </MainLayout>
   );
 }
