@@ -56,6 +56,63 @@ export type Database = {
         }
         Relationships: []
       }
+      vendors: {
+        Row: {
+          address: string | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_name: string | null
+          city: string | null
+          company_name: string
+          created_at: string
+          email: string | null
+          id: string
+          npwp: string | null
+          phone: string | null
+          pic_name: string | null
+          services: string | null
+          status: string | null
+          updated_at: string
+          vendor_type: string | null
+        }
+        Insert: {
+          address?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          city?: string | null
+          company_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          npwp?: string | null
+          phone?: string | null
+          pic_name?: string | null
+          services?: string | null
+          status?: string | null
+          updated_at?: string
+          vendor_type?: string | null
+        }
+        Update: {
+          address?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          city?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          npwp?: string | null
+          phone?: string | null
+          pic_name?: string | null
+          services?: string | null
+          status?: string | null
+          updated_at?: string
+          vendor_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
