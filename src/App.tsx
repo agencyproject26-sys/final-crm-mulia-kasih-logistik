@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Pelanggan from "./pages/master/Pelanggan";
 import Vendor from "./pages/master/Vendor";
+import Truk from "./pages/master/Truk";
 import JobOrder from "./pages/operasional/JobOrder";
 import Tracking from "./pages/operasional/Tracking";
 import Invoice from "./pages/keuangan/Invoice";
@@ -36,7 +37,7 @@ const App = () => (
           {/* Master Data */}
           <Route path="/master/pelanggan" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
           <Route path="/master/vendor" element={<ProtectedRoute><Vendor /></ProtectedRoute>} />
-          <Route path="/master/truk" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
+          <Route path="/master/truk" element={<ProtectedRoute><Truk /></ProtectedRoute>} />
           <Route path="/master/pelabuhan" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
           <Route path="/master/gudang" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
           

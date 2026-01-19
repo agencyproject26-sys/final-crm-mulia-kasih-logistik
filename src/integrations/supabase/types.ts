@@ -56,6 +56,45 @@ export type Database = {
         }
         Relationships: []
       }
+      trucks: {
+        Row: {
+          capacity: string | null
+          created_at: string
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          plate_number: string
+          status: string | null
+          truck_id: string
+          truck_type: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: string | null
+          created_at?: string
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          plate_number: string
+          status?: string | null
+          truck_id: string
+          truck_type: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: string | null
+          created_at?: string
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          plate_number?: string
+          status?: string | null
+          truck_id?: string
+          truck_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       vendors: {
         Row: {
           address: string | null
