@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,40 +19,32 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import {
   Plus,
   Search,
   MoreHorizontal,
   Eye,
   Download,
-  Send,
+  Pencil,
+  Trash2,
   Receipt,
   Clock,
   CheckCircle2,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Invoice {
-  id: string;
-  customer: string;
-  jobOrder: string;
-  amount: number;
-  dpAmount: number;
-  paidAmount: number;
-  tax: number;
-  dueDate: string;
-  status: "draft" | "sent" | "partial" | "paid" | "overdue";
-  createdAt: string;
-}
-
-const invoices: Invoice[] = [
-  { id: "INV-2024-095", customer: "PT Maju Bersama", jobOrder: "JO-2024-001", amount: 45000000, dpAmount: 13500000, paidAmount: 13500000, tax: 4500000, dueDate: "25 Jan 2026", status: "partial", createdAt: "18 Jan 2026" },
-  { id: "INV-2024-094", customer: "CV Sejahtera", jobOrder: "JO-2024-002", amount: 28500000, dpAmount: 0, paidAmount: 28500000, tax: 2850000, dueDate: "20 Jan 2026", status: "paid", createdAt: "17 Jan 2026" },
-  { id: "INV-2024-093", customer: "PT Global Trade", jobOrder: "JO-2024-003", amount: 67000000, dpAmount: 20000000, paidAmount: 0, tax: 6700000, dueDate: "15 Jan 2026", status: "overdue", createdAt: "15 Jan 2026" },
-  { id: "INV-2024-092", customer: "PT Indo Cargo", jobOrder: "JO-2024-004", amount: 32000000, dpAmount: 0, paidAmount: 0, tax: 3200000, dueDate: "28 Jan 2026", status: "sent", createdAt: "14 Jan 2026" },
-  { id: "INV-2024-091", customer: "CV Mandiri", jobOrder: "JO-2024-005", amount: 55000000, dpAmount: 16500000, paidAmount: 55000000, tax: 5500000, dueDate: "22 Jan 2026", status: "paid", createdAt: "12 Jan 2026" },
-  { id: "INV-2024-090", customer: "PT Logistik Prima", jobOrder: "JO-2024-006", amount: 42000000, dpAmount: 0, paidAmount: 0, tax: 4200000, dueDate: "30 Jan 2026", status: "draft", createdAt: "18 Jan 2026" },
-];
+import { useInvoices, Invoice, InvoiceInput, InvoiceItem } from "@/hooks/useInvoices";
+import { InvoiceDialog } from "@/components/invoice/InvoiceDialog";
+import { InvoicePreview } from "@/components/invoice/InvoicePreview";
+import { DeleteInvoiceDialog } from "@/components/invoice/DeleteInvoiceDialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { toast } from "sonner";
 
 const formatRupiah = (value: number) => {
   return new Intl.NumberFormat("id-ID", {
@@ -63,15 +55,15 @@ const formatRupiah = (value: number) => {
   }).format(value);
 };
 
-const statusStyles = {
+const statusStyles: Record<string, { bg: string; text: string; icon: React.ElementType }> = {
   draft: { bg: "bg-muted", text: "text-muted-foreground", icon: Receipt },
-  sent: { bg: "bg-info/10", text: "text-info", icon: Send },
-  partial: { bg: "bg-warning/10", text: "text-warning", icon: Clock },
-  paid: { bg: "bg-success/10", text: "text-success", icon: CheckCircle2 },
+  sent: { bg: "bg-blue-500/10", text: "text-blue-500", icon: FileText },
+  partial: { bg: "bg-yellow-500/10", text: "text-yellow-500", icon: Clock },
+  paid: { bg: "bg-green-500/10", text: "text-green-500", icon: CheckCircle2 },
   overdue: { bg: "bg-destructive/10", text: "text-destructive", icon: AlertCircle },
 };
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   draft: "Draft",
   sent: "Terkirim",
   partial: "Sebagian",
@@ -79,22 +71,136 @@ const statusLabels = {
   overdue: "Jatuh Tempo",
 };
 
-export default function Invoice() {
+export default function InvoicePage() {
+  const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice, getInvoiceWithItems } = useInvoices();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [previewInvoice, setPreviewInvoice] = useState<(Partial<Invoice> & { items: InvoiceItem[] }) | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
-      invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.customer.toLowerCase().includes(searchQuery.toLowerCase());
+      invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invoice.customer_name.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (activeTab === "all") return matchesSearch;
     return matchesSearch && invoice.status === activeTab;
   });
 
-  const totalAmount = invoices.reduce((sum, inv) => sum + inv.amount, 0);
-  const totalPaid = invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
-  const totalOutstanding = totalAmount - totalPaid;
+  const totalAmount = invoices.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
+  const totalPaid = invoices.reduce((sum, inv) => sum + Number(inv.down_payment), 0);
+  const totalOutstanding = invoices.reduce((sum, inv) => sum + Number(inv.remaining_amount), 0);
+
+  const handleCreate = (data: InvoiceInput) => {
+    createInvoice.mutate(data, {
+      onSuccess: () => {
+        setIsDialogOpen(false);
+        setSelectedInvoice(null);
+      },
+    });
+  };
+
+  const handleUpdate = (data: InvoiceInput) => {
+    if (selectedInvoice) {
+      updateInvoice.mutate(
+        { id: selectedInvoice.id, ...data },
+        {
+          onSuccess: () => {
+            setIsDialogOpen(false);
+            setSelectedInvoice(null);
+          },
+        }
+      );
+    }
+  };
+
+  const handleDelete = () => {
+    if (selectedInvoice) {
+      deleteInvoice.mutate(selectedInvoice.id, {
+        onSuccess: () => {
+          setIsDeleteOpen(false);
+          setSelectedInvoice(null);
+        },
+      });
+    }
+  };
+
+  const openEditDialog = async (invoice: Invoice) => {
+    const invoiceWithItems = await getInvoiceWithItems(invoice.id);
+    if (invoiceWithItems) {
+      setSelectedInvoice(invoiceWithItems);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const openPreviewDialog = async (invoice: Invoice) => {
+    const invoiceWithItems = await getInvoiceWithItems(invoice.id);
+    if (invoiceWithItems) {
+      setPreviewInvoice({ ...invoiceWithItems, items: invoiceWithItems.items || [] });
+      setIsPreviewOpen(true);
+    }
+  };
+
+  const openDeleteDialog = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsDeleteOpen(true);
+  };
+
+  const handleDownloadPDF = async (invoice: Invoice) => {
+    const invoiceWithItems = await getInvoiceWithItems(invoice.id);
+    if (invoiceWithItems) {
+      setPreviewInvoice({ ...invoiceWithItems, items: invoiceWithItems.items || [] });
+      
+      // Wait for render
+      setTimeout(async () => {
+        if (!previewRef.current) return;
+
+        try {
+          toast.loading("Generating PDF...");
+
+          const canvas = await html2canvas(previewRef.current, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+          });
+
+          const imgData = canvas.toDataURL("image/png");
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+          });
+
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const imgWidth = canvas.width;
+          const imgHeight = canvas.height;
+          const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+          const imgX = (pdfWidth - imgWidth * ratio) / 2;
+          const imgY = 0;
+
+          pdf.addImage(imgData, "PNG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+          pdf.save(`Invoice_${invoice.invoice_number}.pdf`);
+
+          toast.dismiss();
+          toast.success("PDF berhasil diunduh");
+          setPreviewInvoice(null);
+        } catch (error) {
+          toast.dismiss();
+          toast.error("Gagal mengunduh PDF");
+        }
+      }, 500);
+    }
+  };
+
+  const getStatusInfo = (status: string | null) => {
+    const s = status || "draft";
+    return statusStyles[s] || statusStyles.draft;
+  };
 
   return (
     <MainLayout title="Invoice" subtitle="Kelola invoice pelanggan">
@@ -111,8 +217,8 @@ export default function Invoice() {
         <Card className="stat-card">
           <CardContent className="pt-6">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Sudah Dibayar</p>
-              <p className="text-2xl font-bold font-display text-success">{formatRupiah(totalPaid)}</p>
+              <p className="text-sm text-muted-foreground">Down Payment</p>
+              <p className="text-2xl font-bold font-display text-green-500">{formatRupiah(totalPaid)}</p>
             </div>
           </CardContent>
         </Card>
@@ -127,7 +233,7 @@ export default function Invoice() {
         <Card className="stat-card">
           <CardContent className="pt-6">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Total Invoice</p>
+              <p className="text-sm text-muted-foreground">Jumlah Invoice</p>
               <p className="text-2xl font-bold font-display">{invoices.length}</p>
             </div>
           </CardContent>
@@ -157,7 +263,10 @@ export default function Invoice() {
                 className="pl-9 w-64"
               />
             </div>
-            <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+            <Button onClick={() => {
+              setSelectedInvoice(null);
+              setIsDialogOpen(true);
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Buat Invoice
             </Button>
@@ -171,79 +280,102 @@ export default function Invoice() {
               <TableRow className="table-header">
                 <TableHead>Invoice</TableHead>
                 <TableHead>Pelanggan</TableHead>
-                <TableHead>Job Order</TableHead>
-                <TableHead className="text-right">Jumlah</TableHead>
-                <TableHead className="text-right">Dibayar</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">DP</TableHead>
                 <TableHead className="text-right">Sisa</TableHead>
-                <TableHead>Jatuh Tempo</TableHead>
+                <TableHead>Tanggal</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredInvoices.map((invoice) => {
-                const remaining = invoice.amount + invoice.tax - invoice.paidAmount;
-                const StatusIcon = statusStyles[invoice.status].icon;
-                return (
-                  <TableRow key={invoice.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{invoice.id}</p>
-                        <p className="text-xs text-muted-foreground">{invoice.createdAt}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{invoice.customer}</TableCell>
-                    <TableCell>
-                      <span className="text-sm font-mono">{invoice.jobOrder}</span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div>
-                        <p className="font-medium">{formatRupiah(invoice.amount)}</p>
-                        <p className="text-xs text-muted-foreground">+PPN {formatRupiah(invoice.tax)}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-success">
-                      {formatRupiah(invoice.paidAmount)}
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-destructive">
-                      {formatRupiah(remaining)}
-                    </TableCell>
-                    <TableCell>{invoice.dueDate}</TableCell>
-                    <TableCell>
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                          statusStyles[invoice.status].bg,
-                          statusStyles[invoice.status].text
-                        )}
-                      >
-                        <StatusIcon className="h-3 w-3" />
-                        {statusLabels[invoice.status]}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Eye className="h-4 w-4 mr-2" /> Lihat
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Download className="h-4 w-4 mr-2" /> Download PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Send className="h-4 w-4 mr-2" /> Kirim Email
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    Memuat data...
+                  </TableCell>
+                </TableRow>
+              ) : filteredInvoices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <FileText className="h-8 w-8" />
+                      <p>Belum ada invoice</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredInvoices.map((invoice) => {
+                  const statusInfo = getStatusInfo(invoice.status);
+                  const StatusIcon = statusInfo.icon;
+                  return (
+                    <TableRow key={invoice.id} className="hover:bg-muted/50">
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{invoice.invoice_number}</p>
+                          <p className="text-xs text-muted-foreground">{invoice.bl_number || "-"}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{invoice.customer_name}</p>
+                          <p className="text-xs text-muted-foreground">{invoice.customer_city || "-"}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatRupiah(Number(invoice.total_amount))}
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-green-500">
+                        {formatRupiah(Number(invoice.down_payment))}
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-destructive">
+                        {formatRupiah(Number(invoice.remaining_amount))}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(invoice.invoice_date).toLocaleDateString("id-ID")}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                            statusInfo.bg,
+                            statusInfo.text
+                          )}
+                        >
+                          <StatusIcon className="h-3 w-3" />
+                          {statusLabels[invoice.status || "draft"]}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-popover">
+                            <DropdownMenuItem onClick={() => openPreviewDialog(invoice)}>
+                              <Eye className="h-4 w-4 mr-2" /> Lihat
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadPDF(invoice)}>
+                              <Download className="h-4 w-4 mr-2" /> Download PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEditDialog(invoice)}>
+                              <Pencil className="h-4 w-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openDeleteDialog(invoice)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Hapus
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </div>
@@ -263,6 +395,45 @@ export default function Invoice() {
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <InvoiceDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSubmit={selectedInvoice ? handleUpdate : handleCreate}
+        invoice={selectedInvoice}
+        isLoading={createInvoice.isPending || updateInvoice.isPending}
+      />
+
+      <DeleteInvoiceDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        invoice={selectedInvoice}
+        onConfirm={handleDelete}
+        isLoading={deleteInvoice.isPending}
+      />
+
+      {/* Preview Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <div className="flex justify-end mb-4">
+            <Button onClick={() => previewInvoice && handleDownloadPDF(previewInvoice as Invoice)}>
+              <Download className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
+          </div>
+          <ScrollArea className="h-[70vh]">
+            {previewInvoice && <InvoicePreview ref={previewRef} invoice={previewInvoice} />}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden preview for PDF generation */}
+      {previewInvoice && !isPreviewOpen && (
+        <div className="fixed left-[-9999px] top-0">
+          <InvoicePreview ref={previewRef} invoice={previewInvoice} />
+        </div>
+      )}
     </MainLayout>
   );
 }
