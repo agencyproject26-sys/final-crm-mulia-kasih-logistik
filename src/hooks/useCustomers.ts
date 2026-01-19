@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
+import { mapDatabaseError } from "@/lib/errorHandler";
 export interface Customer {
   id: string;
   company_name: string;
@@ -52,7 +52,7 @@ export function useCreateCustomer() {
       toast.success("Pelanggan berhasil ditambahkan");
     },
     onError: (error) => {
-      toast.error("Gagal menambahkan pelanggan: " + error.message);
+      toast.error(mapDatabaseError(error));
     },
   });
 }
@@ -77,7 +77,7 @@ export function useUpdateCustomer() {
       toast.success("Pelanggan berhasil diperbarui");
     },
     onError: (error) => {
-      toast.error("Gagal memperbarui pelanggan: " + error.message);
+      toast.error(mapDatabaseError(error));
     },
   });
 }
@@ -99,7 +99,7 @@ export function useDeleteCustomer() {
       toast.success("Pelanggan berhasil dihapus");
     },
     onError: (error) => {
-      toast.error("Gagal menghapus pelanggan: " + error.message);
+      toast.error(mapDatabaseError(error));
     },
   });
 }
