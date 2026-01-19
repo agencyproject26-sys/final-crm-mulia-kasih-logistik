@@ -1,4 +1,4 @@
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,6 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   title: string;
@@ -16,6 +19,19 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error("Gagal keluar: " + error.message);
+    } else {
+      toast.success("Berhasil keluar");
+      navigate("/auth");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
       <div>
@@ -51,8 +67,12 @@ export function Header({ title, subtitle }: HeaderProps) {
                 <User className="h-4 w-4" />
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium">Admin</p>
-                <p className="text-xs text-muted-foreground">Administrator</p>
+                <p className="text-sm font-medium truncate max-w-[120px]">
+                  {user?.email?.split('@')[0] || 'User'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {user?.email || 'user@example.com'}
+                </p>
               </div>
             </Button>
           </DropdownMenuTrigger>
@@ -62,7 +82,13 @@ export function Header({ title, subtitle }: HeaderProps) {
             <DropdownMenuItem>Profil</DropdownMenuItem>
             <DropdownMenuItem>Pengaturan</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Keluar</DropdownMenuItem>
+            <DropdownMenuItem 
+              className="text-destructive"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Keluar
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
