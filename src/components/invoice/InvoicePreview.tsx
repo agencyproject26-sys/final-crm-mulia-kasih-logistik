@@ -1,0 +1,195 @@
+import { forwardRef } from "react";
+import { Invoice, InvoiceItem } from "@/hooks/useInvoices";
+import { formatCurrency, terbilang } from "@/lib/numberToWords";
+import { format } from "date-fns";
+
+interface InvoicePreviewProps {
+  invoice: Partial<Invoice> & { items: InvoiceItem[] };
+}
+
+export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
+  ({ invoice }, ref) => {
+    const formatDate = (date: string | null | undefined) => {
+      if (!date) return "-";
+      try {
+        return format(new Date(date), "dd-MMM-yy");
+      } catch {
+        return "-";
+      }
+    };
+
+    const totalAmount = invoice.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+    const downPayment = invoice.down_payment || 0;
+    const remainingAmount = totalAmount - downPayment;
+
+    return (
+      <div
+        ref={ref}
+        className="bg-white p-8 max-w-[210mm] mx-auto text-black"
+        style={{ fontFamily: "Arial, sans-serif", fontSize: "12px" }}
+      >
+        {/* Header */}
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex items-start gap-4">
+            {/* Logo placeholder - Fixed */}
+            <div className="w-20 h-20 border-2 border-green-800 rounded flex items-center justify-center bg-green-50">
+              <div className="text-center">
+                <div className="text-green-800 font-bold text-xs">MKL</div>
+                <div className="text-green-800 text-[8px]">PT. Mulia Kasih</div>
+                <div className="text-green-800 text-[8px]">Logistik</div>
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-green-800">PT. MULIA KASIH LOGISTIK</h1>
+              <p className="text-xs">Office 1 : Kawasan Berikat Nusantara (KBN) Jl. Pontianak Blok C 02/09A,</p>
+              <p className="text-xs ml-12">Marunda, Cilincing, Jakarta Utara - 14120</p>
+              <p className="text-xs">Phone : (021) 38874030</p>
+              <p className="text-xs">E-mail : rudy@mkl-jakarta.com / info@mkl-jakarta.com</p>
+              <p className="text-xs">Web : www.mkl-jakarta.com</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Title */}
+        <h2 className="text-center font-bold text-lg mb-4 underline">INVOICE REIMBURSEMENT</h2>
+
+        {/* Customer & Invoice Info */}
+        <div className="flex justify-between mb-4">
+          <div className="border border-black p-2 w-[55%]">
+            <p className="font-bold">{invoice.customer_name || "NAMA PELANGGAN"}</p>
+            <p>{invoice.customer_address || "ALAMAT"}</p>
+            <p>{invoice.customer_city || "KOTA"}</p>
+          </div>
+          <div className="border border-black p-2 text-center">
+            <p className="text-sm">No. AJU</p>
+            <p className="font-bold">{invoice.no_aju || "-"}</p>
+          </div>
+        </div>
+
+        {/* Invoice Details */}
+        <div className="flex gap-2 mb-4">
+          <div className="border border-black p-2 flex-1 text-center">
+            <p className="text-sm font-bold">Tanggal</p>
+            <p>{formatDate(invoice.invoice_date)}</p>
+          </div>
+          <div className="border border-black p-2 flex-1 text-center">
+            <p className="text-sm font-bold">Number Inv.</p>
+            <p>{invoice.invoice_number || "-"}</p>
+          </div>
+          <div className="border border-black p-2 flex-1 text-center">
+            <p className="text-sm font-bold">B/L No.</p>
+            <p>{invoice.bl_number || "-"}</p>
+          </div>
+        </div>
+
+        {/* Shipment Details */}
+        <div className="border border-black mb-4">
+          <table className="w-full text-xs">
+            <tbody>
+              <tr>
+                <td className="border-b border-r border-black p-1 w-28 font-bold">PARTY</td>
+                <td className="border-b border-black p-1">{invoice.party || "-"}</td>
+              </tr>
+              <tr>
+                <td className="border-b border-r border-black p-1 font-bold">FLIGHT / VESSEL</td>
+                <td className="border-b border-black p-1">{invoice.flight_vessel || "-"}</td>
+              </tr>
+              <tr>
+                <td className="border-b border-r border-black p-1 font-bold">From</td>
+                <td className="border-b border-black p-1">{invoice.origin || "-"}</td>
+              </tr>
+              <tr>
+                <td className="border-b border-r border-black p-1 font-bold">NO. PEN</td>
+                <td className="border-b border-black p-1">{invoice.no_pen || "-"}</td>
+              </tr>
+              <tr>
+                <td className="border-b border-r border-black p-1 font-bold">INVOICE NO.</td>
+                <td className="border-b border-black p-1">{invoice.invoice_number || "-"}</td>
+              </tr>
+              <tr>
+                <td className="border-b border-r border-black p-1 font-bold">DESCRIPTION</td>
+                <td className="border-b border-black p-1">{invoice.description || "-"}</td>
+              </tr>
+              <tr>
+                <td className="border-r border-black p-1 font-bold">DELIVERY</td>
+                <td className="p-1">{formatDate(invoice.delivery_date)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Line Items */}
+        <table className="w-full border border-black mb-4 text-xs">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border-b border-r border-black p-2 text-left">Description</th>
+              <th className="border-b border-black p-2 text-right w-32">(IDR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoice.items?.map((item, index) => (
+              <tr key={index}>
+                <td className="border-b border-r border-black p-2">{item.description}</td>
+                <td className="border-b border-black p-2 text-right">Rp {item.amount.toLocaleString("id-ID")}</td>
+              </tr>
+            ))}
+            <tr className="font-bold bg-gray-50">
+              <td className="border-b border-r border-black p-2">TOTAL</td>
+              <td className="border-b border-black p-2 text-right">Rp {totalAmount.toLocaleString("id-ID")}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Down Payment */}
+        <div className="flex justify-between items-center mb-1 text-xs">
+          <span className="font-bold">DOWN PAYMENT (DP) : {downPayment > 0 ? formatCurrency(downPayment) : "NO DP"}</span>
+          <div className="border border-black px-4 py-1">
+            <span>Rp {downPayment.toLocaleString("id-ID")}</span>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mb-4 text-xs">
+          <span className="font-bold">SISA INVOICE :</span>
+          <div className="border border-black px-4 py-1">
+            <span>Rp {remainingAmount.toLocaleString("id-ID")}</span>
+          </div>
+        </div>
+
+        {/* Terbilang */}
+        <div className="mb-4">
+          <p className="font-bold text-red-600 text-xs">TERBILANG : {terbilang(remainingAmount)}</p>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-between mb-4">
+          <div className="text-xs">
+            <p className="font-bold">Enclosure :</p>
+            <p>All cheques be crossed and made payable to MULIA KASIH LOGISTIK</p>
+            <p>Interest at 1%per month will be charged on overdue account.</p>
+            <p>Any complaints/disputes regarding this invoice should be lodged within</p>
+            <p>1 days from date of invoice.</p>
+          </div>
+          <div className="text-center">
+            <p className="font-bold text-sm">PT. MULIA KASIH LOGISTIK</p>
+            <div className="h-16 flex items-center justify-center">
+              {/* Materai placeholder */}
+              <div className="w-16 h-16 border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-400 text-xs">
+                MATERAI
+              </div>
+            </div>
+            <p className="font-bold mt-2 border-t border-black pt-1">RUDY SURIVANTO</p>
+          </div>
+        </div>
+
+        {/* Bank Account */}
+        <div className="border-2 border-black p-2 text-center text-sm">
+          <p className="font-bold">Acc.</p>
+          <p className="font-bold">PT. MULIA KASIH LOGISTIK</p>
+          <p className="font-bold">6910492436 / BANK BCA CAB. YOS SUDARSO</p>
+        </div>
+      </div>
+    );
+  }
+);
+
+InvoicePreview.displayName = "InvoicePreview";
