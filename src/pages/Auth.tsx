@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Truck } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import logoMkl from "@/assets/logo-mkl.png";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
@@ -81,9 +82,11 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center">
-              <Truck className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <img 
+              src={logoMkl} 
+              alt="PT. Mulia Kasih Logistik" 
+              className="h-24 w-auto object-contain"
+            />
           </div>
           <CardTitle className="text-2xl">Mulia Kasih Logistik</CardTitle>
           <CardDescription>
