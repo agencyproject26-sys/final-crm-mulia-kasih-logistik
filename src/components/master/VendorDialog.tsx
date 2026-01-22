@@ -43,6 +43,7 @@ const vendorSchema = z.object({
   bank_name: z.string().optional(),
   bank_account_number: z.string().optional(),
   bank_account_name: z.string().optional(),
+  party: z.string().optional(),
   status: z.string(),
 });
 
@@ -78,6 +79,7 @@ export function VendorDialog({
       bank_name: "",
       bank_account_number: "",
       bank_account_name: "",
+      party: "",
       status: "aktif",
     },
   });
@@ -97,6 +99,7 @@ export function VendorDialog({
         bank_name: vendor.bank_name || "",
         bank_account_number: vendor.bank_account_number || "",
         bank_account_name: vendor.bank_account_name || "",
+        party: vendor.party || "",
         status: vendor.status || "aktif",
       });
     } else {
@@ -113,6 +116,7 @@ export function VendorDialog({
         bank_name: "",
         bank_account_number: "",
         bank_account_name: "",
+        party: "",
         status: "aktif",
       });
     }
@@ -132,6 +136,7 @@ export function VendorDialog({
       bank_name: values.bank_name || null,
       bank_account_number: values.bank_account_number || null,
       bank_account_name: values.bank_account_name || null,
+      party: values.party || null,
       status: values.status || null,
     });
   };
@@ -307,6 +312,20 @@ export function VendorDialog({
                     <FormLabel>NPWP</FormLabel>
                     <FormControl>
                       <Input placeholder="00.000.000.0-000.000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="party"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Party</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nama party" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
