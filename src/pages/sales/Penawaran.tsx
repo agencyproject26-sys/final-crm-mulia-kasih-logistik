@@ -36,16 +36,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye, Check, ChevronsUpDown, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { generateQuotationPdf } from "@/lib/quotationPdf";
 import { toast } from "sonner";
@@ -183,6 +190,7 @@ export default function Penawaran() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
   
   const { quotations, isLoading, createQuotation, updateQuotation, deleteQuotation, getQuotationWithItems, generateQuotationNumber } = useQuotations();
   const { data: customers = [] } = useCustomers();
@@ -445,22 +453,68 @@ export default function Penawaran() {
                 {/* Customer Selection */}
                 <div className="space-y-2">
                   <Label>Pilih Pelanggan</Label>
-                  <Select
-                    value={formData.customerId || "manual"}
-                    onValueChange={handleCustomerSelect}
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Pilih pelanggan atau input manual" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="manual">-- Input Manual --</SelectItem>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.company_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={customerPopoverOpen}
+                        className="w-full justify-between bg-background"
+                      >
+                        {formData.customerId
+                          ? customers.find((c) => c.id === formData.customerId)?.company_name
+                          : formData.customerName
+                            ? `Manual: ${formData.customerName}`
+                            : "Pilih pelanggan atau input manual..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0 z-50" align="start">
+                      <Command>
+                        <CommandInput placeholder="Cari pelanggan..." />
+                        <CommandList>
+                          <CommandEmpty>Pelanggan tidak ditemukan.</CommandEmpty>
+                          <CommandGroup heading="Opsi">
+                            <CommandItem
+                              value="manual-input"
+                              onSelect={() => {
+                                handleCustomerSelect("manual");
+                                setCustomerPopoverOpen(false);
+                              }}
+                            >
+                              <UserPlus className="mr-2 h-4 w-4" />
+                              Input Manual
+                            </CommandItem>
+                          </CommandGroup>
+                          <CommandGroup heading="Pelanggan Tersimpan">
+                            {customers.map((customer) => (
+                              <CommandItem
+                                key={customer.id}
+                                value={customer.company_name}
+                                onSelect={() => {
+                                  handleCustomerSelect(customer.id);
+                                  setCustomerPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.customerId === customer.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                  <span>{customer.company_name}</span>
+                                  {customer.city && (
+                                    <span className="text-xs text-muted-foreground">{customer.city}</span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 {/* Customer Info */}
