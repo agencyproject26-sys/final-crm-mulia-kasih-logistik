@@ -14,7 +14,7 @@ import Truk from "./pages/master/Truk";
 import JobOrder from "./pages/operasional/JobOrder";
 import Tracking from "./pages/operasional/Tracking";
 import Invoice from "./pages/keuangan/Invoice";
-import Leads from "./pages/sales/Leads";
+import Penawaran from "./pages/sales/Penawaran";
 
 // Components
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -42,8 +42,7 @@ const App = () => (
           <Route path="/master/gudang" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
           
           {/* Sales */}
-          <Route path="/sales/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
-          <Route path="/sales/penawaran" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
+          <Route path="/sales/penawaran" element={<ProtectedRoute><Penawaran /></ProtectedRoute>} />
           
           {/* Operasional */}
           <Route path="/operasional/job-order" element={<ProtectedRoute><JobOrder /></ProtectedRoute>} />
