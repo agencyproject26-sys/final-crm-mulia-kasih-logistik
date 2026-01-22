@@ -38,6 +38,7 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useInvoiceDP, InvoiceDP, InvoiceDPInput, InvoiceDPItem } from "@/hooks/useInvoiceDP";
 import { InvoiceDPDialog } from "@/components/invoicedp/InvoiceDPDialog";
@@ -45,6 +46,7 @@ import { InvoiceDPPreview } from "@/components/invoicedp/InvoiceDPPreview";
 import { DeleteInvoiceDPDialog } from "@/components/invoicedp/DeleteInvoiceDPDialog";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 const formatRupiah = (value: number) => {
@@ -180,6 +182,150 @@ export default function InvoiceDPPage() {
     duplicateAsNextPart.mutate(invoice.id);
   };
 
+  const formatRupiahPlain = (value: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const exportSummaryToExcel = () => {
+    const data = customerSummary.map(([_, summary]) => ({
+      "Pelanggan": summary.customer_name,
+      "Jumlah Part": summary.partCount,
+      "Total DP (Rp)": summary.totalAmount,
+      "Lunas (Rp)": summary.paidAmount,
+      "Pending (Rp)": summary.pendingAmount,
+      "Progress (%)": summary.totalAmount > 0 
+        ? Math.round((summary.paidAmount / summary.totalAmount) * 100) 
+        : 0,
+    }));
+
+    // Add totals row
+    const totals = customerSummary.reduce(
+      (acc, [_, summary]) => ({
+        totalAmount: acc.totalAmount + summary.totalAmount,
+        paidAmount: acc.paidAmount + summary.paidAmount,
+        pendingAmount: acc.pendingAmount + summary.pendingAmount,
+        partCount: acc.partCount + summary.partCount,
+      }),
+      { totalAmount: 0, paidAmount: 0, pendingAmount: 0, partCount: 0 }
+    );
+
+    data.push({
+      "Pelanggan": "TOTAL",
+      "Jumlah Part": totals.partCount,
+      "Total DP (Rp)": totals.totalAmount,
+      "Lunas (Rp)": totals.paidAmount,
+      "Pending (Rp)": totals.pendingAmount,
+      "Progress (%)": totals.totalAmount > 0 
+        ? Math.round((totals.paidAmount / totals.totalAmount) * 100) 
+        : 0,
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Ringkasan DP");
+    
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    XLSX.writeFile(wb, `Ringkasan_Invoice_DP_${dateStr}.xlsx`);
+    toast.success("Excel berhasil diunduh");
+  };
+
+  const exportSummaryToPDF = () => {
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 15;
+    let y = 20;
+
+    // Header
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("PT MULIA KASIH LOGISTIK", pageWidth / 2, y, { align: "center" });
+    y += 8;
+
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Ringkasan Invoice Down Payment per Pelanggan", pageWidth / 2, y, { align: "center" });
+    y += 6;
+
+    const now = new Date();
+    pdf.setFontSize(10);
+    pdf.text(`Tanggal: ${now.toLocaleDateString("id-ID")}`, pageWidth / 2, y, { align: "center" });
+    y += 12;
+
+    // Table header
+    const colWidths = [60, 20, 35, 35, 35];
+    const headers = ["Pelanggan", "Part", "Total DP", "Lunas", "Pending"];
+    
+    pdf.setFillColor(240, 240, 240);
+    pdf.rect(margin, y - 4, pageWidth - margin * 2, 8, "F");
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "bold");
+    
+    let x = margin;
+    headers.forEach((header, i) => {
+      pdf.text(header, x + 2, y);
+      x += colWidths[i];
+    });
+    y += 8;
+
+    // Table rows
+    pdf.setFont("helvetica", "normal");
+    let totalAll = 0;
+    let paidAll = 0;
+    let pendingAll = 0;
+    let partAll = 0;
+
+    customerSummary.forEach(([_, summary]) => {
+      x = margin;
+      const customerName = summary.customer_name.length > 25 
+        ? summary.customer_name.substring(0, 25) + "..." 
+        : summary.customer_name;
+      
+      pdf.text(customerName, x + 2, y);
+      x += colWidths[0];
+      pdf.text(String(summary.partCount), x + 2, y);
+      x += colWidths[1];
+      pdf.text(formatRupiahPlain(summary.totalAmount), x + 2, y);
+      x += colWidths[2];
+      pdf.text(formatRupiahPlain(summary.paidAmount), x + 2, y);
+      x += colWidths[3];
+      pdf.text(formatRupiahPlain(summary.pendingAmount), x + 2, y);
+      
+      totalAll += summary.totalAmount;
+      paidAll += summary.paidAmount;
+      pendingAll += summary.pendingAmount;
+      partAll += summary.partCount;
+      y += 6;
+
+      if (y > 270) {
+        pdf.addPage();
+        y = 20;
+      }
+    });
+
+    // Total row
+    y += 2;
+    pdf.setFillColor(220, 220, 220);
+    pdf.rect(margin, y - 4, pageWidth - margin * 2, 8, "F");
+    pdf.setFont("helvetica", "bold");
+    x = margin;
+    pdf.text("TOTAL", x + 2, y);
+    x += colWidths[0];
+    pdf.text(String(partAll), x + 2, y);
+    x += colWidths[1];
+    pdf.text(formatRupiahPlain(totalAll), x + 2, y);
+    x += colWidths[2];
+    pdf.text(formatRupiahPlain(paidAll), x + 2, y);
+    x += colWidths[3];
+    pdf.text(formatRupiahPlain(pendingAll), x + 2, y);
+
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    pdf.save(`Ringkasan_Invoice_DP_${dateStr}.pdf`);
+    toast.success("PDF berhasil diunduh");
+  };
+
   const handleDownloadPDF = async (invoice: InvoiceDP) => {
     const invoiceWithItems = await getInvoiceDPWithItems(invoice.id);
     setPreviewInvoice(invoiceWithItems);
@@ -299,7 +445,19 @@ export default function InvoiceDPPage() {
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 space-y-4">
+                  {/* Export Buttons */}
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={exportSummaryToExcel}>
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Export Excel
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={exportSummaryToPDF}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export PDF
+                    </Button>
+                  </div>
+                  
                   <div className="border rounded-lg overflow-hidden">
                     <Table>
                       <TableHeader>
