@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { generateQuotationPdf } from "@/lib/quotationPdf";
@@ -53,6 +53,7 @@ import { useQuotations, QuotationInput } from "@/hooks/useQuotations";
 import { useCustomers } from "@/hooks/useCustomers";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
+import { QuotationPreview } from "@/components/quotation/QuotationPreview";
 
 interface RateItem {
   no: number;
@@ -177,6 +178,7 @@ function RateTable({ title, titleColor, items, onUpdate }: RateTableProps) {
 export default function Penawaran() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -541,6 +543,14 @@ export default function Penawaran() {
                   </Button>
                   <Button 
                     variant="outline"
+                    onClick={() => setIsPreviewOpen(true)}
+                    disabled={isSaving}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Preview
+                  </Button>
+                  <Button 
+                    variant="outline"
                     onClick={() => {
                       generateQuotationPdf(formData);
                       toast.success("PDF berhasil di-export");
@@ -666,6 +676,45 @@ export default function Penawaran() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Preview Penawaran</DialogTitle>
+            <DialogDescription>
+              Pratinjau dokumen penawaran sebelum di-export ke PDF
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[calc(90vh-180px)]">
+            <QuotationPreview
+              customerName={formData.customerName}
+              customerAddress={formData.customerAddress}
+              route={formData.route}
+              rates={formData.rates}
+              greenLine={formData.greenLine}
+              redLine={formData.redLine}
+              notes={formData.notes}
+            />
+          </ScrollArea>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+              Tutup
+            </Button>
+            <Button 
+              onClick={() => {
+                generateQuotationPdf(formData);
+                toast.success("PDF berhasil di-export");
+                setIsPreviewOpen(false);
+              }}
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
