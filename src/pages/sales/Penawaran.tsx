@@ -17,7 +17,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -27,7 +44,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Send, Download, Search, FileDown, Loader2 } from "lucide-react";
+import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { generateQuotationPdf } from "@/lib/quotationPdf";
@@ -161,7 +178,11 @@ export default function Penawaran() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { quotations, isLoading, createQuotation, generateQuotationNumber } = useQuotations();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const { quotations, isLoading, createQuotation, updateQuotation, deleteQuotation, getQuotationWithItems, generateQuotationNumber } = useQuotations();
   const { data: customers = [] } = useCustomers();
 
   const [formData, setFormData] = useState<QuotationForm>({
@@ -186,6 +207,67 @@ export default function Penawaran() {
       redLine: [...defaultRedLine],
       notes: [...defaultNotes],
     });
+    setEditingId(null);
+  };
+
+  const convertDbItemsToRateItems = (
+    items: { section: string; item_no: number; description: string; lcl_rate: number | null; fcl_20_rate: number | null; fcl_40_rate: number | null }[],
+    section: string,
+    defaultItems: RateItem[]
+  ): RateItem[] => {
+    const sectionItems = items.filter((item) => item.section === section);
+    if (sectionItems.length === 0) return [...defaultItems];
+    
+    return sectionItems.map((item) => ({
+      no: item.item_no,
+      description: item.description,
+      lclRate: item.lcl_rate,
+      fcl20Rate: item.fcl_20_rate,
+      fcl40Rate: item.fcl_40_rate,
+    }));
+  };
+
+  const handleEdit = async (quotationId: string) => {
+    try {
+      const quotation = await getQuotationWithItems(quotationId);
+      if (!quotation) {
+        toast.error("Penawaran tidak ditemukan");
+        return;
+      }
+
+      const items = quotation.items || [];
+      
+      setFormData({
+        customerId: quotation.customer_id || null,
+        customerName: quotation.customer_name,
+        customerAddress: quotation.customer_address || "",
+        route: quotation.route || "Tanjung Priok - Bandung",
+        rates: convertDbItemsToRateItems(items, "rates", defaultRates),
+        greenLine: convertDbItemsToRateItems(items, "green_line", defaultGreenLine),
+        redLine: convertDbItemsToRateItems(items, "red_line", defaultRedLine),
+        notes: quotation.notes || [...defaultNotes],
+      });
+      
+      setEditingId(quotationId);
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error("Error loading quotation:", error);
+      toast.error("Gagal memuat data penawaran");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteQuotation.mutateAsync(deleteId);
+      setDeleteId(null);
+    } catch (error) {
+      console.error("Error deleting quotation:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleCustomerSelect = (customerId: string) => {
@@ -253,26 +335,42 @@ export default function Penawaran() {
 
     setIsSaving(true);
     try {
-      const quotationNumber = await generateQuotationNumber();
-      
       const items = [
         ...convertRateItemsToDbItems(formData.rates, "rates"),
         ...convertRateItemsToDbItems(formData.greenLine, "green_line"),
         ...convertRateItemsToDbItems(formData.redLine, "red_line"),
       ];
 
-      const input: QuotationInput = {
-        quotation_number: quotationNumber,
-        customer_id: formData.customerId,
-        customer_name: formData.customerName,
-        customer_address: formData.customerAddress || null,
-        route: formData.route || null,
-        status,
-        notes: formData.notes,
-        items,
-      };
+      if (editingId) {
+        // Update existing quotation
+        await updateQuotation.mutateAsync({
+          id: editingId,
+          customer_id: formData.customerId,
+          customer_name: formData.customerName,
+          customer_address: formData.customerAddress || null,
+          route: formData.route || null,
+          status,
+          notes: formData.notes,
+          items,
+        });
+      } else {
+        // Create new quotation
+        const quotationNumber = await generateQuotationNumber();
+        
+        const input: QuotationInput = {
+          quotation_number: quotationNumber,
+          customer_id: formData.customerId,
+          customer_name: formData.customerName,
+          customer_address: formData.customerAddress || null,
+          route: formData.route || null,
+          status,
+          notes: formData.notes,
+          items,
+        };
 
-      await createQuotation.mutateAsync(input);
+        await createQuotation.mutateAsync(input);
+      }
+      
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
@@ -335,7 +433,10 @@ export default function Penawaran() {
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh]">
             <DialogHeader>
-              <DialogTitle>Buat Penawaran Baru</DialogTitle>
+              <DialogTitle>{editingId ? "Edit Penawaran" : "Buat Penawaran Baru"}</DialogTitle>
+              <DialogDescription>
+                {editingId ? "Perbarui data penawaran yang sudah ada" : "Buat penawaran harga baru untuk pelanggan"}
+              </DialogDescription>
             </DialogHeader>
             <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
               <div className="space-y-6 py-4">
@@ -504,6 +605,26 @@ export default function Penawaran() {
                       <p className="text-sm text-muted-foreground">{quotation.customer_name}</p>
                     </div>
                   </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-background">
+                      <DropdownMenuItem onClick={() => handleEdit(quotation.id)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setDeleteId(quotation.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Hapus
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -522,6 +643,29 @@ export default function Penawaran() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Penawaran</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin menghapus penawaran ini? Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }
