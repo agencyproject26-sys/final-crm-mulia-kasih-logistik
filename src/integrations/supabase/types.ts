@@ -23,6 +23,7 @@ export type Database = {
           customer_type: string | null
           email: string | null
           id: string
+          npwp: string | null
           phone: string | null
           pic_name: string | null
           status: string | null
@@ -36,6 +37,7 @@ export type Database = {
           customer_type?: string | null
           email?: string | null
           id?: string
+          npwp?: string | null
           phone?: string | null
           pic_name?: string | null
           status?: string | null
@@ -49,6 +51,7 @@ export type Database = {
           customer_type?: string | null
           email?: string | null
           id?: string
+          npwp?: string | null
           phone?: string | null
           pic_name?: string | null
           status?: string | null

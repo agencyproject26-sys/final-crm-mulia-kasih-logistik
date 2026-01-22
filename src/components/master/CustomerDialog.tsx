@@ -37,6 +37,7 @@ const customerSchema = z.object({
   email: z.string().email("Email tidak valid").optional().or(z.literal("")),
   address: z.string().optional(),
   city: z.string().optional(),
+  npwp: z.string().optional(),
   customer_type: z.enum(["eksportir", "importir", "keduanya"]),
   status: z.enum(["aktif", "tidak_aktif"]),
 });
@@ -67,6 +68,7 @@ export function CustomerDialog({
       email: "",
       address: "",
       city: "",
+      npwp: "",
       customer_type: "keduanya",
       status: "aktif",
     },
@@ -81,6 +83,7 @@ export function CustomerDialog({
         email: customer.email || "",
         address: customer.address || "",
         city: customer.city || "",
+        npwp: customer.npwp || "",
         customer_type: customer.customer_type,
         status: customer.status,
       });
@@ -92,6 +95,7 @@ export function CustomerDialog({
         email: "",
         address: "",
         city: "",
+        npwp: "",
         customer_type: "keduanya",
         status: "aktif",
       });
@@ -106,6 +110,7 @@ export function CustomerDialog({
       email: values.email || null,
       address: values.address || null,
       city: values.city || null,
+      npwp: values.npwp || null,
       customer_type: values.customer_type,
       status: values.status,
     });
@@ -196,6 +201,20 @@ export function CustomerDialog({
                     <FormLabel>Kota</FormLabel>
                     <FormControl>
                       <Input placeholder="Jakarta" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="npwp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>NPWP</FormLabel>
+                    <FormControl>
+                      <Input placeholder="00.000.000.0-000.000" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
