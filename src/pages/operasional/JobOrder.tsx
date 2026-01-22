@@ -36,12 +36,16 @@ import {
   FileCheck,
   Clock,
   CheckCircle2,
+  Receipt,
+  Banknote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useJobOrders, JobOrder, JobOrderInput } from "@/hooks/useJobOrders";
 import { JobOrderDialog } from "@/components/joborder/JobOrderDialog";
 import { JobOrderPdfMenu } from "@/components/joborder/JobOrderPdfMenu";
 import { DeleteJobOrderDialog } from "@/components/joborder/DeleteJobOrderDialog";
+import { CreateInvoiceFromJobOrder } from "@/components/joborder/CreateInvoiceFromJobOrder";
+import { JobOrderInvoicesDialog } from "@/components/joborder/JobOrderInvoicesDialog";
 
 const statusDoStyles: Record<string, string> = {
   pending: "bg-muted text-muted-foreground",
@@ -76,9 +80,14 @@ export default function JobOrderPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isInvoicesDialogOpen, setIsInvoicesDialogOpen] = useState(false);
   const [selectedJobOrder, setSelectedJobOrder] = useState<JobOrder | null>(null);
 
   const { jobOrders, isLoading, createJobOrder, updateJobOrder, deleteJobOrder } = useJobOrders();
+
+  const refetchJobOrders = () => {
+    // Force a refresh when invoice is created
+  };
 
   const filteredOrders = jobOrders.filter((order) => {
     const matchesSearch =
@@ -265,6 +274,7 @@ export default function JobOrderPage() {
                     <TableHead>Lokasi → Tujuan</TableHead>
                     <TableHead>Status DO</TableHead>
                     <TableHead>Respond BC</TableHead>
+                    <TableHead>Invoice</TableHead>
                     <TableHead>PDF</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
@@ -292,6 +302,21 @@ export default function JobOrderPage() {
                         <Badge className={cn("text-xs", respondBcStyles[order.respond_bc || "pending"])}>
                           {respondBcLabels[order.respond_bc || "pending"]}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <CreateInvoiceFromJobOrder jobOrder={order} />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedJobOrder(order);
+                              setIsInvoicesDialogOpen(true);
+                            }}
+                          >
+                            <Banknote className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <JobOrderPdfMenu jobOrder={order} />
@@ -342,6 +367,15 @@ export default function JobOrderPage() {
         onConfirm={handleDelete}
         jobOrderNumber={selectedJobOrder?.job_order_number}
       />
+
+      {selectedJobOrder && (
+        <JobOrderInvoicesDialog
+          open={isInvoicesDialogOpen}
+          onOpenChange={setIsInvoicesDialogOpen}
+          jobOrderId={selectedJobOrder.id}
+          jobOrderNumber={selectedJobOrder.job_order_number}
+        />
+      )}
     </MainLayout>
   );
 }

@@ -22,11 +22,14 @@ export interface JobOrder {
   customer_name: string | null;
   notes: string | null;
   status: string | null;
+  total_invoice_amount: number | null;
+  total_paid_amount: number | null;
+  payment_status: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export type JobOrderInput = Omit<JobOrder, "id" | "created_at" | "updated_at">;
+export type JobOrderInput = Omit<JobOrder, "id" | "created_at" | "updated_at" | "total_invoice_amount" | "total_paid_amount" | "payment_status">;
 
 export const useJobOrders = () => {
   const queryClient = useQueryClient();

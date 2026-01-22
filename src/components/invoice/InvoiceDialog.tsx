@@ -207,6 +207,7 @@ export const InvoiceDialog = ({
       remaining_amount: remaining,
       status: "draft",
       notes: data.notes || null,
+      job_order_id: invoice?.job_order_id || null,
       items: items.filter((item) => item.description.trim() !== ""),
     };
 
