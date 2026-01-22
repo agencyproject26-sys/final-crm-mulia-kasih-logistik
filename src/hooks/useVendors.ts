@@ -17,6 +17,7 @@ export interface Vendor {
   bank_name: string | null;
   bank_account_number: string | null;
   bank_account_name: string | null;
+  party: string | null;
   status: string | null;
   created_at: string;
   updated_at: string;
