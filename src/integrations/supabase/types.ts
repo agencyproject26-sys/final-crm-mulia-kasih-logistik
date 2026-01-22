@@ -522,6 +522,68 @@ export type Database = {
         }
         Relationships: []
       }
+      warehouses: {
+        Row: {
+          administration: string | null
+          cbm: number | null
+          created_at: string
+          customer_id: string | null
+          customer_name: string
+          daily_notes: string | null
+          description: string | null
+          handling_in_out: string | null
+          id: string
+          notes: string | null
+          party: string | null
+          quantity: number | null
+          status: string | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          administration?: string | null
+          cbm?: number | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name: string
+          daily_notes?: string | null
+          description?: string | null
+          handling_in_out?: string | null
+          id?: string
+          notes?: string | null
+          party?: string | null
+          quantity?: number | null
+          status?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          administration?: string | null
+          cbm?: number | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string
+          daily_notes?: string | null
+          description?: string | null
+          handling_in_out?: string | null
+          id?: string
+          notes?: string | null
+          party?: string | null
+          quantity?: number | null
+          status?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
