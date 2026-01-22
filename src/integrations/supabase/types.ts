@@ -59,6 +59,60 @@ export type Database = {
         }
         Relationships: []
       }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string
+          expense_date: string
+          id: string
+          job_order_id: string | null
+          notes: string | null
+          updated_at: string
+          vendor_id: string | null
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          description: string
+          expense_date?: string
+          id?: string
+          job_order_id?: string | null
+          notes?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          id?: string
+          job_order_id?: string | null
+          notes?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_job_order_id_fkey"
+            columns: ["job_order_id"]
+            isOneToOne: false
+            referencedRelation: "job_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_dp: {
         Row: {
           bl_number: string | null
