@@ -15,6 +15,7 @@ import JobOrder from "./pages/operasional/JobOrder";
 import Tracking from "./pages/operasional/Tracking";
 import Gudang from "./pages/operasional/Gudang";
 import Invoice from "./pages/keuangan/Invoice";
+import InvoiceDP from "./pages/keuangan/InvoiceDP";
 import Penawaran from "./pages/sales/Penawaran";
 
 // Components
@@ -52,6 +53,7 @@ const App = () => (
           
           {/* Keuangan */}
           <Route path="/keuangan/invoice" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
+          <Route path="/keuangan/invoice-dp" element={<ProtectedRoute><InvoiceDP /></ProtectedRoute>} />
           <Route path="/keuangan/pembayaran" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           <Route path="/keuangan/pengeluaran" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           <Route path="/keuangan/laba-rugi" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />

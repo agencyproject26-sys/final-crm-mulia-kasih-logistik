@@ -59,6 +59,100 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_dp: {
+        Row: {
+          bl_number: string | null
+          created_at: string
+          customer_address: string | null
+          customer_city: string | null
+          customer_id: string | null
+          customer_name: string
+          description: string | null
+          id: string
+          invoice_date: string
+          invoice_dp_number: string
+          notes: string | null
+          part_number: number
+          status: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          bl_number?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_id?: string | null
+          customer_name: string
+          description?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_dp_number: string
+          notes?: string | null
+          part_number?: number
+          status?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          bl_number?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          description?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_dp_number?: string
+          notes?: string | null
+          part_number?: number
+          status?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_dp_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_dp_items: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          invoice_dp_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description: string
+          id?: string
+          invoice_dp_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_dp_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_dp_items_invoice_dp_id_fkey"
+            columns: ["invoice_dp_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_dp"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           amount: number
