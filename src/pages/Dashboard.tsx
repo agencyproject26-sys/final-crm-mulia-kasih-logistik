@@ -6,6 +6,7 @@ import { FinanceChart } from "@/components/dashboard/FinanceChart";
 import { TruckUtilization } from "@/components/dashboard/TruckUtilization";
 import { WarehouseOccupancy } from "@/components/dashboard/WarehouseOccupancy";
 import { OutstandingInvoices } from "@/components/dashboard/OutstandingInvoices";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 import {
   Users,
   Package,
@@ -13,37 +14,66 @@ import {
   CheckCircle2,
   Receipt,
   TrendingUp,
-  TrendingDown,
-  Wallet,
+  Warehouse,
+  FileText,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const formatRupiah = (value: number) => {
+  if (value >= 1000000000) {
+    return `Rp ${(value / 1000000000).toFixed(2)} M`;
+  } else if (value >= 1000000) {
+    return `Rp ${(value / 1000000).toFixed(1)} jt`;
+  } else if (value >= 1000) {
+    return `Rp ${(value / 1000).toFixed(0)} rb`;
+  }
+  return `Rp ${value}`;
+};
 
 export default function Dashboard() {
+  const { data: stats, isLoading } = useDashboardStats();
+
+  if (isLoading) {
+    return (
+      <MainLayout title="Dashboard" subtitle="Selamat datang di Sistem Manajemen PT Mulia Kasih Logistik">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout title="Dashboard" subtitle="Selamat datang di Sistem Manajemen PT Mulia Kasih Logistik">
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatCard
           title="Total Pelanggan"
-          value="248"
+          value={stats?.totalCustomers.toLocaleString("id-ID") || "0"}
           icon={Users}
-          trend={{ value: 12, isPositive: true }}
         />
         <StatCard
           title="Order Aktif"
-          value="56"
+          value={stats?.activeOrders.toLocaleString("id-ID") || "0"}
           icon={Package}
-          trend={{ value: 8, isPositive: true }}
         />
         <StatCard
           title="Pengiriman Berjalan"
-          value="32"
+          value={stats?.inProgressOrders.toLocaleString("id-ID") || "0"}
           icon={Truck}
           variant="secondary"
         />
         <StatCard
           title="Pengiriman Selesai"
-          value="1,847"
-          subtitle="Bulan ini: 142"
+          value={stats?.completedOrders.toLocaleString("id-ID") || "0"}
+          subtitle={`Bulan ini: ${stats?.completedThisMonth || 0}`}
           icon={CheckCircle2}
           variant="success"
         />
@@ -53,29 +83,28 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatCard
           title="Invoice Outstanding"
-          value="Rp 172,5 jt"
-          subtitle="12 invoice pending"
+          value={formatRupiah(stats?.outstandingAmount || 0)}
+          subtitle={`${stats?.outstandingCount || 0} invoice pending`}
           icon={Receipt}
           variant="warning"
         />
         <StatCard
-          title="Pendapatan Bulanan"
-          value="Rp 1,12 M"
+          title="Total Invoice"
+          value={formatRupiah(stats?.monthlyRevenue || 0)}
           icon={TrendingUp}
-          trend={{ value: 15, isPositive: true }}
         />
         <StatCard
-          title="Pengeluaran Bulanan"
-          value="Rp 820 jt"
-          icon={TrendingDown}
-          trend={{ value: 5, isPositive: false }}
+          title="Total Invoice DP"
+          value={formatRupiah(stats?.totalInvoiceDPAmount || 0)}
+          subtitle={`Terbayar: ${formatRupiah(stats?.paidInvoiceDPAmount || 0)}`}
+          icon={FileText}
         />
         <StatCard
-          title="Laba Bersih"
-          value="Rp 300 jt"
-          icon={Wallet}
+          title="Total Gudang"
+          value={`${stats?.totalCBM?.toFixed(0) || 0} CBM`}
+          subtitle={`${stats?.totalWarehouseItems || 0} item`}
+          icon={Warehouse}
           variant="primary"
-          trend={{ value: 18, isPositive: true }}
         />
       </div>
 
