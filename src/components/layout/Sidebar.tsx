@@ -45,7 +45,6 @@ const navItems: NavItem[] = [
     label: "Sales & CRM",
     icon: Handshake,
     children: [
-      { label: "Leads", href: "/sales/leads" },
       { label: "Penawaran", href: "/sales/penawaran" },
     ],
   },
