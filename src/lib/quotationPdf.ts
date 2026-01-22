@@ -18,6 +18,15 @@ interface QuotationData {
   notes: string[];
 }
 
+// Company letterhead info - fixed/permanent
+const COMPANY_INFO = {
+  name: "PT. Mulia Kasih Logistik",
+  address: "Kawasan Berikat Nusantara (KBN) Jl. Pontianak Blok C 02/09A, Marunda, Cilincing, Jakarta Utara - 14120",
+  phone: "(021) 38874030",
+  email: "rudy@mkl-jakarta.com / info@mkl-jakarta.com",
+  website: "www.mkl-jakarta.com",
+};
+
 const formatRupiah = (value: number | null): string => {
   if (value === null) return "-";
   return `IDR ${value.toLocaleString("id-ID")}`;
@@ -27,29 +36,76 @@ export const generateQuotationPdf = (data: QuotationData): void => {
   const doc = new jsPDF("p", "mm", "a4");
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 15;
-  let y = 20;
+  let y = 15;
 
-  // Header
+  // ===== LETTERHEAD (Fixed) =====
+  // Company Name
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("PT MULIA KASIH LOGISTIK", pageWidth / 2, y, { align: "center" });
-  y += 8;
+  doc.setTextColor(30, 58, 138); // Primary blue color
+  doc.text(COMPANY_INFO.name, margin, y);
+  y += 6;
 
+  // Address
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100, 100, 100);
+  const addressLines = doc.splitTextToSize(COMPANY_INFO.address, pageWidth - margin * 2);
+  doc.text(addressLines, margin, y);
+  y += addressLines.length * 3.5;
+
+  // Contact Info
+  doc.setFontSize(8);
+  doc.text(`Phone: ${COMPANY_INFO.phone}`, margin, y);
+  y += 4;
+  doc.text(`E-mail: ${COMPANY_INFO.email}`, margin, y);
+  y += 4;
+  doc.text(`Web: ${COMPANY_INFO.website}`, margin, y);
+  y += 6;
+
+  // Letterhead separator line
+  doc.setDrawColor(30, 58, 138);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 10;
+
+  // ===== DOCUMENT TITLE =====
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("PENAWARAN HARGA", pageWidth / 2, y, { align: "center" });
+  y += 5;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("PENAWARAN HARGA / QUOTATION", pageWidth / 2, y, { align: "center" });
-  y += 12;
+  doc.text("Quotation", pageWidth / 2, y, { align: "center" });
+  y += 10;
 
-  // Customer Info
+  // ===== CUSTOMER INFO =====
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
   if (data.customerName) {
-    doc.setFontSize(10);
-    doc.text(`Kepada Yth: ${data.customerName}`, margin, y);
+    doc.setFont("helvetica", "bold");
+    doc.text("Kepada Yth:", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(data.customerName, margin + 25, y);
     y += 5;
   }
-  if (data.route) {
-    doc.text(`Rute: ${data.route}`, margin, y);
-    y += 10;
+  if (data.customerAddress) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Alamat:", margin, y);
+    doc.setFont("helvetica", "normal");
+    const addrLines = doc.splitTextToSize(data.customerAddress, pageWidth - margin * 2 - 25);
+    doc.text(addrLines, margin + 25, y);
+    y += addrLines.length * 5;
   }
+  if (data.route) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Rute:", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(data.route, margin + 25, y);
+    y += 5;
+  }
+  y += 5;
 
   // Helper function to draw table
   const drawTable = (
@@ -130,11 +186,11 @@ export const generateQuotationPdf = (data: QuotationData): void => {
       currentY += rowHeight;
     });
 
-    return currentY + 8;
+    return currentY + 6;
   };
 
   // Draw RATES table
-  y = drawTable("RATES", { r: 59, g: 130, b: 246 }, data.rates, y);
+  y = drawTable("RATES", { r: 30, g: 58, b: 138 }, data.rates, y);
 
   // Check for page break
   if (y > 200) {
@@ -152,7 +208,7 @@ export const generateQuotationPdf = (data: QuotationData): void => {
   }
 
   // Draw RED LINE table
-  y = drawTable("RED LINE", { r: 239, g: 68, b: 68 }, data.redLine, y);
+  y = drawTable("RED LINE", { r: 220, g: 38, b: 38 }, data.redLine, y);
 
   // Notes section
   if (y > 230) {
@@ -160,10 +216,16 @@ export const generateQuotationPdf = (data: QuotationData): void => {
     y = 20;
   }
 
+  y += 3;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("Catatan:", margin, y);
   y += 5;
+
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(80, 80, 80);
 
   data.notes.forEach((note) => {
     if (y > 270) {
@@ -176,7 +238,7 @@ export const generateQuotationPdf = (data: QuotationData): void => {
   });
 
   // Signature section
-  y += 15;
+  y += 12;
   if (y > 250) {
     doc.addPage();
     y = 20;
@@ -190,9 +252,9 @@ export const generateQuotationPdf = (data: QuotationData): void => {
   doc.text(data.customerName || "___________________", margin, y + 25);
 
   // Right signature
-  doc.text("Dengan Hormat,", pageWidth - margin - 50, y);
+  doc.text("Dengan Hormat,", pageWidth - margin - 55, y);
   doc.setFont("helvetica", "bold");
-  doc.text("PT MULIA KASIH LOGISTIK", pageWidth - margin - 50, y + 25);
+  doc.text(COMPANY_INFO.name, pageWidth - margin - 55, y + 25);
 
   // Save PDF
   const fileName = data.customerName 
