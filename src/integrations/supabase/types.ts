@@ -177,6 +177,83 @@ export type Database = {
           },
         ]
       }
+      job_orders: {
+        Row: {
+          aju: string | null
+          bl_number: string | null
+          created_at: string
+          customer_id: string | null
+          customer_name: string | null
+          eta_kapal: string | null
+          exp_do: string | null
+          id: string
+          job_order_number: string
+          lokasi: string | null
+          no_invoice: string | null
+          notes: string | null
+          party: string | null
+          pembayaran_do: string | null
+          respond_bc: string | null
+          status: string | null
+          status_bl: string | null
+          status_do: string | null
+          tujuan: string | null
+          updated_at: string
+        }
+        Insert: {
+          aju?: string | null
+          bl_number?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          eta_kapal?: string | null
+          exp_do?: string | null
+          id?: string
+          job_order_number: string
+          lokasi?: string | null
+          no_invoice?: string | null
+          notes?: string | null
+          party?: string | null
+          pembayaran_do?: string | null
+          respond_bc?: string | null
+          status?: string | null
+          status_bl?: string | null
+          status_do?: string | null
+          tujuan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aju?: string | null
+          bl_number?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          eta_kapal?: string | null
+          exp_do?: string | null
+          id?: string
+          job_order_number?: string
+          lokasi?: string | null
+          no_invoice?: string | null
+          notes?: string | null
+          party?: string | null
+          pembayaran_do?: string | null
+          respond_bc?: string | null
+          status?: string | null
+          status_bl?: string | null
+          status_do?: string | null
+          tujuan?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotation_items: {
         Row: {
           created_at: string
