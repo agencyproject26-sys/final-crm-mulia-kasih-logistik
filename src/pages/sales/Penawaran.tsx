@@ -50,7 +50,7 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye, Check, ChevronsUpDown, UserPlus } from "lucide-react";
+import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye, Check, ChevronsUpDown, UserPlus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -123,18 +123,30 @@ interface RateTableProps {
   title: string;
   titleColor: string;
   items: RateItem[];
-  onUpdate: (index: number, field: keyof RateItem, value: number | null) => void;
+  onUpdate: (index: number, field: keyof RateItem, value: number | null | string) => void;
+  onAddRow: () => void;
+  onRemoveRow: (index: number) => void;
 }
 
-function RateTable({ title, titleColor, items, onUpdate }: RateTableProps) {
+function RateTable({ title, titleColor, items, onUpdate, onAddRow, onRemoveRow }: RateTableProps) {
   const handleValueChange = (index: number, field: keyof RateItem, value: string) => {
-    const numValue = value === "" || value === "-" ? null : parseInt(value.replace(/\D/g, ""), 10);
-    onUpdate(index, field, numValue);
+    if (field === "description") {
+      onUpdate(index, field, value);
+    } else {
+      const numValue = value === "" || value === "-" ? null : parseInt(value.replace(/\D/g, ""), 10);
+      onUpdate(index, field, numValue);
+    }
   };
 
   return (
     <div className="space-y-2">
-      <h3 className={`font-semibold text-lg ${titleColor}`}>{title}</h3>
+      <div className="flex items-center justify-between">
+        <h3 className={`font-semibold text-lg ${titleColor}`}>{title}</h3>
+        <Button type="button" variant="outline" size="sm" onClick={onAddRow}>
+          <Plus className="h-4 w-4 mr-1" />
+          Tambah Baris
+        </Button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -143,13 +155,22 @@ function RateTable({ title, titleColor, items, onUpdate }: RateTableProps) {
             <TableHead className="text-right w-32">1-5 CBM (LCL)</TableHead>
             <TableHead className="text-right w-32">20'</TableHead>
             <TableHead className="text-right w-32">40'</TableHead>
+            <TableHead className="w-10"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((item, index) => (
-            <TableRow key={item.no}>
-              <TableCell>{item.no}</TableCell>
-              <TableCell>{item.description}</TableCell>
+            <TableRow key={`${title}-${index}`}>
+              <TableCell className="font-medium">{item.no}</TableCell>
+              <TableCell>
+                <Input
+                  type="text"
+                  value={item.description}
+                  onChange={(e) => handleValueChange(index, "description", e.target.value)}
+                  placeholder="Masukkan deskripsi..."
+                  className="h-8"
+                />
+              </TableCell>
               <TableCell className="text-right">
                 <Input
                   type="text"
@@ -173,6 +194,17 @@ function RateTable({ title, titleColor, items, onUpdate }: RateTableProps) {
                   onChange={(e) => handleValueChange(index, "fcl40Rate", e.target.value)}
                   className="text-right h-8 w-28"
                 />
+              </TableCell>
+              <TableCell>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => onRemoveRow(index)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
@@ -302,7 +334,7 @@ export default function Penawaran() {
     }
   };
 
-  const handleRatesUpdate = (index: number, field: keyof RateItem, value: number | null) => {
+  const handleRatesUpdate = (index: number, field: keyof RateItem, value: number | null | string) => {
     setFormData((prev) => {
       const newRates = [...prev.rates];
       newRates[index] = { ...newRates[index], [field]: value };
@@ -310,7 +342,7 @@ export default function Penawaran() {
     });
   };
 
-  const handleGreenLineUpdate = (index: number, field: keyof RateItem, value: number | null) => {
+  const handleGreenLineUpdate = (index: number, field: keyof RateItem, value: number | null | string) => {
     setFormData((prev) => {
       const newGreenLine = [...prev.greenLine];
       newGreenLine[index] = { ...newGreenLine[index], [field]: value };
@@ -318,11 +350,41 @@ export default function Penawaran() {
     });
   };
 
-  const handleRedLineUpdate = (index: number, field: keyof RateItem, value: number | null) => {
+  const handleRedLineUpdate = (index: number, field: keyof RateItem, value: number | null | string) => {
     setFormData((prev) => {
       const newRedLine = [...prev.redLine];
       newRedLine[index] = { ...newRedLine[index], [field]: value };
       return { ...prev, redLine: newRedLine };
+    });
+  };
+
+  const addRateRow = (section: "rates" | "greenLine" | "redLine") => {
+    setFormData((prev) => {
+      const sectionItems = prev[section];
+      const newNo = sectionItems.length > 0 ? Math.max(...sectionItems.map(i => i.no)) + 1 : 1;
+      const newItem: RateItem = {
+        no: newNo,
+        description: "",
+        lclRate: null,
+        fcl20Rate: null,
+        fcl40Rate: null,
+      };
+      return { ...prev, [section]: [...sectionItems, newItem] };
+    });
+  };
+
+  const removeRateRow = (section: "rates" | "greenLine" | "redLine", index: number) => {
+    setFormData((prev) => {
+      const sectionItems = prev[section];
+      if (sectionItems.length <= 1) {
+        toast.error("Minimal harus ada 1 baris");
+        return prev;
+      }
+      const newItems = sectionItems.filter((_, i) => i !== index).map((item, i) => ({
+        ...item,
+        no: i + 1,
+      }));
+      return { ...prev, [section]: newItems };
     });
   };
 
@@ -562,6 +624,8 @@ export default function Penawaran() {
                   titleColor="text-primary"
                   items={formData.rates}
                   onUpdate={handleRatesUpdate}
+                  onAddRow={() => addRateRow("rates")}
+                  onRemoveRow={(index) => removeRateRow("rates", index)}
                 />
 
                 {/* Green Line Section */}
@@ -570,6 +634,8 @@ export default function Penawaran() {
                   titleColor="text-success"
                   items={formData.greenLine}
                   onUpdate={handleGreenLineUpdate}
+                  onAddRow={() => addRateRow("greenLine")}
+                  onRemoveRow={(index) => removeRateRow("greenLine", index)}
                 />
 
                 {/* Red Line Section */}
@@ -578,6 +644,8 @@ export default function Penawaran() {
                   titleColor="text-destructive"
                   items={formData.redLine}
                   onUpdate={handleRedLineUpdate}
+                  onAddRow={() => addRateRow("redLine")}
+                  onRemoveRow={(index) => removeRateRow("redLine", index)}
                 />
 
                 {/* Notes */}
