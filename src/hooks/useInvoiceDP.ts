@@ -82,13 +82,83 @@ export function useInvoiceDP() {
     const { data, error } = await supabase
       .from("invoice_dp")
       .select("part_number")
-      .like("invoice_dp_number", `${invoiceNumber}%`)
+      .eq("invoice_dp_number", invoiceNumber)
       .order("part_number", { ascending: false })
       .limit(1);
 
     if (error) throw error;
     return data && data.length > 0 ? data[0].part_number + 1 : 1;
   };
+
+  const duplicateAsNextPart = useMutation({
+    mutationFn: async (sourceId: string) => {
+      // Get source invoice with items
+      const { data: sourceInvoice, error: sourceError } = await supabase
+        .from("invoice_dp")
+        .select("*")
+        .eq("id", sourceId)
+        .single();
+
+      if (sourceError) throw sourceError;
+
+      // Get next part number for same invoice number
+      const nextPart = await getNextPartNumber(sourceInvoice.invoice_dp_number);
+
+      // Get source items
+      const { data: sourceItems, error: itemsError } = await supabase
+        .from("invoice_dp_items")
+        .select("*")
+        .eq("invoice_dp_id", sourceId);
+
+      if (itemsError) throw itemsError;
+
+      // Create new invoice with next part number
+      const { data: newInvoice, error: createError } = await supabase
+        .from("invoice_dp")
+        .insert({
+          invoice_dp_number: sourceInvoice.invoice_dp_number,
+          part_number: nextPart,
+          invoice_date: new Date().toISOString().split('T')[0],
+          customer_id: sourceInvoice.customer_id,
+          customer_name: sourceInvoice.customer_name,
+          customer_address: sourceInvoice.customer_address,
+          customer_city: sourceInvoice.customer_city,
+          bl_number: sourceInvoice.bl_number,
+          description: sourceInvoice.description,
+          total_amount: sourceInvoice.total_amount,
+          status: "draft",
+          notes: sourceInvoice.notes,
+        })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      // Duplicate items
+      if (sourceItems && sourceItems.length > 0) {
+        const newItems = sourceItems.map((item) => ({
+          invoice_dp_id: newInvoice.id,
+          description: item.description,
+          amount: item.amount,
+        }));
+
+        const { error: insertItemsError } = await supabase
+          .from("invoice_dp_items")
+          .insert(newItems);
+
+        if (insertItemsError) throw insertItemsError;
+      }
+
+      return newInvoice;
+    },
+    onSuccess: (newInvoice) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices_dp"] });
+      toast.success(`Invoice DP Part ${newInvoice.part_number} berhasil dibuat`);
+    },
+    onError: (error) => {
+      toast.error("Gagal membuat Part baru: " + error.message);
+    },
+  });
 
   const getInvoiceDPByCustomer = async (customerId: string) => {
     const { data, error } = await supabase
@@ -199,6 +269,7 @@ export function useInvoiceDP() {
     createInvoiceDP,
     updateInvoiceDP,
     deleteInvoiceDP,
+    duplicateAsNextPart,
     getInvoiceDPWithItems,
     getNextPartNumber,
     getInvoiceDPByCustomer,

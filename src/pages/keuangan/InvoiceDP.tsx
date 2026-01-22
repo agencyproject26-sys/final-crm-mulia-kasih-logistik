@@ -33,6 +33,7 @@ import {
   DollarSign,
   Clock,
   CheckCircle2,
+  Copy,
 } from "lucide-react";
 import { useInvoiceDP, InvoiceDP, InvoiceDPInput, InvoiceDPItem } from "@/hooks/useInvoiceDP";
 import { InvoiceDPDialog } from "@/components/invoicedp/InvoiceDPDialog";
@@ -69,6 +70,7 @@ export default function InvoiceDPPage() {
     createInvoiceDP,
     updateInvoiceDP,
     deleteInvoiceDP,
+    duplicateAsNextPart,
     getInvoiceDPWithItems,
   } = useInvoiceDP();
 
@@ -140,6 +142,10 @@ export default function InvoiceDPPage() {
   const openDeleteDialog = (invoice: InvoiceDP) => {
     setSelectedInvoice(invoice);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleDuplicateNextPart = (invoice: InvoiceDP) => {
+    duplicateAsNextPart.mutate(invoice.id);
   };
 
   const handleDownloadPDF = async (invoice: InvoiceDP) => {
@@ -333,6 +339,10 @@ export default function InvoiceDPPage() {
                                 <DropdownMenuItem onClick={() => openEditDialog(invoice)}>
                                   <Pencil className="h-4 w-4 mr-2" />
                                   Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDuplicateNextPart(invoice)}>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Buat Part Baru
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => openDeleteDialog(invoice)}
