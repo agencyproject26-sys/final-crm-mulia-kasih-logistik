@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Plus,
   Search,
@@ -34,6 +35,9 @@ import {
   Clock,
   CheckCircle2,
   Copy,
+  Users,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useInvoiceDP, InvoiceDP, InvoiceDPInput, InvoiceDPItem } from "@/hooks/useInvoiceDP";
 import { InvoiceDPDialog } from "@/components/invoicedp/InvoiceDPDialog";
@@ -76,6 +80,7 @@ export default function InvoiceDPPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [showCustomerSummary, setShowCustomerSummary] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -92,13 +97,40 @@ export default function InvoiceDPPage() {
     return matchesSearch && matchesTab;
   });
 
-  // Group invoices by customer for part counting
-  const groupedByCustomer = invoicesDP.reduce((acc, inv) => {
-    const key = inv.customer_id || inv.customer_name;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(inv);
-    return acc;
-  }, {} as Record<string, InvoiceDP[]>);
+  // Group invoices by customer for summary
+  const customerSummary = Object.entries(
+    invoicesDP.reduce((acc, inv) => {
+      const key = inv.customer_name;
+      if (!acc[key]) {
+        acc[key] = {
+          customer_name: inv.customer_name,
+          customer_id: inv.customer_id,
+          invoices: [],
+          totalAmount: 0,
+          paidAmount: 0,
+          pendingAmount: 0,
+          partCount: 0,
+        };
+      }
+      acc[key].invoices.push(inv);
+      acc[key].totalAmount += inv.total_amount;
+      acc[key].partCount += 1;
+      if (inv.status === "paid") {
+        acc[key].paidAmount += inv.total_amount;
+      } else {
+        acc[key].pendingAmount += inv.total_amount;
+      }
+      return acc;
+    }, {} as Record<string, {
+      customer_name: string;
+      customer_id: string | null;
+      invoices: InvoiceDP[];
+      totalAmount: number;
+      paidAmount: number;
+      pendingAmount: number;
+      partCount: number;
+    }>)
+  ).sort((a, b) => b[1].totalAmount - a[1].totalAmount);
 
   // Stats
   const totalAmount = invoicesDP.reduce((sum, inv) => sum + inv.total_amount, 0);
@@ -245,6 +277,87 @@ export default function InvoiceDPPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Customer Summary Section */}
+        {customerSummary.length > 0 && (
+          <Collapsible open={showCustomerSummary} onOpenChange={setShowCustomerSummary}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">Ringkasan per Pelanggan</CardTitle>
+                      <Badge variant="secondary">{customerSummary.length} Pelanggan</Badge>
+                    </div>
+                    {showCustomerSummary ? (
+                      <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead>Pelanggan</TableHead>
+                          <TableHead className="text-center">Jumlah Part</TableHead>
+                          <TableHead className="text-right">Total DP</TableHead>
+                          <TableHead className="text-right">Lunas</TableHead>
+                          <TableHead className="text-right">Pending</TableHead>
+                          <TableHead className="text-center">Progress</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {customerSummary.map(([key, summary]) => {
+                          const progressPercent = summary.totalAmount > 0 
+                            ? Math.round((summary.paidAmount / summary.totalAmount) * 100) 
+                            : 0;
+                          return (
+                            <TableRow key={key}>
+                              <TableCell className="font-medium">{summary.customer_name}</TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                  {summary.partCount} Part
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {formatRupiah(summary.totalAmount)}
+                              </TableCell>
+                              <TableCell className="text-right text-green-600">
+                                {formatRupiah(summary.paidAmount)}
+                              </TableCell>
+                              <TableCell className="text-right text-orange-600">
+                                {formatRupiah(summary.pendingAmount)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full bg-green-500 transition-all duration-300"
+                                      style={{ width: `${progressPercent}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-muted-foreground w-10 text-right">
+                                    {progressPercent}%
+                                  </span>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )}
 
         {/* Tabs and Search */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
