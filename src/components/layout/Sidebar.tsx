@@ -39,9 +39,6 @@ const navItems: NavItem[] = [
     children: [
       { label: "Pelanggan", href: "/master/pelanggan" },
       { label: "Vendor", href: "/master/vendor" },
-      { label: "Truk & Driver", href: "/master/truk" },
-      { label: "Pelabuhan", href: "/master/pelabuhan" },
-      { label: "Gudang", href: "/master/gudang" },
     ],
   },
   {
