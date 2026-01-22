@@ -364,6 +364,65 @@ export type Database = {
           },
         ]
       }
+      trackings: {
+        Row: {
+          aju: string | null
+          company_name: string
+          container_number: string | null
+          created_at: string
+          depo_kosongan: string | null
+          destination: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          notes: string | null
+          plate_number: string | null
+          status: string | null
+          updated_at: string
+          vendor_id: string | null
+        }
+        Insert: {
+          aju?: string | null
+          company_name: string
+          container_number?: string | null
+          created_at?: string
+          depo_kosongan?: string | null
+          destination?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          notes?: string | null
+          plate_number?: string | null
+          status?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          aju?: string | null
+          company_name?: string
+          container_number?: string | null
+          created_at?: string
+          depo_kosongan?: string | null
+          destination?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          notes?: string | null
+          plate_number?: string | null
+          status?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trackings_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trucks: {
         Row: {
           capacity: string | null
