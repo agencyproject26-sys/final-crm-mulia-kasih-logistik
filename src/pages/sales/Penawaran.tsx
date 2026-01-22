@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, FileText, Send, Download, Search, FileDown, Loader2 } from "lucide-react";
@@ -26,6 +33,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { generateQuotationPdf } from "@/lib/quotationPdf";
 import { toast } from "sonner";
 import { useQuotations, QuotationInput } from "@/hooks/useQuotations";
+import { useCustomers } from "@/hooks/useCustomers";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 
@@ -38,6 +46,7 @@ interface RateItem {
 }
 
 interface QuotationForm {
+  customerId: string | null;
   customerName: string;
   customerAddress: string;
   route: string;
@@ -153,8 +162,10 @@ export default function Penawaran() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { quotations, isLoading, createQuotation, generateQuotationNumber } = useQuotations();
+  const { data: customers = [] } = useCustomers();
 
   const [formData, setFormData] = useState<QuotationForm>({
+    customerId: null,
     customerName: "",
     customerAddress: "",
     route: "Tanjung Priok - Bandung",
@@ -166,6 +177,7 @@ export default function Penawaran() {
 
   const resetForm = () => {
     setFormData({
+      customerId: null,
       customerName: "",
       customerAddress: "",
       route: "Tanjung Priok - Bandung",
@@ -174,6 +186,28 @@ export default function Penawaran() {
       redLine: [...defaultRedLine],
       notes: [...defaultNotes],
     });
+  };
+
+  const handleCustomerSelect = (customerId: string) => {
+    if (customerId === "manual") {
+      setFormData((prev) => ({
+        ...prev,
+        customerId: null,
+        customerName: "",
+        customerAddress: "",
+      }));
+      return;
+    }
+
+    const customer = customers?.find((c) => c.id === customerId);
+    if (customer) {
+      setFormData((prev) => ({
+        ...prev,
+        customerId: customer.id,
+        customerName: customer.company_name,
+        customerAddress: [customer.address, customer.city].filter(Boolean).join(", "),
+      }));
+    }
   };
 
   const handleRatesUpdate = (index: number, field: keyof RateItem, value: number | null) => {
@@ -229,6 +263,7 @@ export default function Penawaran() {
 
       const input: QuotationInput = {
         quotation_number: quotationNumber,
+        customer_id: formData.customerId,
         customer_name: formData.customerName,
         customer_address: formData.customerAddress || null,
         route: formData.route || null,
@@ -304,6 +339,27 @@ export default function Penawaran() {
             </DialogHeader>
             <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
               <div className="space-y-6 py-4">
+                {/* Customer Selection */}
+                <div className="space-y-2">
+                  <Label>Pilih Pelanggan</Label>
+                  <Select
+                    value={formData.customerId || "manual"}
+                    onValueChange={handleCustomerSelect}
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Pilih pelanggan atau input manual" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="manual">-- Input Manual --</SelectItem>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.company_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Customer Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -315,6 +371,7 @@ export default function Penawaran() {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, customerName: e.target.value }))
                       }
+                      disabled={!!formData.customerId}
                     />
                   </div>
                   <div className="space-y-2">
@@ -338,6 +395,7 @@ export default function Penawaran() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, customerAddress: e.target.value }))
                     }
+                    disabled={!!formData.customerId}
                   />
                 </div>
 
