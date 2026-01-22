@@ -45,6 +45,7 @@ import { JobOrderDialog } from "@/components/joborder/JobOrderDialog";
 import { JobOrderPdfMenu } from "@/components/joborder/JobOrderPdfMenu";
 import { DeleteJobOrderDialog } from "@/components/joborder/DeleteJobOrderDialog";
 import { CreateInvoiceFromJobOrder } from "@/components/joborder/CreateInvoiceFromJobOrder";
+import { CreateInvoiceDPFromJobOrder } from "@/components/joborder/CreateInvoiceDPFromJobOrder";
 import { JobOrderInvoicesDialog } from "@/components/joborder/JobOrderInvoicesDialog";
 
 const statusDoStyles: Record<string, string> = {
@@ -306,6 +307,7 @@ export default function JobOrderPage() {
                       <TableCell>
                         <div className="flex gap-1">
                           <CreateInvoiceFromJobOrder jobOrder={order} />
+                          <CreateInvoiceDPFromJobOrder jobOrder={order} />
                           <Button
                             variant="ghost"
                             size="sm"
