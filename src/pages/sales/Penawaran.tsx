@@ -20,9 +20,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Send, Download, Search } from "lucide-react";
+import { Plus, FileText, Send, Download, Search, FileDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { generateQuotationPdf } from "@/lib/quotationPdf";
+import { toast } from "sonner";
 
 interface RateItem {
   no: number;
@@ -318,6 +320,16 @@ export default function Penawaran() {
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Batal
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      generateQuotationPdf(formData);
+                      toast.success("PDF berhasil di-export");
+                    }}
+                  >
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Export PDF
                   </Button>
                   <Button variant="outline">
                     <Download className="h-4 w-4 mr-2" />
