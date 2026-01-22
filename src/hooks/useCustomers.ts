@@ -10,6 +10,7 @@ export interface Customer {
   email: string | null;
   address: string | null;
   city: string | null;
+  npwp: string | null;
   customer_type: "eksportir" | "importir" | "keduanya";
   status: "aktif" | "tidak_aktif";
   created_at: string;
