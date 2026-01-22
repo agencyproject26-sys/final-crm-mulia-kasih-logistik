@@ -36,13 +36,15 @@ const categories: { value: ExpenseCategory; label: string }[] = [
 ];
 
 export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProps) {
+  const NONE_VALUE = "__none__";
+
   const [formData, setFormData] = useState({
     category: "operasional" as ExpenseCategory,
     description: "",
     amount: "",
     expense_date: format(new Date(), "yyyy-MM-dd"),
-    vendor_id: "",
-    job_order_id: "",
+    vendor_id: NONE_VALUE,
+    job_order_id: NONE_VALUE,
     notes: "",
   });
 
@@ -58,8 +60,8 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
         description: expense.description,
         amount: String(expense.amount),
         expense_date: expense.expense_date,
-        vendor_id: expense.vendor_id || "",
-        job_order_id: expense.job_order_id || "",
+        vendor_id: expense.vendor_id || NONE_VALUE,
+        job_order_id: expense.job_order_id || NONE_VALUE,
         notes: expense.notes || "",
       });
     } else {
@@ -68,8 +70,8 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
         description: "",
         amount: "",
         expense_date: format(new Date(), "yyyy-MM-dd"),
-        vendor_id: "",
-        job_order_id: "",
+        vendor_id: NONE_VALUE,
+        job_order_id: NONE_VALUE,
         notes: "",
       });
     }
@@ -83,8 +85,8 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
       description: formData.description,
       amount: Number(formData.amount),
       expense_date: formData.expense_date,
-      vendor_id: formData.vendor_id || null,
-      job_order_id: formData.job_order_id || null,
+      vendor_id: formData.vendor_id === NONE_VALUE ? null : formData.vendor_id,
+      job_order_id: formData.job_order_id === NONE_VALUE ? null : formData.job_order_id,
       notes: formData.notes || null,
     };
 
@@ -182,7 +184,7 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                   <SelectValue placeholder="Pilih vendor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tidak ada</SelectItem>
+                  <SelectItem value={NONE_VALUE}>Tidak ada</SelectItem>
                   {vendors.map((vendor) => (
                     <SelectItem key={vendor.id} value={vendor.id}>
                       {vendor.company_name}
@@ -204,7 +206,7 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                   <SelectValue placeholder="Pilih job order" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tidak ada</SelectItem>
+                  <SelectItem value={NONE_VALUE}>Tidak ada</SelectItem>
                   {jobOrders.map((jo) => (
                     <SelectItem key={jo.id} value={jo.id}>
                       {jo.job_order_number}
