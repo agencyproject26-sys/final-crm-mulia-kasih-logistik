@@ -32,6 +32,7 @@ export interface Invoice {
   remaining_amount: number;
   status: string | null;
   notes: string | null;
+  job_order_id: string | null;
   created_at: string;
   updated_at: string;
   items?: InvoiceItem[];

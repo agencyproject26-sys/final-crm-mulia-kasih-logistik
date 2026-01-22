@@ -106,6 +106,7 @@ export type Database = {
           id: string
           invoice_date: string
           invoice_number: string
+          job_order_id: string | null
           no_aju: string | null
           no_pen: string | null
           notes: string | null
@@ -131,6 +132,7 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number: string
+          job_order_id?: string | null
           no_aju?: string | null
           no_pen?: string | null
           notes?: string | null
@@ -156,6 +158,7 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number?: string
+          job_order_id?: string | null
           no_aju?: string | null
           no_pen?: string | null
           notes?: string | null
@@ -175,6 +178,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invoices_job_order_id_fkey"
+            columns: ["job_order_id"]
+            isOneToOne: false
+            referencedRelation: "job_orders"
+            referencedColumns: ["id"]
+          },
         ]
       }
       job_orders: {
@@ -192,11 +202,14 @@ export type Database = {
           no_invoice: string | null
           notes: string | null
           party: string | null
+          payment_status: string | null
           pembayaran_do: string | null
           respond_bc: string | null
           status: string | null
           status_bl: string | null
           status_do: string | null
+          total_invoice_amount: number | null
+          total_paid_amount: number | null
           tujuan: string | null
           updated_at: string
         }
@@ -214,11 +227,14 @@ export type Database = {
           no_invoice?: string | null
           notes?: string | null
           party?: string | null
+          payment_status?: string | null
           pembayaran_do?: string | null
           respond_bc?: string | null
           status?: string | null
           status_bl?: string | null
           status_do?: string | null
+          total_invoice_amount?: number | null
+          total_paid_amount?: number | null
           tujuan?: string | null
           updated_at?: string
         }
@@ -236,11 +252,14 @@ export type Database = {
           no_invoice?: string | null
           notes?: string | null
           party?: string | null
+          payment_status?: string | null
           pembayaran_do?: string | null
           respond_bc?: string | null
           status?: string | null
           status_bl?: string | null
           status_do?: string | null
+          total_invoice_amount?: number | null
+          total_paid_amount?: number | null
           tujuan?: string | null
           updated_at?: string
         }
