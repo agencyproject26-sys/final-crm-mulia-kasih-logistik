@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +20,14 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Send, Download, Search, FileDown } from "lucide-react";
+import { Plus, FileText, Send, Download, Search, FileDown, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { generateQuotationPdf } from "@/lib/quotationPdf";
 import { toast } from "sonner";
+import { useQuotations, QuotationInput } from "@/hooks/useQuotations";
+import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 
 interface RateItem {
   no: number;
@@ -80,23 +83,6 @@ const defaultNotes = [
   "Penumpukan, Gerakan Behandle, Repair, Lift Off, Delivery Order, DLL (Ditagihkan sesuai Kwitansi/Invoice Pihak Ketiga).",
   "Dokumen dan barang harus sesuai (apabila dokumen dan barang tidak sesuai akan menjadi tanggung jawab pemilik barang).",
   "Apabila ada biaya Undertable atau biaya yang timbul sehubungan dengan penentuan Harga/Jenis/Tarif pos dan tentang kelengkapan dokumen akan dinegosiasikan terlebih dahulu sesuai kesepakatan dan menjadi beban Pemilik barang / Importer.",
-];
-
-const formatRupiah = (value: number | null) => {
-  if (value === null) return "-";
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-};
-
-// Sample quotations data
-const sampleQuotations = [
-  { id: "Q001", customer: "PT Sunny Group", route: "Tanjung Priok - Bandung", date: "22 Jan 2026", status: "draft" },
-  { id: "Q002", customer: "CV Abadi Sentosa", route: "Tanjung Priok - Surabaya", date: "21 Jan 2026", status: "sent" },
-  { id: "Q003", customer: "PT Mitra Logistik", route: "Tanjung Priok - Semarang", date: "20 Jan 2026", status: "approved" },
 ];
 
 interface RateTableProps {
@@ -165,6 +151,9 @@ function RateTable({ title, titleColor, items, onUpdate }: RateTableProps) {
 export default function Penawaran() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { quotations, isLoading, createQuotation, generateQuotationNumber } = useQuotations();
+
   const [formData, setFormData] = useState<QuotationForm>({
     customerName: "",
     customerAddress: "",
@@ -174,6 +163,18 @@ export default function Penawaran() {
     redLine: [...defaultRedLine],
     notes: [...defaultNotes],
   });
+
+  const resetForm = () => {
+    setFormData({
+      customerName: "",
+      customerAddress: "",
+      route: "Tanjung Priok - Bandung",
+      rates: [...defaultRates],
+      greenLine: [...defaultGreenLine],
+      redLine: [...defaultRedLine],
+      notes: [...defaultNotes],
+    });
+  };
 
   const handleRatesUpdate = (index: number, field: keyof RateItem, value: number | null) => {
     setFormData((prev) => {
@@ -199,10 +200,57 @@ export default function Penawaran() {
     });
   };
 
-  const filteredQuotations = sampleQuotations.filter(
+  const convertRateItemsToDbItems = (items: RateItem[], section: "rates" | "green_line" | "red_line") => {
+    return items.map((item) => ({
+      section,
+      item_no: item.no,
+      description: item.description,
+      lcl_rate: item.lclRate,
+      fcl_20_rate: item.fcl20Rate,
+      fcl_40_rate: item.fcl40Rate,
+    }));
+  };
+
+  const handleSave = async (status: string = "draft") => {
+    if (!formData.customerName.trim()) {
+      toast.error("Nama pelanggan wajib diisi");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const quotationNumber = await generateQuotationNumber();
+      
+      const items = [
+        ...convertRateItemsToDbItems(formData.rates, "rates"),
+        ...convertRateItemsToDbItems(formData.greenLine, "green_line"),
+        ...convertRateItemsToDbItems(formData.redLine, "red_line"),
+      ];
+
+      const input: QuotationInput = {
+        quotation_number: quotationNumber,
+        customer_name: formData.customerName,
+        customer_address: formData.customerAddress || null,
+        route: formData.route || null,
+        status,
+        notes: formData.notes,
+        items,
+      };
+
+      await createQuotation.mutateAsync(input);
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error saving quotation:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const filteredQuotations = quotations.filter(
     (q) =>
-      q.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      q.id.toLowerCase().includes(searchQuery.toLowerCase())
+      q.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      q.quotation_number.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const statusStyles: Record<string, string> = {
@@ -219,6 +267,14 @@ export default function Penawaran() {
     rejected: "Ditolak",
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "dd MMM yyyy", { locale: localeId });
+    } catch {
+      return dateString;
+    }
+  };
+
   return (
     <MainLayout title="Penawaran" subtitle="Kelola penawaran harga">
       {/* Header */}
@@ -232,7 +288,10 @@ export default function Penawaran() {
             className="pl-9"
           />
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) resetForm();
+        }}>
           <DialogTrigger asChild>
             <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
               <Plus className="h-4 w-4 mr-2" />
@@ -248,7 +307,7 @@ export default function Penawaran() {
                 {/* Customer Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="customerName">Nama Pelanggan</Label>
+                    <Label htmlFor="customerName">Nama Pelanggan *</Label>
                     <Input
                       id="customerName"
                       placeholder="Masukkan nama pelanggan"
@@ -317,8 +376,8 @@ export default function Penawaran() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <div className="flex flex-wrap justify-end gap-3 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
                     Batal
                   </Button>
                   <Button 
@@ -327,16 +386,25 @@ export default function Penawaran() {
                       generateQuotationPdf(formData);
                       toast.success("PDF berhasil di-export");
                     }}
+                    disabled={isSaving}
                   >
                     <FileDown className="h-4 w-4 mr-2" />
                     Export PDF
                   </Button>
-                  <Button variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleSave("draft")}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                     Simpan Draft
                   </Button>
-                  <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-                    <Send className="h-4 w-4 mr-2" />
+                  <Button 
+                    className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                    onClick={() => handleSave("sent")}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
                     Kirim Penawaran
                   </Button>
                 </div>
@@ -346,38 +414,56 @@ export default function Penawaran() {
         </Dialog>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && filteredQuotations.length === 0 && (
+        <div className="text-center py-12">
+          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">Belum ada penawaran</h3>
+          <p className="text-muted-foreground">Klik "Tambah Penawaran" untuk membuat penawaran baru</p>
+        </div>
+      )}
+
       {/* Quotations List */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredQuotations.map((quotation) => (
-          <Card key={quotation.id} className="stat-card">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">{quotation.id}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{quotation.customer}</p>
+      {!isLoading && filteredQuotations.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredQuotations.map((quotation) => (
+            <Card key={quotation.id} className="stat-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">{quotation.quotation_number}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{quotation.customer_name}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Rute</span>
-                <span className="font-medium">{quotation.route}</span>
-              </div>
-              <div className="flex items-center justify-between pt-3 border-t border-border">
-                <Badge className={statusStyles[quotation.status]}>
-                  {statusLabels[quotation.status]}
-                </Badge>
-                <span className="text-xs text-muted-foreground">{quotation.date}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Rute</span>
+                  <span className="font-medium">{quotation.route || "-"}</span>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <Badge className={statusStyles[quotation.status || "draft"]}>
+                    {statusLabels[quotation.status || "draft"]}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">{formatDate(quotation.created_at)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </MainLayout>
   );
 }

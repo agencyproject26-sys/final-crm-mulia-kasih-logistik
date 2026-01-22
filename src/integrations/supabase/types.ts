@@ -177,6 +177,97 @@ export type Database = {
           },
         ]
       }
+      quotation_items: {
+        Row: {
+          created_at: string
+          description: string
+          fcl_20_rate: number | null
+          fcl_40_rate: number | null
+          id: string
+          item_no: number
+          lcl_rate: number | null
+          quotation_id: string
+          section: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          fcl_20_rate?: number | null
+          fcl_40_rate?: number | null
+          id?: string
+          item_no: number
+          lcl_rate?: number | null
+          quotation_id: string
+          section: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          fcl_20_rate?: number | null
+          fcl_40_rate?: number | null
+          id?: string
+          item_no?: number
+          lcl_rate?: number | null
+          quotation_id?: string
+          section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_items_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotations: {
+        Row: {
+          created_at: string
+          customer_address: string | null
+          customer_id: string | null
+          customer_name: string
+          id: string
+          notes: string[] | null
+          quotation_number: string
+          route: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_address?: string | null
+          customer_id?: string | null
+          customer_name: string
+          id?: string
+          notes?: string[] | null
+          quotation_number: string
+          route?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_address?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          id?: string
+          notes?: string[] | null
+          quotation_number?: string
+          route?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trucks: {
         Row: {
           capacity: string | null
