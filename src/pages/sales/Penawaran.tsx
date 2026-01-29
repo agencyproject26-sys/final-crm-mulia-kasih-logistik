@@ -78,6 +78,7 @@ interface RateItem {
 }
 
 interface QuotationForm {
+  quotationNumber: string;
   customerId: string | null;
   customerName: string;
   customerAddress: string;
@@ -236,6 +237,7 @@ export default function Penawaran() {
   const { data: customers = [] } = useCustomers();
 
   const [formData, setFormData] = useState<QuotationForm>({
+    quotationNumber: "",
     customerId: null,
     customerName: "",
     customerAddress: "",
@@ -248,6 +250,7 @@ export default function Penawaran() {
 
   const resetForm = () => {
     setFormData({
+      quotationNumber: "",
       customerId: null,
       customerName: "",
       customerAddress: "",
@@ -288,6 +291,7 @@ export default function Penawaran() {
       const items = quotation.items || [];
       
       setFormData({
+        quotationNumber: quotation.quotation_number,
         customerId: quotation.customer_id || null,
         customerName: quotation.customer_name,
         customerAddress: quotation.customer_address || "",
@@ -349,6 +353,7 @@ export default function Penawaran() {
       const items = quotation.items || [];
       
       setFormData({
+        quotationNumber: quotation.quotation_number,
         customerId: quotation.customer_id || null,
         customerName: quotation.customer_name,
         customerAddress: quotation.customer_address || "",
@@ -474,6 +479,11 @@ export default function Penawaran() {
       return;
     }
 
+    if (!formData.quotationNumber.trim()) {
+      toast.error("Nomor penawaran wajib diisi");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const items = [
@@ -486,6 +496,7 @@ export default function Penawaran() {
         // Update existing quotation
         await updateQuotation.mutateAsync({
           id: editingId,
+          quotation_number: formData.quotationNumber,
           customer_id: formData.customerId,
           customer_name: formData.customerName,
           customer_address: formData.customerAddress || null,
@@ -496,10 +507,8 @@ export default function Penawaran() {
         });
       } else {
         // Create new quotation
-        const quotationNumber = await generateQuotationNumber();
-        
         const input: QuotationInput = {
-          quotation_number: quotationNumber,
+          quotation_number: formData.quotationNumber,
           customer_id: formData.customerId,
           customer_name: formData.customerName,
           customer_address: formData.customerAddress || null,
@@ -584,9 +593,15 @@ export default function Penawaran() {
             className="pl-9"
           />
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        <Dialog open={isDialogOpen} onOpenChange={async (open) => {
           setIsDialogOpen(open);
-          if (!open) resetForm();
+          if (!open) {
+            resetForm();
+          } else if (!editingId) {
+            // Auto-generate quotation number for new quotation
+            const newNumber = await generateQuotationNumber();
+            setFormData((prev) => ({ ...prev, quotationNumber: newNumber }));
+          }
         }}>
           <DialogTrigger asChild>
             <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
@@ -603,6 +618,19 @@ export default function Penawaran() {
             </DialogHeader>
             <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
               <div className="space-y-6 py-4">
+                {/* Quotation Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="quotationNumber">Nomor Penawaran *</Label>
+                  <Input
+                    id="quotationNumber"
+                    placeholder="Contoh: Q202501-0001"
+                    value={formData.quotationNumber}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, quotationNumber: e.target.value }))
+                    }
+                  />
+                </div>
+
                 {/* Customer Selection */}
                 <div className="space-y-2">
                   <Label>Pilih Pelanggan</Label>
@@ -961,6 +989,7 @@ export default function Penawaran() {
           </DialogHeader>
           <ScrollArea className="max-h-[calc(90vh-220px)]">
             <QuotationPreview
+              quotationNumber={formData.quotationNumber}
               customerName={formData.customerName}
               customerAddress={formData.customerAddress}
               route={formData.route}

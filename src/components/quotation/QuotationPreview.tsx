@@ -19,6 +19,7 @@ interface RateItem {
 }
 
 interface QuotationPreviewProps {
+  quotationNumber?: string;
   customerName: string;
   customerAddress: string;
   route: string;
@@ -81,6 +82,7 @@ const COMPANY_INFO = {
 };
 
 export function QuotationPreview({
+  quotationNumber,
   customerName,
   customerAddress,
   route,
@@ -131,6 +133,9 @@ export function QuotationPreview({
       <div className="text-center mb-6">
         <h2 className="text-lg font-bold uppercase tracking-wide">Penawaran Harga</h2>
         <p className="text-sm text-muted-foreground">Quotation</p>
+        {quotationNumber && (
+          <p className="text-sm font-semibold mt-1">No: {quotationNumber}</p>
+        )}
       </div>
 
       {/* Customer Info */}
