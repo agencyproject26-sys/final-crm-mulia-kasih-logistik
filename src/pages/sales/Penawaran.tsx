@@ -269,6 +269,34 @@ export default function Penawaran() {
     }));
   };
 
+  const handleView = async (quotationId: string) => {
+    try {
+      const quotation = await getQuotationWithItems(quotationId);
+      if (!quotation) {
+        toast.error("Penawaran tidak ditemukan");
+        return;
+      }
+
+      const items = quotation.items || [];
+      
+      setFormData({
+        customerId: quotation.customer_id || null,
+        customerName: quotation.customer_name,
+        customerAddress: quotation.customer_address || "",
+        route: quotation.route || "Tanjung Priok - Bandung",
+        rates: convertDbItemsToRateItems(items, "rates", defaultRates),
+        greenLine: convertDbItemsToRateItems(items, "green_line", defaultGreenLine),
+        redLine: convertDbItemsToRateItems(items, "red_line", defaultRedLine),
+        notes: quotation.notes || [...defaultNotes],
+      });
+      
+      setIsPreviewOpen(true);
+    } catch (error) {
+      console.error("Error loading quotation:", error);
+      toast.error("Gagal memuat data penawaran");
+    }
+  };
+
   const handleEdit = async (quotationId: string) => {
     try {
       const quotation = await getQuotationWithItems(quotationId);
@@ -744,6 +772,10 @@ export default function Penawaran() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-background">
+                      <DropdownMenuItem onClick={() => handleView(quotation.id)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Lihat
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleEdit(quotation.id)}>
                         <Pencil className="h-4 w-4 mr-2" />
                         Edit
