@@ -46,6 +46,7 @@ const App = () => (
           
           {/* Sales */}
           <Route path="/sales/penawaran" element={<ProtectedRoute><Penawaran /></ProtectedRoute>} />
+          <Route path="/sales/penawaran-domestik" element={<ProtectedRoute><Penawaran /></ProtectedRoute>} />
           
           {/* Operasional */}
           <Route path="/operasional/job-order" element={<ProtectedRoute><JobOrder /></ProtectedRoute>} />

@@ -46,6 +46,7 @@ const navItems: NavItem[] = [
     icon: Handshake,
     children: [
       { label: "Penawaran Exp' Imp", href: "/sales/penawaran" },
+      { label: "Penawaran Domestik", href: "/sales/penawaran-domestik" },
     ],
   },
   {
