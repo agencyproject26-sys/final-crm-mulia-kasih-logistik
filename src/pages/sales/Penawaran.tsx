@@ -220,6 +220,7 @@ export default function Penawaran() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
@@ -290,10 +291,43 @@ export default function Penawaran() {
         notes: quotation.notes || [...defaultNotes],
       });
       
+      setPreviewId(quotationId);
       setIsPreviewOpen(true);
     } catch (error) {
       console.error("Error loading quotation:", error);
       toast.error("Gagal memuat data penawaran");
+    }
+  };
+
+  const handleEditFromPreview = () => {
+    if (previewId) {
+      setIsPreviewOpen(false);
+      setEditingId(previewId);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const handleDeleteFromPreview = () => {
+    if (previewId) {
+      setIsPreviewOpen(false);
+      setDeleteId(previewId);
+    }
+  };
+
+  const handleSendQuotation = async () => {
+    if (!previewId) return;
+    
+    try {
+      await updateQuotation.mutateAsync({
+        id: previewId,
+        status: "sent",
+      });
+      toast.success("Penawaran berhasil dikirim");
+      setIsPreviewOpen(false);
+      setPreviewId(null);
+    } catch (error) {
+      console.error("Error sending quotation:", error);
+      toast.error("Gagal mengirim penawaran");
     }
   };
 
@@ -840,7 +874,10 @@ export default function Penawaran() {
       </AlertDialog>
 
       {/* Preview Dialog */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+      <Dialog open={isPreviewOpen} onOpenChange={(open) => {
+        setIsPreviewOpen(open);
+        if (!open) setPreviewId(null);
+      }}>
         <DialogContent className="max-w-5xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Preview Penawaran</DialogTitle>
@@ -848,7 +885,7 @@ export default function Penawaran() {
               Pratinjau dokumen penawaran sebelum di-export ke PDF
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[calc(90vh-180px)]">
+          <ScrollArea className="max-h-[calc(90vh-220px)]">
             <QuotationPreview
               customerName={formData.customerName}
               customerAddress={formData.customerAddress}
@@ -859,21 +896,55 @@ export default function Penawaran() {
               notes={formData.notes}
             />
           </ScrollArea>
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
-              Tutup
-            </Button>
-            <Button 
-              onClick={() => {
-                generateQuotationPdf(formData);
-                toast.success("PDF berhasil di-export");
+          <div className="flex flex-wrap justify-between gap-3 pt-4 border-t">
+            <div className="flex gap-2">
+              {previewId && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleEditFromPreview}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleDeleteFromPreview}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Hapus
+                  </Button>
+                </>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => {
                 setIsPreviewOpen(false);
-              }}
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-            >
-              <FileDown className="h-4 w-4 mr-2" />
-              Export PDF
-            </Button>
+                setPreviewId(null);
+              }}>
+                Tutup
+              </Button>
+              <Button 
+                onClick={() => {
+                  generateQuotationPdf(formData);
+                  toast.success("PDF berhasil di-export");
+                }}
+                variant="outline"
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+              {previewId && (
+                <Button 
+                  onClick={handleSendQuotation}
+                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Kirim Penawaran
+                </Button>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
