@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -50,7 +57,7 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye, Check, ChevronsUpDown, UserPlus, X } from "lucide-react";
+import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye, Check, ChevronsUpDown, UserPlus, X, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -520,6 +527,28 @@ export default function Penawaran() {
       q.quotation_number.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Group quotations by customer name
+  const groupedByCustomer = useMemo(() => {
+    const groups: Record<string, typeof filteredQuotations> = {};
+    
+    filteredQuotations.forEach((quotation) => {
+      const customerName = quotation.customer_name?.trim() || "Pelanggan Tidak Diketahui";
+      if (!groups[customerName]) {
+        groups[customerName] = [];
+      }
+      groups[customerName].push(quotation);
+    });
+
+    // Sort customer names alphabetically, but put "Pelanggan Tidak Diketahui" at the end
+    const sortedCustomers = Object.keys(groups).sort((a, b) => {
+      if (a === "Pelanggan Tidak Diketahui") return 1;
+      if (b === "Pelanggan Tidak Diketahui") return -1;
+      return a.localeCompare(b, "id");
+    });
+
+    return { groups, sortedCustomers };
+  }, [filteredQuotations]);
+
   const statusStyles: Record<string, string> = {
     draft: "bg-muted text-muted-foreground",
     sent: "bg-info/10 text-info",
@@ -769,96 +798,129 @@ export default function Penawaran() {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-32 w-full" />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && filteredQuotations.length === 0 && (
-        <div className="text-center py-12">
-          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">Belum ada penawaran</h3>
-          <p className="text-muted-foreground">Klik "Tambah Penawaran" untuk membuat penawaran baru</p>
+        <div className="rounded-xl border border-border bg-card">
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Belum ada penawaran</h3>
+            <p className="text-muted-foreground">Klik "Tambah Penawaran" untuk membuat penawaran baru</p>
+          </div>
         </div>
       )}
 
-      {/* Quotations List */}
+      {/* Quotations List - Grouped by Customer */}
       {!isLoading && filteredQuotations.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredQuotations.map((quotation) => (
-            <Card 
-              key={quotation.id} 
-              className="stat-card cursor-pointer"
-              onClick={() => handleView(quotation.id)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
+        <div className="rounded-xl border border-border bg-card">
+          <Accordion type="multiple" defaultValue={groupedByCustomer.sortedCustomers} className="p-4 space-y-2">
+            {groupedByCustomer.sortedCustomers.map((customerName) => (
+              <AccordionItem 
+                key={customerName} 
+                value={customerName}
+                className="border rounded-lg overflow-hidden"
+              >
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 [&[data-state=open]]:bg-muted/30">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-primary" />
+                    <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
+                      <Building2 className="h-4 w-4 text-primary" />
                     </div>
-                    <div>
-                      <CardTitle className="text-base">{quotation.quotation_number}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{quotation.customer_name}</p>
+                    <div className="text-left">
+                      <p className="font-semibold">{customerName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {groupedByCustomer.groups[customerName].length} penawaran
+                      </p>
                     </div>
                   </div>
-                  <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Menu aksi</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      align="end" 
-                      className="w-40 z-[100] bg-popover border shadow-md"
-                      sideOffset={5}
-                    >
-                      <DropdownMenuItem 
-                        onSelect={() => handleView(quotation.id)}
-                        className="cursor-pointer"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Lihat
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onSelect={() => handleEdit(quotation.id)}
-                        className="cursor-pointer"
-                      >
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onSelect={() => setDeleteId(quotation.id)}
-                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Hapus
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Rute</span>
-                  <span className="font-medium">{quotation.route || "-"}</span>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-border">
-                  <Badge className={statusStyles[quotation.status || "draft"]}>
-                    {statusLabels[quotation.status || "draft"]}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">{formatDate(quotation.created_at)}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </AccordionTrigger>
+                <AccordionContent className="pb-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="table-header">
+                          <TableHead>No. Penawaran</TableHead>
+                          <TableHead>Rute</TableHead>
+                          <TableHead>Tanggal</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="w-[80px]"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {groupedByCustomer.groups[customerName].map((quotation) => (
+                          <TableRow 
+                            key={quotation.id} 
+                            className="hover:bg-muted/50 cursor-pointer"
+                            onClick={() => handleView(quotation.id)}
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                  <FileText className="h-4 w-4 text-primary" />
+                                </div>
+                                <span className="font-medium">{quotation.quotation_number}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{quotation.route || "-"}</TableCell>
+                            <TableCell>{formatDate(quotation.created_at)}</TableCell>
+                            <TableCell>
+                              <Badge className={statusStyles[quotation.status || "draft"]}>
+                                {statusLabels[quotation.status || "draft"]}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu modal={false}>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onSelect={() => handleView(quotation.id)}>
+                                    <Eye className="h-4 w-4 mr-2" /> Lihat
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => handleEdit(quotation.id)}>
+                                    <Pencil className="h-4 w-4 mr-2" /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    className="text-destructive"
+                                    onSelect={() => setDeleteId(quotation.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" /> Hapus
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+          
+          {/* Footer */}
+          <div className="flex items-center justify-between p-4 border-t border-border">
+            <p className="text-sm text-muted-foreground">
+              Menampilkan {filteredQuotations.length} penawaran dari {groupedByCustomer.sortedCustomers.length} pelanggan
+            </p>
+          </div>
         </div>
       )}
 
