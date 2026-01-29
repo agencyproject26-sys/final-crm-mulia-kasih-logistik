@@ -46,7 +46,7 @@ import { InvoiceDPPreview } from "@/components/invoicedp/InvoiceDPPreview";
 import { DeleteInvoiceDPDialog } from "@/components/invoicedp/DeleteInvoiceDPDialog";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { toast } from "sonner";
 
 const formatRupiah = (value: number) => {
@@ -188,7 +188,7 @@ export default function InvoiceDPPage() {
     }).format(value);
   };
 
-  const exportSummaryToExcel = () => {
+  const exportSummaryToExcel = async () => {
     const data = customerSummary.map(([_, summary]) => ({
       "Pelanggan": summary.customer_name,
       "Jumlah Part": summary.partCount,
@@ -222,13 +222,46 @@ export default function InvoiceDPPage() {
         : 0,
     });
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Ringkasan DP");
+    // Create workbook with ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Ringkasan DP");
+
+    // Add headers
+    const headers = Object.keys(data[0]);
+    worksheet.addRow(headers);
+
+    // Style header row
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE0E0E0" },
+    };
+
+    // Add data rows
+    data.forEach((row) => {
+      worksheet.addRow(Object.values(row));
+    });
+
+    // Auto-fit column widths
+    worksheet.columns.forEach((column) => {
+      column.width = 18;
+    });
+
+    // Generate file and trigger download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
     
     const now = new Date();
     const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    XLSX.writeFile(wb, `Ringkasan_Invoice_DP_${dateStr}.xlsx`);
+    link.href = url;
+    link.download = `Ringkasan_Invoice_DP_${dateStr}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
     toast.success("Excel berhasil diunduh");
   };
 
