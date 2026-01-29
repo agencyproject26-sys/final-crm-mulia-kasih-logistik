@@ -787,7 +787,11 @@ export default function Penawaran() {
       {!isLoading && filteredQuotations.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredQuotations.map((quotation) => (
-            <Card key={quotation.id} className="stat-card">
+            <Card 
+              key={quotation.id} 
+              className="stat-card cursor-pointer"
+              onClick={() => handleView(quotation.id)}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -799,12 +803,13 @@ export default function Penawaran() {
                       <p className="text-sm text-muted-foreground">{quotation.customer_name}</p>
                     </div>
                   </div>
-                  <DropdownMenu>
+                  <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8 shrink-0"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Menu aksi</span>
@@ -812,19 +817,26 @@ export default function Penawaran() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent 
                       align="end" 
-                      className="w-40"
+                      className="w-40 z-[100] bg-popover border shadow-md"
+                      sideOffset={5}
                     >
-                      <DropdownMenuItem onSelect={() => handleView(quotation.id)}>
+                      <DropdownMenuItem 
+                        onSelect={() => handleView(quotation.id)}
+                        className="cursor-pointer"
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         Lihat
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleEdit(quotation.id)}>
+                      <DropdownMenuItem 
+                        onSelect={() => handleEdit(quotation.id)}
+                        className="cursor-pointer"
+                      >
                         <Pencil className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onSelect={() => setDeleteId(quotation.id)}
-                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Hapus
