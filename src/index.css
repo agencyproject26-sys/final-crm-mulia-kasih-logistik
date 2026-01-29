@@ -125,7 +125,7 @@
 
 @layer components {
   .stat-card {
-    @apply relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-secondary/30;
+    @apply relative rounded-xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-secondary/30;
   }
 
   .stat-card::before {

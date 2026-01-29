@@ -765,24 +765,47 @@ export default function Penawaran() {
                       <p className="text-sm text-muted-foreground">{quotation.customer_name}</p>
                     </div>
                   </div>
-                  <DropdownMenu>
+                  <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Menu aksi</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-background">
-                      <DropdownMenuItem onClick={() => handleView(quotation.id)}>
+                    <DropdownMenuContent 
+                      align="end" 
+                      className="z-50 bg-popover border border-border shadow-md"
+                      sideOffset={5}
+                    >
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleView(quotation.id);
+                        }}
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         Lihat
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleEdit(quotation.id)}>
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(quotation.id);
+                        }}
+                      >
                         <Pencil className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => setDeleteId(quotation.id)}
-                        className="text-destructive focus:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteId(quotation.id);
+                        }}
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Hapus
