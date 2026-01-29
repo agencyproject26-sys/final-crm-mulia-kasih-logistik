@@ -9,6 +9,7 @@ interface RateItem {
 }
 
 interface QuotationData {
+  quotationNumber?: string;
   customerName: string;
   customerAddress: string;
   route: string;
@@ -78,7 +79,17 @@ export const generateQuotationPdf = (data: QuotationData): void => {
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text("Quotation", pageWidth / 2, y, { align: "center" });
-  y += 10;
+  y += 8;
+
+  // Quotation Number
+  if (data.quotationNumber) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(`No: ${data.quotationNumber}`, pageWidth / 2, y, { align: "center" });
+    y += 8;
+  } else {
+    y += 2;
+  }
 
   // ===== CUSTOMER INFO =====
   doc.setFontSize(10);
@@ -256,9 +267,9 @@ export const generateQuotationPdf = (data: QuotationData): void => {
   doc.setFont("helvetica", "bold");
   doc.text(COMPANY_INFO.name, pageWidth - margin - 55, y + 25);
 
-  // Save PDF
-  const fileName = data.customerName 
-    ? `Penawaran_${data.customerName.replace(/\s+/g, "_")}.pdf`
-    : "Penawaran.pdf";
+  // Save PDF with quotation number in filename
+  const quotationPart = data.quotationNumber ? `_${data.quotationNumber.replace(/[/\\:*?"<>|]/g, "_")}` : "";
+  const customerPart = data.customerName ? `_${data.customerName.replace(/\s+/g, "_")}` : "";
+  const fileName = `Penawaran${quotationPart}${customerPart}.pdf`;
   doc.save(fileName);
 };
