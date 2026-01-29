@@ -177,10 +177,8 @@ export default function Pelanggan() {
                     <TableCell>
                       {customer.phone ? (
                         <a
-                          href={`https://wa.me/${customer.phone.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 hover:underline transition-colors"
+                          href={`whatsapp://send?phone=${customer.phone.replace(/[^0-9]/g, '')}`}
+                          className="inline-flex items-center gap-1.5 text-green-600 hover:text-green-700 hover:underline transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <svg 
