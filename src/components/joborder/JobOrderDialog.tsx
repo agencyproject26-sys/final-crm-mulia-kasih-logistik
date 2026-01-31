@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -97,6 +97,9 @@ export const JobOrderDialog = ({
   isLoading,
 }: JobOrderDialogProps) => {
   const { generateJobOrderNumber } = useJobOrders();
+  
+  // Track if we've initialized this dialog session
+  const hasInitialized = useRef(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -120,8 +123,10 @@ export const JobOrderDialog = ({
     },
   });
 
+  // Only reset form when dialog opens (not on every render)
   useEffect(() => {
-    if (open) {
+    if (open && !hasInitialized.current) {
+      hasInitialized.current = true;
       if (jobOrder) {
         form.reset({
           job_order_number: jobOrder.job_order_number,
@@ -161,6 +166,11 @@ export const JobOrderDialog = ({
           notes: "",
         });
       }
+    }
+    
+    // Reset the flag when dialog closes
+    if (!open) {
+      hasInitialized.current = false;
     }
   }, [open, jobOrder, form, generateJobOrderNumber]);
 

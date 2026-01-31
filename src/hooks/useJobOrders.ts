@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -102,13 +103,13 @@ export const useJobOrders = () => {
     },
   });
 
-  const generateJobOrderNumber = (): string => {
+  const generateJobOrderNumber = useCallback((): string => {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const random = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
     return `JO${year}${month}-${random}`;
-  };
+  }, []);
 
   return {
     jobOrders,
