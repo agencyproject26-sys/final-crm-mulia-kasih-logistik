@@ -286,19 +286,6 @@ export const JobOrderDialog = ({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="job_order_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>No. Job Order</FormLabel>
-                    <FormControl>
-                      <Input {...field} readOnly className="bg-muted" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="aju"
                 render={({ field }) => (
                   <FormItem>
@@ -310,10 +297,6 @@ export const JobOrderDialog = ({
                   </FormItem>
                 )}
               />
-            </div>
-
-            {/* Row 4 */}
-            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="party"
@@ -327,6 +310,10 @@ export const JobOrderDialog = ({
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Row 4 */}
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="exp_do"
