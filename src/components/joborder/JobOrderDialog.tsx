@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,21 +22,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { useCustomers } from "@/hooks/useCustomers";
 import { JobOrder, JobOrderInput, useJobOrders } from "@/hooks/useJobOrders";
+import { CustomerCombobox } from "./CustomerCombobox";
+import { SearchableSelect, SelectOption } from "./SearchableSelect";
 
 const formSchema = z.object({
   job_order_number: z.string().min(1, "Nomor Job Order wajib diisi"),
@@ -67,6 +61,34 @@ interface JobOrderDialogProps {
   isLoading?: boolean;
 }
 
+// Options for searchable selects
+const statusDoOptions: SelectOption[] = [
+  { value: "pending", label: "Pending" },
+  { value: "released", label: "Released" },
+  { value: "on_hold", label: "On Hold" },
+  { value: "expired", label: "Expired" },
+];
+
+const pembayaranDoOptions: SelectOption[] = [
+  { value: "belum_lunas", label: "Belum Lunas" },
+  { value: "lunas", label: "Lunas" },
+  { value: "dp", label: "DP" },
+];
+
+const respondBcOptions: SelectOption[] = [
+  { value: "green", label: "Green (Jalur Hijau)" },
+  { value: "yellow", label: "Yellow (Jalur Kuning)" },
+  { value: "red", label: "Red (Jalur Merah)" },
+  { value: "pending", label: "Pending" },
+];
+
+const statusBlOptions: SelectOption[] = [
+  { value: "pending", label: "Pending" },
+  { value: "received", label: "Received" },
+  { value: "surrendered", label: "Surrendered" },
+  { value: "telex_release", label: "Telex Release" },
+];
+
 export const JobOrderDialog = ({
   open,
   onOpenChange,
@@ -74,11 +96,7 @@ export const JobOrderDialog = ({
   jobOrder,
   isLoading,
 }: JobOrderDialogProps) => {
-  const { data: customers = [] } = useCustomers();
   const { generateJobOrderNumber } = useJobOrders();
-
-  // Radix Select tidak nyaman dengan value string kosong; pakai sentinel agar form stabil.
-  const NONE = "__none__";
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -146,17 +164,9 @@ export const JobOrderDialog = ({
     }
   }, [open, jobOrder, form, generateJobOrderNumber]);
 
-  const handleCustomerChange = (customerId: string) => {
-    if (customerId === NONE) {
-      form.setValue("customer_id", "");
-      form.setValue("customer_name", "");
-      return;
-    }
-    const customer = customers.find((c) => c.id === customerId);
-    if (customer) {
-      form.setValue("customer_id", customerId);
-      form.setValue("customer_name", customer.company_name);
-    }
+  const handleCustomerSelect = (customerId: string, customerName: string) => {
+    form.setValue("customer_id", customerId);
+    form.setValue("customer_name", customerName);
   };
 
   const handleSubmit = (data: FormData) => {
@@ -182,6 +192,9 @@ export const JobOrderDialog = ({
     onSubmit(input);
   };
 
+  const customerId = form.watch("customer_id");
+  const customerName = form.watch("customer_name");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -193,7 +206,7 @@ export const JobOrderDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Row 1 */}
+            {/* Row 1: BL Number & Customer */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -213,37 +226,17 @@ export const JobOrderDialog = ({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="customer_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer</FormLabel>
-                    <Select
-                      value={field.value || NONE}
-                      onValueChange={handleCustomerChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih customer" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={NONE}>Tidak ada</SelectItem>
-                        {customers.map((customer) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.company_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormItem>
+                <FormLabel>Customer</FormLabel>
+                <CustomerCombobox
+                  value={customerId || ""}
+                  customerName={customerName || ""}
+                  onSelect={handleCustomerSelect}
+                />
+              </FormItem>
             </div>
 
-            {/* Row 2 */}
+            {/* Row 2: ETA Kapal & No DP */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -300,7 +293,7 @@ export const JobOrderDialog = ({
               />
             </div>
 
-            {/* Row 3 */}
+            {/* Row 3: AJU & Party */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -338,7 +331,7 @@ export const JobOrderDialog = ({
               />
             </div>
 
-            {/* Row 4 */}
+            {/* Row 4: EXP DO */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -378,7 +371,7 @@ export const JobOrderDialog = ({
               />
             </div>
 
-            {/* Row 5 */}
+            {/* Row 5: Status DO & Pembayaran DO */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -386,22 +379,16 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status DO</FormLabel>
-                    <Select 
-                      value={field.value || "pending"} 
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="released">Released</SelectItem>
-                        <SelectItem value="on_hold">On Hold</SelectItem>
-                        <SelectItem value="expired">Expired</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        value={field.value || "pending"}
+                        options={statusDoOptions}
+                        placeholder="Pilih status"
+                        searchPlaceholder="Cari status..."
+                        onChange={field.onChange}
+                        allowClear={false}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -412,28 +399,23 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Pembayaran DO</FormLabel>
-                    <Select 
-                      value={field.value || "belum_lunas"} 
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih status pembayaran" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="belum_lunas">Belum Lunas</SelectItem>
-                        <SelectItem value="lunas">Lunas</SelectItem>
-                        <SelectItem value="dp">DP</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        value={field.value || "belum_lunas"}
+                        options={pembayaranDoOptions}
+                        placeholder="Pilih status pembayaran"
+                        searchPlaceholder="Cari..."
+                        onChange={field.onChange}
+                        allowClear={false}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Row 6 */}
+            {/* Row 6: Lokasi & Tujuan */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -471,7 +453,7 @@ export const JobOrderDialog = ({
               />
             </div>
 
-            {/* Row 7 */}
+            {/* Row 7: Respond BC & Status BL */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -479,23 +461,16 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Respond BC</FormLabel>
-                    <Select 
-                      value={field.value || NONE} 
-                      onValueChange={(val) => field.onChange(val === NONE ? "" : val)}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih respond" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={NONE}>Belum dipilih</SelectItem>
-                        <SelectItem value="green">Green (Jalur Hijau)</SelectItem>
-                        <SelectItem value="yellow">Yellow (Jalur Kuning)</SelectItem>
-                        <SelectItem value="red">Red (Jalur Merah)</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        value={field.value || ""}
+                        options={respondBcOptions}
+                        placeholder="Pilih respond"
+                        searchPlaceholder="Cari respond..."
+                        onChange={field.onChange}
+                        allowClear={true}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -506,23 +481,16 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status BL</FormLabel>
-                    <Select 
-                      value={field.value || NONE} 
-                      onValueChange={(val) => field.onChange(val === NONE ? "" : val)}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={NONE}>Belum dipilih</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="received">Received</SelectItem>
-                        <SelectItem value="surrendered">Surrendered</SelectItem>
-                        <SelectItem value="telex_release">Telex Release</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        value={field.value || "pending"}
+                        options={statusBlOptions}
+                        placeholder="Pilih status"
+                        searchPlaceholder="Cari status..."
+                        onChange={field.onChange}
+                        allowClear={false}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
