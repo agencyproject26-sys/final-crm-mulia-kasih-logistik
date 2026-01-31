@@ -22,6 +22,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   Plus,
   Search,
   MoreVertical,
@@ -39,6 +45,9 @@ import {
   ChevronDown,
   ChevronUp,
   FileSpreadsheet,
+  Building2,
+  CalendarDays,
+  FolderOpen,
 } from "lucide-react";
 import { useInvoiceDP, InvoiceDP, InvoiceDPInput, InvoiceDPItem } from "@/hooks/useInvoiceDP";
 import { InvoiceDPDialog } from "@/components/invoicedp/InvoiceDPDialog";
@@ -83,6 +92,8 @@ export default function InvoiceDPPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [showCustomerSummary, setShowCustomerSummary] = useState(true);
+  const [viewMode, setViewMode] = useState<"table" | "folder">("folder");
+  const [expandedCustomers, setExpandedCustomers] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -133,6 +144,42 @@ export default function InvoiceDPPage() {
       partCount: number;
     }>)
   ).sort((a, b) => b[1].totalAmount - a[1].totalAmount);
+
+  // Group filtered invoices by customer name, then by date
+  const groupedByCustomer = filteredInvoices.reduce((acc, inv) => {
+    const customerKey = inv.customer_name || "Tanpa Pelanggan";
+    if (!acc[customerKey]) {
+      acc[customerKey] = {
+        customer_name: customerKey,
+        invoices: [],
+        totalAmount: 0,
+        byDate: {} as Record<string, InvoiceDP[]>,
+      };
+    }
+    acc[customerKey].invoices.push(inv);
+    acc[customerKey].totalAmount += inv.total_amount;
+    
+    // Group by date
+    const dateKey = new Date(inv.invoice_date).toLocaleDateString("id-ID", {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    if (!acc[customerKey].byDate[dateKey]) {
+      acc[customerKey].byDate[dateKey] = [];
+    }
+    acc[customerKey].byDate[dateKey].push(inv);
+    
+    return acc;
+  }, {} as Record<string, {
+    customer_name: string;
+    invoices: InvoiceDP[];
+    totalAmount: number;
+    byDate: Record<string, InvoiceDP[]>;
+  }>);
+
+  const sortedCustomerGroups = Object.entries(groupedByCustomer)
+    .sort((a, b) => b[1].totalAmount - a[1].totalAmount);
 
   // Stats
   const totalAmount = invoicesDP.reduce((sum, inv) => sum + inv.total_amount, 0);
@@ -550,15 +597,35 @@ export default function InvoiceDPPage() {
           </Collapsible>
         )}
 
-        {/* Tabs and Search */}
+        {/* Tabs, View Toggle, and Search */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <TabsList>
-              <TabsTrigger value="all">Semua</TabsTrigger>
-              <TabsTrigger value="draft">Draft</TabsTrigger>
-              <TabsTrigger value="sent">Terkirim</TabsTrigger>
-              <TabsTrigger value="paid">Lunas</TabsTrigger>
-            </TabsList>
+            <div className="flex items-center gap-4">
+              <TabsList>
+                <TabsTrigger value="all">Semua</TabsTrigger>
+                <TabsTrigger value="draft">Draft</TabsTrigger>
+                <TabsTrigger value="sent">Terkirim</TabsTrigger>
+                <TabsTrigger value="paid">Lunas</TabsTrigger>
+              </TabsList>
+              <div className="flex items-center gap-2 border rounded-lg p-1">
+                <Button
+                  variant={viewMode === "folder" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("folder")}
+                >
+                  <FolderOpen className="h-4 w-4 mr-1" />
+                  Folder
+                </Button>
+                <Button
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                >
+                  <FileText className="h-4 w-4 mr-1" />
+                  Tabel
+                </Button>
+              </div>
+            </div>
             <div className="relative max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -571,34 +638,154 @@ export default function InvoiceDPPage() {
           </div>
 
           <TabsContent value={activeTab} className="mt-4">
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>No. Invoice DP</TableHead>
-                    <TableHead>Part</TableHead>
-                    <TableHead>Tanggal</TableHead>
-                    <TableHead>Pelanggan</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[80px]">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Memuat data...
+              </div>
+            ) : filteredInvoices.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Tidak ada invoice DP ditemukan
+              </div>
+            ) : viewMode === "folder" ? (
+              /* Folder View - Grouped by Customer and Date */
+              <Accordion
+                type="multiple"
+                value={expandedCustomers}
+                onValueChange={setExpandedCustomers}
+                className="space-y-3"
+              >
+                {sortedCustomerGroups.map(([customerName, group]) => (
+                  <AccordionItem
+                    key={customerName}
+                    value={customerName}
+                    className="border rounded-lg overflow-hidden"
+                  >
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 [&[data-state=open]]:bg-muted/50">
+                      <div className="flex items-center justify-between w-full pr-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <Building2 className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="text-left">
+                            <h3 className="font-semibold text-base">{customerName}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {group.invoices.length} Invoice • {Object.keys(group.byDate).length} Tanggal
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          {formatRupiah(group.totalAmount)}
+                        </Badge>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="space-y-4 pt-2">
+                        {Object.entries(group.byDate)
+                          .sort((a, b) => new Date(b[1][0].invoice_date).getTime() - new Date(a[1][0].invoice_date).getTime())
+                          .map(([dateKey, invoices]) => (
+                            <div key={dateKey} className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground border-b pb-2">
+                                <CalendarDays className="h-4 w-4" />
+                                <span className="font-medium">{dateKey}</span>
+                                <Badge variant="secondary" className="ml-auto">
+                                  {invoices.length} Invoice
+                                </Badge>
+                              </div>
+                              <div className="grid gap-2 pl-2">
+                                {invoices.map((invoice) => {
+                                  const style = statusStyles[invoice.status || "draft"];
+                                  const StatusIcon = style.icon;
+                                  return (
+                                    <div
+                                      key={invoice.id}
+                                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
+                                    >
+                                      <div className="flex items-center gap-4">
+                                        <div className="space-y-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-medium">
+                                              {invoice.invoice_dp_number}
+                                            </span>
+                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                              Part {invoice.part_number}
+                                            </Badge>
+                                          </div>
+                                          {invoice.bl_number && (
+                                            <p className="text-xs text-muted-foreground">
+                                              BL: {invoice.bl_number}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-4">
+                                        <span className="font-semibold">
+                                          {formatRupiah(invoice.total_amount)}
+                                        </span>
+                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
+                                          <StatusIcon className="h-3 w-3" />
+                                          {statusLabels[invoice.status || "draft"]}
+                                        </div>
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                              <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => openPreviewDialog(invoice)}>
+                                              <Eye className="h-4 w-4 mr-2" />
+                                              Preview
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDownloadPDF(invoice)}>
+                                              <Download className="h-4 w-4 mr-2" />
+                                              Download PDF
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => openEditDialog(invoice)}>
+                                              <Pencil className="h-4 w-4 mr-2" />
+                                              Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDuplicateNextPart(invoice)}>
+                                              <Copy className="h-4 w-4 mr-2" />
+                                              Buat Part Baru
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                              onClick={() => openDeleteDialog(invoice)}
+                                              className="text-destructive focus:text-destructive"
+                                            >
+                                              <Trash2 className="h-4 w-4 mr-2" />
+                                              Hapus
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              /* Table View */
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
-                        Memuat data...
-                      </TableCell>
+                      <TableHead>No. Invoice DP</TableHead>
+                      <TableHead>Part</TableHead>
+                      <TableHead>Tanggal</TableHead>
+                      <TableHead>Pelanggan</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-[80px]">Aksi</TableHead>
                     </TableRow>
-                  ) : filteredInvoices.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        Tidak ada invoice DP ditemukan
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredInvoices.map((invoice) => {
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInvoices.map((invoice) => {
                       const style = statusStyles[invoice.status || "draft"];
                       const StatusIcon = style.icon;
                       return (
@@ -660,11 +847,11 @@ export default function InvoiceDPPage() {
                           </TableCell>
                         </TableRow>
                       );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
