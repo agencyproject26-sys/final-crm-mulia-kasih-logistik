@@ -10,6 +10,8 @@ interface RateItem {
 
 interface QuotationData {
   quotationNumber?: string;
+  title?: string;
+  quotationDate?: Date;
   customerName: string;
   customerAddress: string;
   route: string;
@@ -79,17 +81,40 @@ export const generateQuotationPdf = (data: QuotationData): void => {
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text("Quotation", pageWidth / 2, y, { align: "center" });
-  y += 8;
+  y += 6;
 
   // Quotation Number
   if (data.quotationNumber) {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text(`No: ${data.quotationNumber}`, pageWidth / 2, y, { align: "center" });
-    y += 8;
-  } else {
-    y += 2;
+    y += 5;
   }
+
+  // Quotation Date
+  if (data.quotationDate) {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const formattedDate = data.quotationDate.toLocaleDateString("id-ID", { 
+      day: "numeric", 
+      month: "long", 
+      year: "numeric" 
+    });
+    doc.text(`Tanggal: ${formattedDate}`, pageWidth / 2, y, { align: "center" });
+    y += 5;
+  }
+
+  // Title
+  if (data.title) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(30, 58, 138);
+    doc.text(data.title, pageWidth / 2, y, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    y += 6;
+  }
+
+  y += 3;
 
   // ===== CUSTOMER INFO =====
   doc.setFontSize(10);

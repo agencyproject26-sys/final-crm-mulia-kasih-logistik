@@ -17,6 +17,8 @@ export interface QuotationItem {
 export interface Quotation {
   id: string;
   quotation_number: string;
+  title: string | null;
+  quotation_date: string;
   customer_id: string | null;
   customer_name: string;
   customer_address: string | null;
@@ -30,6 +32,8 @@ export interface Quotation {
 
 export interface QuotationInput {
   quotation_number: string;
+  title?: string | null;
+  quotation_date?: string;
   customer_id?: string | null;
   customer_name: string;
   customer_address?: string | null;
