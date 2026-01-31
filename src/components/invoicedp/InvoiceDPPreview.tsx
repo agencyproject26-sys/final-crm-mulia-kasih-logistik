@@ -54,9 +54,6 @@ export const InvoiceDPPreview = forwardRef<HTMLDivElement, InvoiceDPPreviewProps
           <h1 className="text-base font-bold tracking-wide" style={{ fontSize: "14px" }}>
             INVOICE DOWN PAYMENT
           </h1>
-          <div className="inline-block bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-semibold mt-1">
-            Part {invoice.part_number}
-          </div>
         </div>
 
         {/* Customer Info and Invoice Details - Compact Grid */}
