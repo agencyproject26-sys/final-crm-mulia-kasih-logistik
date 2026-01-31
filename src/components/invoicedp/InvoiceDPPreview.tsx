@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { InvoiceDP, InvoiceDPItem } from "@/hooks/useInvoiceDP";
 import { terbilang } from "@/lib/numberToWords";
-import kopSuratFull from "@/assets/kop-surat-mkl-full.jpg";
+import kopSuratNew from "@/assets/kop-surat-mkl-new.jpg";
 
 interface InvoiceDPPreviewProps {
   invoice: InvoiceDP & { items?: InvoiceDPItem[] };
@@ -42,7 +42,7 @@ export const InvoiceDPPreview = forwardRef<HTMLDivElement, InvoiceDPPreviewProps
         {/* Header with Kop Surat - Compact */}
         <div className="mb-3">
           <img
-            src={kopSuratFull}
+            src={kopSuratNew}
             alt="Kop Surat"
             className="w-full h-auto"
             style={{ maxHeight: "28mm" }}
