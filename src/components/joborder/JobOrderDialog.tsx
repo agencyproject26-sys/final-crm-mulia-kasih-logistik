@@ -398,7 +398,10 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status DO</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select 
+                      value={field.value || "pending"} 
+                      onValueChange={field.onChange}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih status" />
@@ -421,7 +424,10 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Pembayaran DO</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select 
+                      value={field.value || "belum_lunas"} 
+                      onValueChange={field.onChange}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih status pembayaran" />
@@ -491,13 +497,17 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Respond BC</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select 
+                      value={field.value || NONE} 
+                      onValueChange={(val) => field.onChange(val === NONE ? "" : val)}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih respond" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value={NONE}>Belum dipilih</SelectItem>
                         <SelectItem value="green">Green (Jalur Hijau)</SelectItem>
                         <SelectItem value="yellow">Yellow (Jalur Kuning)</SelectItem>
                         <SelectItem value="red">Red (Jalur Merah)</SelectItem>
@@ -514,13 +524,17 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status BL</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select 
+                      value={field.value || NONE} 
+                      onValueChange={(val) => field.onChange(val === NONE ? "" : val)}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value={NONE}>Belum dipilih</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="received">Received</SelectItem>
                         <SelectItem value="surrendered">Surrendered</SelectItem>
