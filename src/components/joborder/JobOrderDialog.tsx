@@ -202,7 +202,15 @@ export const JobOrderDialog = ({
                   <FormItem>
                     <FormLabel>No. BL</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Nomor BL" autoFocus />
+                      <Input 
+                        value={field.value ?? ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        placeholder="Nomor BL" 
+                        autoFocus 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -283,7 +291,14 @@ export const JobOrderDialog = ({
                   <FormItem>
                     <FormLabel>No. DP</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Nomor DP" />
+                      <Input 
+                        value={field.value ?? ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        placeholder="Nomor DP" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -300,7 +315,14 @@ export const JobOrderDialog = ({
                   <FormItem>
                     <FormLabel>AJU</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Nomor AJU" />
+                      <Input 
+                        value={field.value ?? ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        placeholder="Nomor AJU" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -313,7 +335,14 @@ export const JobOrderDialog = ({
                   <FormItem>
                     <FormLabel>Party</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Nama Party" />
+                      <Input 
+                        value={field.value ?? ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        placeholder="Nama Party" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -419,7 +448,14 @@ export const JobOrderDialog = ({
                   <FormItem>
                     <FormLabel>Lokasi</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Lokasi asal" />
+                      <Input 
+                        value={field.value ?? ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        placeholder="Lokasi asal" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -432,7 +468,14 @@ export const JobOrderDialog = ({
                   <FormItem>
                     <FormLabel>Tujuan</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Lokasi tujuan" />
+                      <Input 
+                        value={field.value ?? ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                        placeholder="Lokasi tujuan" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -499,7 +542,11 @@ export const JobOrderDialog = ({
                   <FormLabel>Catatan</FormLabel>
                   <FormControl>
                     <Textarea
-                      {...field}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
                       placeholder="Catatan tambahan..."
                       rows={3}
                     />
