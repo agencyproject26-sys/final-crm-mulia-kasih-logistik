@@ -203,11 +203,8 @@ export const JobOrderDialog = ({
                     <FormLabel>No. BL</FormLabel>
                     <FormControl>
                       <Input 
-                        value={field.value ?? ""} 
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
+                        {...field}
+                        value={field.value || ""}
                         placeholder="Nomor BL" 
                         autoFocus 
                       />
@@ -292,11 +289,8 @@ export const JobOrderDialog = ({
                     <FormLabel>No. DP</FormLabel>
                     <FormControl>
                       <Input 
-                        value={field.value ?? ""} 
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
+                        {...field}
+                        value={field.value || ""}
                         placeholder="Nomor DP" 
                       />
                     </FormControl>
@@ -316,11 +310,8 @@ export const JobOrderDialog = ({
                     <FormLabel>AJU</FormLabel>
                     <FormControl>
                       <Input 
-                        value={field.value ?? ""} 
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
+                        {...field}
+                        value={field.value || ""}
                         placeholder="Nomor AJU" 
                       />
                     </FormControl>
@@ -336,11 +327,8 @@ export const JobOrderDialog = ({
                     <FormLabel>Party</FormLabel>
                     <FormControl>
                       <Input 
-                        value={field.value ?? ""} 
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
+                        {...field}
+                        value={field.value || ""}
                         placeholder="Nama Party" 
                       />
                     </FormControl>
@@ -455,11 +443,8 @@ export const JobOrderDialog = ({
                     <FormLabel>Lokasi</FormLabel>
                     <FormControl>
                       <Input 
-                        value={field.value ?? ""} 
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
+                        {...field}
+                        value={field.value || ""}
                         placeholder="Lokasi asal" 
                       />
                     </FormControl>
@@ -475,11 +460,8 @@ export const JobOrderDialog = ({
                     <FormLabel>Tujuan</FormLabel>
                     <FormControl>
                       <Input 
-                        value={field.value ?? ""} 
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
+                        {...field}
+                        value={field.value || ""}
                         placeholder="Lokasi tujuan" 
                       />
                     </FormControl>
@@ -556,11 +538,8 @@ export const JobOrderDialog = ({
                   <FormLabel>Catatan</FormLabel>
                   <FormControl>
                     <Textarea
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      name={field.name}
-                      ref={field.ref}
+                      {...field}
+                      value={field.value || ""}
                       placeholder="Catatan tambahan..."
                       rows={3}
                     />
