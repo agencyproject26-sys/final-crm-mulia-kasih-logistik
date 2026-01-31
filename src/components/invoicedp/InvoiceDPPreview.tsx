@@ -39,13 +39,12 @@ export const InvoiceDPPreview = forwardRef<HTMLDivElement, InvoiceDPPreviewProps
           boxSizing: "border-box",
         }}
       >
-        {/* Header with Kop Surat - Professional Size */}
-        <div className="mb-4 border-b-2 border-green-700 pb-3">
+        {/* Header with Kop Surat - Full Width Header */}
+        <div className="mb-4 border-b-2 border-green-700 pb-3 -mx-[10mm] px-[10mm] -mt-[8mm] pt-[8mm] bg-white">
           <img
             src={kopSuratNew}
             alt="Kop Surat"
-            className="w-full h-auto object-contain"
-            style={{ maxHeight: "22mm" }}
+            className="w-full h-auto object-cover"
             crossOrigin="anonymous"
           />
         </div>
