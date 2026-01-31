@@ -41,7 +41,7 @@ import { JobOrder, JobOrderInput, useJobOrders } from "@/hooks/useJobOrders";
 const formSchema = z.object({
   job_order_number: z.string().min(1, "Nomor Job Order wajib diisi"),
   eta_kapal: z.date().nullable().optional(),
-  bl_number: z.string().min(1, "Nomor BL wajib diisi"),
+  bl_number: z.string().optional(),
   no_invoice: z.string().optional(),
   aju: z.string().optional(),
   party: z.string().optional(),
