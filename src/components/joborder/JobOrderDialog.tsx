@@ -77,6 +77,9 @@ export const JobOrderDialog = ({
   const { data: customers = [] } = useCustomers();
   const { generateJobOrderNumber } = useJobOrders();
 
+  // Radix Select tidak nyaman dengan value string kosong; pakai sentinel agar form stabil.
+  const NONE = "__none__";
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -144,6 +147,11 @@ export const JobOrderDialog = ({
   }, [open, jobOrder, form, generateJobOrderNumber]);
 
   const handleCustomerChange = (customerId: string) => {
+    if (customerId === NONE) {
+      form.setValue("customer_id", "");
+      form.setValue("customer_name", "");
+      return;
+    }
     const customer = customers.find((c) => c.id === customerId);
     if (customer) {
       form.setValue("customer_id", customerId);
@@ -194,7 +202,7 @@ export const JobOrderDialog = ({
                   <FormItem>
                     <FormLabel>No. BL</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Nomor BL" />
+                      <Input {...field} placeholder="Nomor BL" autoFocus />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -207,7 +215,7 @@ export const JobOrderDialog = ({
                   <FormItem>
                     <FormLabel>Customer</FormLabel>
                     <Select
-                      value={field.value}
+                      value={field.value || NONE}
                       onValueChange={handleCustomerChange}
                     >
                       <FormControl>
@@ -216,6 +224,7 @@ export const JobOrderDialog = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value={NONE}>Tidak ada</SelectItem>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>
                             {customer.company_name}
