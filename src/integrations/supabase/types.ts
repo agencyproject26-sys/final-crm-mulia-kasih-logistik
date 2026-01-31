@@ -476,9 +476,11 @@ export type Database = {
           customer_name: string
           id: string
           notes: string[] | null
+          quotation_date: string
           quotation_number: string
           route: string | null
           status: string | null
+          title: string | null
           updated_at: string
         }
         Insert: {
@@ -488,9 +490,11 @@ export type Database = {
           customer_name: string
           id?: string
           notes?: string[] | null
+          quotation_date?: string
           quotation_number: string
           route?: string | null
           status?: string | null
+          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -500,9 +504,11 @@ export type Database = {
           customer_name?: string
           id?: string
           notes?: string[] | null
+          quotation_date?: string
           quotation_number?: string
           route?: string | null
           status?: string | null
+          title?: string | null
           updated_at?: string
         }
         Relationships: [

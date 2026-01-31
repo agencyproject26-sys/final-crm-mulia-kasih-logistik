@@ -55,9 +55,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye, Check, ChevronsUpDown, UserPlus, X, Building2 } from "lucide-react";
+import { Plus, FileText, Send, Download, Search, FileDown, Loader2, MoreHorizontal, Pencil, Trash2, Eye, Check, ChevronsUpDown, UserPlus, X, Building2, CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -65,7 +66,7 @@ import { generateQuotationPdf } from "@/lib/quotationPdf";
 import { toast } from "sonner";
 import { useQuotations, QuotationInput } from "@/hooks/useQuotations";
 import { useCustomers } from "@/hooks/useCustomers";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { QuotationPreview } from "@/components/quotation/QuotationPreview";
 
@@ -79,6 +80,8 @@ interface RateItem {
 
 interface QuotationForm {
   quotationNumber: string;
+  title: string;
+  quotationDate: Date;
   customerId: string | null;
   customerName: string;
   customerAddress: string;
@@ -232,12 +235,15 @@ export default function Penawaran() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
+  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
   
   const { quotations, isLoading, createQuotation, updateQuotation, deleteQuotation, getQuotationWithItems, generateQuotationNumber } = useQuotations();
   const { data: customers = [] } = useCustomers();
 
   const [formData, setFormData] = useState<QuotationForm>({
     quotationNumber: "",
+    title: "",
+    quotationDate: new Date(),
     customerId: null,
     customerName: "",
     customerAddress: "",
@@ -251,6 +257,8 @@ export default function Penawaran() {
   const resetForm = () => {
     setFormData({
       quotationNumber: "",
+      title: "",
+      quotationDate: new Date(),
       customerId: null,
       customerName: "",
       customerAddress: "",
@@ -292,6 +300,8 @@ export default function Penawaran() {
       
       setFormData({
         quotationNumber: quotation.quotation_number,
+        title: quotation.title || "",
+        quotationDate: quotation.quotation_date ? parseISO(quotation.quotation_date) : new Date(),
         customerId: quotation.customer_id || null,
         customerName: quotation.customer_name,
         customerAddress: quotation.customer_address || "",
@@ -354,6 +364,8 @@ export default function Penawaran() {
       
       setFormData({
         quotationNumber: quotation.quotation_number,
+        title: quotation.title || "",
+        quotationDate: quotation.quotation_date ? parseISO(quotation.quotation_date) : new Date(),
         customerId: quotation.customer_id || null,
         customerName: quotation.customer_name,
         customerAddress: quotation.customer_address || "",
@@ -497,6 +509,8 @@ export default function Penawaran() {
         await updateQuotation.mutateAsync({
           id: editingId,
           quotation_number: formData.quotationNumber,
+          title: formData.title || null,
+          quotation_date: format(formData.quotationDate, "yyyy-MM-dd"),
           customer_id: formData.customerId,
           customer_name: formData.customerName,
           customer_address: formData.customerAddress || null,
@@ -509,6 +523,8 @@ export default function Penawaran() {
         // Create new quotation
         const input: QuotationInput = {
           quotation_number: formData.quotationNumber,
+          title: formData.title || null,
+          quotation_date: format(formData.quotationDate, "yyyy-MM-dd"),
           customer_id: formData.customerId,
           customer_name: formData.customerName,
           customer_address: formData.customerAddress || null,
@@ -618,15 +634,60 @@ export default function Penawaran() {
             </DialogHeader>
             <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
               <div className="space-y-6 py-4">
-                {/* Quotation Number */}
+                {/* Quotation Number and Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="quotationNumber">Nomor Penawaran *</Label>
+                    <Input
+                      id="quotationNumber"
+                      placeholder="Contoh: Q202501-0001"
+                      value={formData.quotationNumber}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, quotationNumber: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tanggal Penawaran</Label>
+                    <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.quotationDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.quotationDate ? format(formData.quotationDate, "dd MMMM yyyy", { locale: localeId }) : "Pilih tanggal"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={formData.quotationDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              setFormData((prev) => ({ ...prev, quotationDate: date }));
+                            }
+                            setDatePopoverOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* Title */}
                 <div className="space-y-2">
-                  <Label htmlFor="quotationNumber">Nomor Penawaran *</Label>
+                  <Label htmlFor="title">Judul Penawaran</Label>
                   <Input
-                    id="quotationNumber"
-                    placeholder="Contoh: Q202501-0001"
-                    value={formData.quotationNumber}
+                    id="title"
+                    placeholder="Contoh: Penawaran Jasa Custom Clearance Import FCL"
+                    value={formData.title}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, quotationNumber: e.target.value }))
+                      setFormData((prev) => ({ ...prev, title: e.target.value }))
                     }
                   />
                 </div>
@@ -767,14 +828,53 @@ export default function Penawaran() {
                   onRemoveRow={(index) => removeRateRow("redLine", index)}
                 />
 
-                {/* Notes */}
-                <div className="space-y-2">
-                  <Label>Catatan</Label>
-                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                {/* Notes - Editable */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Catatan</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setFormData((prev) => ({ ...prev, notes: [...prev.notes, ""] }))}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Tambah Catatan
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
                     {formData.notes.map((note, index) => (
-                      <li key={index}>{note}</li>
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="text-muted-foreground mt-2 text-sm">{index + 1}.</span>
+                        <Textarea
+                          value={note}
+                          onChange={(e) => {
+                            const newNotes = [...formData.notes];
+                            newNotes[index] = e.target.value;
+                            setFormData((prev) => ({ ...prev, notes: newNotes }));
+                          }}
+                          placeholder="Masukkan catatan..."
+                          className="min-h-[60px] flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive mt-1"
+                          onClick={() => {
+                            if (formData.notes.length <= 1) {
+                              toast.error("Minimal harus ada 1 catatan");
+                              return;
+                            }
+                            const newNotes = formData.notes.filter((_, i) => i !== index);
+                            setFormData((prev) => ({ ...prev, notes: newNotes }));
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
 
                 {/* Actions */}
@@ -900,7 +1000,7 @@ export default function Penawaran() {
                               </div>
                             </TableCell>
                             <TableCell>{quotation.route || "-"}</TableCell>
-                            <TableCell>{formatDate(quotation.created_at)}</TableCell>
+                            <TableCell>{formatDate(quotation.quotation_date)}</TableCell>
                             <TableCell>
                               <Badge className={statusStyles[quotation.status || "draft"]}>
                                 {statusLabels[quotation.status || "draft"]}
@@ -990,6 +1090,8 @@ export default function Penawaran() {
           <ScrollArea className="max-h-[calc(90vh-220px)]">
             <QuotationPreview
               quotationNumber={formData.quotationNumber}
+              title={formData.title}
+              quotationDate={format(formData.quotationDate, "dd MMMM yyyy", { locale: localeId })}
               customerName={formData.customerName}
               customerAddress={formData.customerAddress}
               route={formData.route}
