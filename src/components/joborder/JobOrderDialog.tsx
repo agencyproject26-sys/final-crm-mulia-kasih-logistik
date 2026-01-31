@@ -41,7 +41,7 @@ import { JobOrder, JobOrderInput, useJobOrders } from "@/hooks/useJobOrders";
 const formSchema = z.object({
   job_order_number: z.string().min(1, "Nomor Job Order wajib diisi"),
   eta_kapal: z.date().nullable().optional(),
-  bl_number: z.string().optional(),
+  bl_number: z.string().min(1, "Nomor BL wajib diisi"),
   no_invoice: z.string().optional(),
   aju: z.string().optional(),
   party: z.string().optional(),
@@ -189,12 +189,12 @@ export const JobOrderDialog = ({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="job_order_number"
+                name="bl_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>No. Job Order</FormLabel>
+                    <FormLabel>No. BL</FormLabel>
                     <FormControl>
-                      <Input {...field} readOnly className="bg-muted" />
+                      <Input {...field} placeholder="Nomor BL" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -269,12 +269,12 @@ export const JobOrderDialog = ({
               />
               <FormField
                 control={form.control}
-                name="bl_number"
+                name="no_invoice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>BL Number</FormLabel>
+                    <FormLabel>No. DP</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Nomor BL" />
+                      <Input {...field} placeholder="Nomor DP" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -286,12 +286,12 @@ export const JobOrderDialog = ({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="no_invoice"
+                name="job_order_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>No. Invoice</FormLabel>
+                    <FormLabel>No. Job Order</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Nomor Invoice" />
+                      <Input {...field} readOnly className="bg-muted" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
