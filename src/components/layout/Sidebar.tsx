@@ -88,7 +88,6 @@ const navItems: NavItem[] = [
           { label: "Kinerja Layanan", href: "/laporan/kinerja-layanan" },
         ],
       },
-      { label: "Laporan Manajemen", href: "/laporan/manajemen" },
     ],
   },
 ];
