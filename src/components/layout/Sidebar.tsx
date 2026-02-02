@@ -73,9 +73,11 @@ const navItems: NavItem[] = [
     label: "Laporan",
     icon: BarChart3,
     children: [
-      { label: "Laporan Keuangan", href: "/laporan/keuangan" },
-      { label: "Laporan Operasional", href: "/laporan/operasional" },
-      { label: "Laporan Manajemen", href: "/laporan/manajemen" },
+      { label: "Laporan Invoice", href: "/laporan/invoice" },
+      { label: "Laporan Pembayaran", href: "/laporan/pembayaran" },
+      { label: "Laporan Outstanding", href: "/laporan/outstanding" },
+      { label: "Laporan Pengeluaran", href: "/laporan/pengeluaran" },
+      { label: "Laporan Laba Rugi", href: "/laporan/laba-rugi" },
     ],
   },
 ];

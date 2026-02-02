@@ -18,6 +18,11 @@ import Invoice from "./pages/keuangan/Invoice";
 import InvoiceDP from "./pages/keuangan/InvoiceDP";
 import Pengeluaran from "./pages/keuangan/Pengeluaran";
 import Penawaran from "./pages/sales/Penawaran";
+import LaporanInvoice from "./pages/laporan/LaporanInvoice";
+import LaporanPembayaran from "./pages/laporan/LaporanPembayaran";
+import LaporanOutstanding from "./pages/laporan/LaporanOutstanding";
+import LaporanPengeluaran from "./pages/laporan/LaporanPengeluaran";
+import LaporanLabaRugi from "./pages/laporan/LaporanLabaRugi";
 
 // Components
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -61,10 +66,11 @@ const App = () => (
           <Route path="/keuangan/laba-rugi" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           
           {/* Laporan */}
-          <Route path="/laporan/keuangan" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
-          <Route path="/laporan/operasional" element={<ProtectedRoute><JobOrder /></ProtectedRoute>} />
-          <Route path="/laporan/manajemen" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
-          
+          <Route path="/laporan/invoice" element={<ProtectedRoute><LaporanInvoice /></ProtectedRoute>} />
+          <Route path="/laporan/pembayaran" element={<ProtectedRoute><LaporanPembayaran /></ProtectedRoute>} />
+          <Route path="/laporan/outstanding" element={<ProtectedRoute><LaporanOutstanding /></ProtectedRoute>} />
+          <Route path="/laporan/pengeluaran" element={<ProtectedRoute><LaporanPengeluaran /></ProtectedRoute>} />
+          <Route path="/laporan/laba-rugi" element={<ProtectedRoute><LaporanLabaRugi /></ProtectedRoute>} />
           {/* Pengaturan */}
           <Route path="/pengaturan" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
           
