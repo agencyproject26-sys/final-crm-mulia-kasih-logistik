@@ -78,7 +78,6 @@ const navItems: NavItem[] = [
       { label: "Laporan Manajemen", href: "/laporan/manajemen" },
     ],
   },
-  { label: "Pengaturan", icon: Settings, href: "/pengaturan" },
 ];
 
 export function Sidebar() {
