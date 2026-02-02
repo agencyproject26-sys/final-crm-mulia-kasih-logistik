@@ -72,9 +72,12 @@ const navItems: NavItem[] = [
     label: "Laporan",
     icon: BarChart3,
     children: [
-      { label: "Laporan Keuangan", href: "/laporan/invoice" },
-      { label: "Laporan Operasional", href: "/laporan/pembayaran" },
-      { label: "Laporan Manajemen", href: "/laporan/outstanding" },
+      { label: "Laporan Keuangan", href: "/laporan/keuangan" },
+      { label: "Laporan Pengiriman", href: "/laporan/pengiriman" },
+      { label: "Utilisasi Truk", href: "/laporan/utilisasi-truk" },
+      { label: "Okupansi Gudang", href: "/laporan/okupansi-gudang" },
+      { label: "Kinerja Layanan", href: "/laporan/kinerja-layanan" },
+      { label: "Laporan Manajemen", href: "/laporan/manajemen" },
     ],
   },
 ];

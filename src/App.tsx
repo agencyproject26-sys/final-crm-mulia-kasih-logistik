@@ -19,10 +19,11 @@ import InvoiceDP from "./pages/keuangan/InvoiceDP";
 import Pengeluaran from "./pages/keuangan/Pengeluaran";
 import Penawaran from "./pages/sales/Penawaran";
 import LaporanInvoice from "./pages/laporan/LaporanInvoice";
-import LaporanPembayaran from "./pages/laporan/LaporanPembayaran";
+import LaporanPengiriman from "./pages/laporan/LaporanPengiriman";
+import LaporanUtilisasiTruk from "./pages/laporan/LaporanUtilisasiTruk";
+import LaporanOkupansiGudang from "./pages/laporan/LaporanOkupansiGudang";
+import LaporanKinerjaLayanan from "./pages/laporan/LaporanKinerjaLayanan";
 import LaporanOutstanding from "./pages/laporan/LaporanOutstanding";
-import LaporanPengeluaran from "./pages/laporan/LaporanPengeluaran";
-import LaporanLabaRugi from "./pages/laporan/LaporanLabaRugi";
 
 // Components
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -66,11 +67,12 @@ const App = () => (
           <Route path="/keuangan/laba-rugi" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           
           {/* Laporan */}
-          <Route path="/laporan/invoice" element={<ProtectedRoute><LaporanInvoice /></ProtectedRoute>} />
-          <Route path="/laporan/pembayaran" element={<ProtectedRoute><LaporanPembayaran /></ProtectedRoute>} />
-          <Route path="/laporan/outstanding" element={<ProtectedRoute><LaporanOutstanding /></ProtectedRoute>} />
-          <Route path="/laporan/pengeluaran" element={<ProtectedRoute><LaporanPengeluaran /></ProtectedRoute>} />
-          <Route path="/laporan/laba-rugi" element={<ProtectedRoute><LaporanLabaRugi /></ProtectedRoute>} />
+          <Route path="/laporan/keuangan" element={<ProtectedRoute><LaporanInvoice /></ProtectedRoute>} />
+          <Route path="/laporan/pengiriman" element={<ProtectedRoute><LaporanPengiriman /></ProtectedRoute>} />
+          <Route path="/laporan/utilisasi-truk" element={<ProtectedRoute><LaporanUtilisasiTruk /></ProtectedRoute>} />
+          <Route path="/laporan/okupansi-gudang" element={<ProtectedRoute><LaporanOkupansiGudang /></ProtectedRoute>} />
+          <Route path="/laporan/kinerja-layanan" element={<ProtectedRoute><LaporanKinerjaLayanan /></ProtectedRoute>} />
+          <Route path="/laporan/manajemen" element={<ProtectedRoute><LaporanOutstanding /></ProtectedRoute>} />
           {/* Pengaturan */}
           <Route path="/pengaturan" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
           
