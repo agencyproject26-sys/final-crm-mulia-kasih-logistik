@@ -66,7 +66,7 @@ const navItems: NavItem[] = [
       { label: "Invoice Final", href: "/keuangan/invoice" },
       { label: "Pembayaran", href: "/keuangan/pembayaran" },
       { label: "Pengeluaran", href: "/keuangan/pengeluaran" },
-      { label: "Laba Rugi", href: "/keuangan/laba-rugi" },
+      { label: "Margin Perusahaan", href: "/keuangan/laba-rugi" },
     ],
   },
   {
