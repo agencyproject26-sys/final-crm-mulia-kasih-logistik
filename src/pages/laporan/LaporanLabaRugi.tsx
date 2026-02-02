@@ -164,7 +164,7 @@ export default function LaporanLabaRugi() {
 
   if (isLoading) {
     return (
-      <MainLayout title="Laporan Laba Rugi" subtitle="Analisis profitabilitas">
+      <MainLayout title="Margin Perusahaan" subtitle="Analisis profitabilitas">
         <div className="grid gap-4 md:grid-cols-4 mb-6">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-xl" />
@@ -175,7 +175,7 @@ export default function LaporanLabaRugi() {
   }
 
   return (
-    <MainLayout title="Laporan Laba Rugi" subtitle="Analisis profitabilitas perusahaan">
+    <MainLayout title="Margin Perusahaan" subtitle="Analisis profitabilitas perusahaan">
       {/* Period Filter */}
       <div className="flex justify-between items-center mb-6">
         <Select value={periodFilter} onValueChange={setPeriodFilter}>
