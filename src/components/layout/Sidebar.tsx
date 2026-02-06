@@ -69,7 +69,14 @@ const navItems: NavItem[] = [
     icon: Receipt,
     children: [
       { label: "Invoice DP", href: "/keuangan/invoice-dp" },
-      { label: "Invoice Final", href: "/keuangan/invoice" },
+      { 
+        label: "Invoice Final",
+        children: [
+          { label: "Invoice Reimbursement", href: "/keuangan/invoice-reimbursement" },
+          { label: "Invoice", href: "/keuangan/invoice" },
+          { label: "Invoice Final", href: "/keuangan/invoice-final" },
+        ],
+      },
       { label: "Pembayaran", href: "/keuangan/pembayaran" },
       { label: "Pengeluaran", href: "/keuangan/pengeluaran" },
     ],
