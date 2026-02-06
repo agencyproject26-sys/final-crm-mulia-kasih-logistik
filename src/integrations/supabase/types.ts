@@ -24,8 +24,8 @@ export type Database = {
           email: string | null
           id: string
           npwp: string | null
-          phone: string | null
-          pic_name: string | null
+          phone: string[] | null
+          pic_name: string[] | null
           status: string | null
           updated_at: string
         }
@@ -38,8 +38,8 @@ export type Database = {
           email?: string | null
           id?: string
           npwp?: string | null
-          phone?: string | null
-          pic_name?: string | null
+          phone?: string[] | null
+          pic_name?: string[] | null
           status?: string | null
           updated_at?: string
         }
@@ -52,8 +52,8 @@ export type Database = {
           email?: string | null
           id?: string
           npwp?: string | null
-          phone?: string | null
-          pic_name?: string | null
+          phone?: string[] | null
+          pic_name?: string[] | null
           status?: string | null
           updated_at?: string
         }

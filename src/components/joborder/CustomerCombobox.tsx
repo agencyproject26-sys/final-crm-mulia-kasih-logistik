@@ -41,7 +41,7 @@ export function CustomerCombobox({
     return customers.filter(
       (c) =>
         c.company_name.toLowerCase().includes(searchLower) ||
-        c.pic_name?.toLowerCase().includes(searchLower)
+        c.pic_name?.some(p => p?.toLowerCase().includes(searchLower))
     );
   }, [customers, search]);
 
@@ -146,9 +146,9 @@ export function CustomerCombobox({
                     />
                     <div className="flex flex-col">
                       <span>{customer.company_name}</span>
-                      {customer.pic_name && (
+                      {customer.pic_name && customer.pic_name.length > 0 && (
                         <span className="text-xs text-muted-foreground">
-                          PIC: {customer.pic_name}
+                          PIC: {customer.pic_name.join(", ")}
                         </span>
                       )}
                     </div>
