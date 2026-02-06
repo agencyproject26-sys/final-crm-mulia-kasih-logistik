@@ -33,8 +33,10 @@ import { Customer, CustomerInput } from "@/hooks/useCustomers";
 
 const customerSchema = z.object({
   company_name: z.string().min(1, "Nama perusahaan wajib diisi"),
-  pic_names: z.array(z.object({ value: z.string() })).default([{ value: "" }]),
-  phones: z.array(z.object({ value: z.string() })).default([{ value: "" }]),
+  contacts: z.array(z.object({ 
+    name: z.string(), 
+    phone: z.string() 
+  })).default([{ name: "", phone: "" }]),
   email: z.string().email("Email tidak valid").optional().or(z.literal("")),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -64,8 +66,7 @@ export function CustomerDialog({
     resolver: zodResolver(customerSchema),
     defaultValues: {
       company_name: "",
-      pic_names: [{ value: "" }],
-      phones: [{ value: "" }],
+      contacts: [{ name: "", phone: "" }],
       email: "",
       address: "",
       city: "",
@@ -75,29 +76,25 @@ export function CustomerDialog({
     },
   });
 
-  const { fields: picFields, append: appendPic, remove: removePic } = useFieldArray({
+  const { fields: contactFields, append: appendContact, remove: removeContact } = useFieldArray({
     control: form.control,
-    name: "pic_names",
-  });
-
-  const { fields: phoneFields, append: appendPhone, remove: removePhone } = useFieldArray({
-    control: form.control,
-    name: "phones",
+    name: "contacts",
   });
 
   useEffect(() => {
     if (customer) {
-      const picNames = customer.pic_name && customer.pic_name.length > 0 
-        ? customer.pic_name.map(p => ({ value: p || "" }))
-        : [{ value: "" }];
-      const phones = customer.phone && customer.phone.length > 0 
-        ? customer.phone.map(p => ({ value: p || "" }))
-        : [{ value: "" }];
+      const picNames = customer.pic_name || [];
+      const phones = customer.phone || [];
+      const maxLength = Math.max(picNames.length, phones.length, 1);
+      
+      const contacts = Array.from({ length: maxLength }, (_, i) => ({
+        name: picNames[i] || "",
+        phone: phones[i] || "",
+      }));
       
       form.reset({
         company_name: customer.company_name,
-        pic_names: picNames,
-        phones: phones,
+        contacts: contacts.length > 0 ? contacts : [{ name: "", phone: "" }],
         email: customer.email || "",
         address: customer.address || "",
         city: customer.city || "",
@@ -108,8 +105,7 @@ export function CustomerDialog({
     } else {
       form.reset({
         company_name: "",
-        pic_names: [{ value: "" }],
-        phones: [{ value: "" }],
+        contacts: [{ name: "", phone: "" }],
         email: "",
         address: "",
         city: "",
@@ -121,11 +117,11 @@ export function CustomerDialog({
   }, [customer, form]);
 
   const handleSubmit = (values: CustomerFormValues) => {
-    const picNames = values.pic_names
-      .map(p => p.value.trim())
+    const picNames = values.contacts
+      .map(c => c.name.trim())
       .filter(v => v !== "");
-    const phones = values.phones
-      .map(p => p.value.trim())
+    const phones = values.contacts
+      .map(c => c.phone.trim())
       .filter(v => v !== "");
     
     onSubmit({
@@ -172,95 +168,60 @@ export function CustomerDialog({
                 )}
               />
 
-              {/* Grouped PIC and Phone Fields */}
+              {/* Paired PIC and Phone Fields */}
               <div className="sm:col-span-2 border rounded-lg p-4 bg-muted/30 space-y-4">
-                <h4 className="font-medium text-sm text-foreground">Kontak Perusahaan</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm text-foreground">Kontak Perusahaan</h4>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => appendContact({ name: "", phone: "" })}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Tambah Kontak
+                  </Button>
+                </div>
                 
-                {/* Dynamic PIC Fields */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <FormLabel className="text-muted-foreground">Nama PIC</FormLabel>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => appendPic({ value: "" })}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Tambah PIC
-                    </Button>
-                  </div>
-                  {picFields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2">
-                      <FormField
-                        control={form.control}
-                        name={`pic_names.${index}.value`}
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input placeholder={`Nama PIC ${index + 1}`} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      {picFields.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removePic(index)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                {contactFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2 items-start">
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input placeholder="Nama PIC" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Dynamic Phone Fields */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <FormLabel className="text-muted-foreground">No. Telepon</FormLabel>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => appendPhone({ value: "" })}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Tambah Telepon
-                    </Button>
-                  </div>
-                  {phoneFields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2">
-                      <FormField
-                        control={form.control}
-                        name={`phones.${index}.value`}
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input placeholder={`No. Telepon ${index + 1}`} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      {phoneFields.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removePhone(index)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.phone`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input placeholder="No. Telepon" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </div>
-                  ))}
-                </div>
+                    />
+                    {contactFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeContact(index)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
 
               <FormField
