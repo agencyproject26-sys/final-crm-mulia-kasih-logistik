@@ -70,7 +70,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "Invoice DP", href: "/keuangan/invoice-dp" },
       { 
-        label: "Invoice Final",
+        label: "Invoice MKL",
         children: [
           { label: "Invoice Reimbursement", href: "/keuangan/invoice-reimbursement" },
           { label: "Invoice", href: "/keuangan/invoice" },
