@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, ChevronDown, Receipt, Banknote, Package } from "lucide-react";
+import { FileText, ChevronDown, Receipt, Banknote, Package, Upload, Wrench, Clock, Move, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,12 +29,17 @@ interface CreateInvoiceFromJobOrderProps {
   onSuccess?: () => void;
 }
 
-type InvoiceCategory = "penumpukan" | "do" | "behandle";
+type InvoiceCategory = "penumpukan" | "do" | "spjm" | "repair" | "perpanjangan_do" | "perpanjangan_tila" | "gerakan" | "lain_lain";
 
 const invoiceCategories: Record<InvoiceCategory, { label: string; icon: React.ElementType; color: string }> = {
   penumpukan: { label: "Invoice Penumpukan", icon: Package, color: "text-primary" },
   do: { label: "Invoice DO", icon: Banknote, color: "text-success" },
-  behandle: { label: "Invoice Behandle", icon: Receipt, color: "text-destructive" },
+  spjm: { label: "Invoice Penumpukan SPJM", icon: Receipt, color: "text-destructive" },
+  repair: { label: "Invoice Repair", icon: Wrench, color: "text-warning" },
+  perpanjangan_do: { label: "Invoice Perpanjangan DO", icon: Clock, color: "text-blue-500" },
+  perpanjangan_tila: { label: "Invoice Perpanjangan Tila", icon: Clock, color: "text-purple-500" },
+  gerakan: { label: "Invoice Gerakan", icon: Move, color: "text-orange-500" },
+  lain_lain: { label: "Invoice Lain-lain", icon: MoreHorizontal, color: "text-muted-foreground" },
 };
 
 export const CreateInvoiceFromJobOrder = ({ jobOrder, onSuccess }: CreateInvoiceFromJobOrderProps) => {
@@ -52,7 +57,17 @@ export const CreateInvoiceFromJobOrder = ({ jobOrder, onSuccess }: CreateInvoice
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const random = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
-    const prefix = category === "penumpukan" ? "PNP" : category === "do" ? "DO" : "BHD";
+    const prefixMap: Record<InvoiceCategory, string> = {
+      penumpukan: "PNP",
+      do: "DO",
+      spjm: "SPJM",
+      repair: "RPR",
+      perpanjangan_do: "PDO",
+      perpanjangan_tila: "PTL",
+      gerakan: "GRK",
+      lain_lain: "LLL",
+    };
+    const prefix = prefixMap[category];
     return `INV-${prefix}${year}${month}-${random}`;
   };
 
@@ -156,14 +171,15 @@ export const CreateInvoiceFromJobOrder = ({ jobOrder, onSuccess }: CreateInvoice
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-64">
           {(Object.keys(invoiceCategories) as InvoiceCategory[]).map((category) => {
             const { label, icon: Icon, color } = invoiceCategories[category];
             return (
               <DropdownMenuItem key={category} onClick={() => openCreateDialog(category)}>
                 <div className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
                   <Icon className={`h-4 w-4 ${color}`} />
-                  Buat {label}
+                  Upload {label}
                 </div>
               </DropdownMenuItem>
             );
