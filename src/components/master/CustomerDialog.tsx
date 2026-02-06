@@ -172,90 +172,95 @@ export function CustomerDialog({
                 )}
               />
 
-              {/* Dynamic PIC Fields */}
-              <div className="sm:col-span-2 space-y-3">
-                <div className="flex items-center justify-between">
-                  <FormLabel>Nama PIC</FormLabel>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => appendPic({ value: "" })}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Tambah PIC
-                  </Button>
-                </div>
-                {picFields.map((field, index) => (
-                  <div key={field.id} className="flex gap-2">
-                    <FormField
-                      control={form.control}
-                      name={`pic_names.${index}.value`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input placeholder={`Nama PIC ${index + 1}`} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {picFields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removePic(index)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+              {/* Grouped PIC and Phone Fields */}
+              <div className="sm:col-span-2 border rounded-lg p-4 bg-muted/30 space-y-4">
+                <h4 className="font-medium text-sm text-foreground">Kontak Perusahaan</h4>
+                
+                {/* Dynamic PIC Fields */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="text-muted-foreground">Nama PIC</FormLabel>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendPic({ value: "" })}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Tambah PIC
+                    </Button>
                   </div>
-                ))}
-              </div>
+                  {picFields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2">
+                      <FormField
+                        control={form.control}
+                        name={`pic_names.${index}.value`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input placeholder={`Nama PIC ${index + 1}`} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {picFields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removePic(index)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
-              {/* Dynamic Phone Fields */}
-              <div className="sm:col-span-2 space-y-3">
-                <div className="flex items-center justify-between">
-                  <FormLabel>No. Telepon</FormLabel>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => appendPhone({ value: "" })}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Tambah Telepon
-                  </Button>
-                </div>
-                {phoneFields.map((field, index) => (
-                  <div key={field.id} className="flex gap-2">
-                    <FormField
-                      control={form.control}
-                      name={`phones.${index}.value`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input placeholder={`No. Telepon ${index + 1}`} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {phoneFields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removePhone(index)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                {/* Dynamic Phone Fields */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="text-muted-foreground">No. Telepon</FormLabel>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendPhone({ value: "" })}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Tambah Telepon
+                    </Button>
                   </div>
-                ))}
+                  {phoneFields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2">
+                      <FormField
+                        control={form.control}
+                        name={`phones.${index}.value`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input placeholder={`No. Telepon ${index + 1}`} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {phoneFields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removePhone(index)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <FormField
