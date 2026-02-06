@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Plus, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,8 +33,8 @@ import { Customer, CustomerInput } from "@/hooks/useCustomers";
 
 const customerSchema = z.object({
   company_name: z.string().min(1, "Nama perusahaan wajib diisi"),
-  pic_name: z.string().optional(),
-  phone: z.string().optional(),
+  pic_names: z.array(z.object({ value: z.string() })).default([{ value: "" }]),
+  phones: z.array(z.object({ value: z.string() })).default([{ value: "" }]),
   email: z.string().email("Email tidak valid").optional().or(z.literal("")),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -63,8 +64,8 @@ export function CustomerDialog({
     resolver: zodResolver(customerSchema),
     defaultValues: {
       company_name: "",
-      pic_name: "",
-      phone: "",
+      pic_names: [{ value: "" }],
+      phones: [{ value: "" }],
       email: "",
       address: "",
       city: "",
@@ -74,12 +75,29 @@ export function CustomerDialog({
     },
   });
 
+  const { fields: picFields, append: appendPic, remove: removePic } = useFieldArray({
+    control: form.control,
+    name: "pic_names",
+  });
+
+  const { fields: phoneFields, append: appendPhone, remove: removePhone } = useFieldArray({
+    control: form.control,
+    name: "phones",
+  });
+
   useEffect(() => {
     if (customer) {
+      const picNames = customer.pic_name && customer.pic_name.length > 0 
+        ? customer.pic_name.map(p => ({ value: p || "" }))
+        : [{ value: "" }];
+      const phones = customer.phone && customer.phone.length > 0 
+        ? customer.phone.map(p => ({ value: p || "" }))
+        : [{ value: "" }];
+      
       form.reset({
         company_name: customer.company_name,
-        pic_name: customer.pic_name || "",
-        phone: customer.phone || "",
+        pic_names: picNames,
+        phones: phones,
         email: customer.email || "",
         address: customer.address || "",
         city: customer.city || "",
@@ -90,8 +108,8 @@ export function CustomerDialog({
     } else {
       form.reset({
         company_name: "",
-        pic_name: "",
-        phone: "",
+        pic_names: [{ value: "" }],
+        phones: [{ value: "" }],
         email: "",
         address: "",
         city: "",
@@ -103,10 +121,17 @@ export function CustomerDialog({
   }, [customer, form]);
 
   const handleSubmit = (values: CustomerFormValues) => {
+    const picNames = values.pic_names
+      .map(p => p.value.trim())
+      .filter(v => v !== "");
+    const phones = values.phones
+      .map(p => p.value.trim())
+      .filter(v => v !== "");
+    
     onSubmit({
       company_name: values.company_name,
-      pic_name: values.pic_name || null,
-      phone: values.phone || null,
+      pic_name: picNames.length > 0 ? picNames : null,
+      phone: phones.length > 0 ? phones : null,
       email: values.email || null,
       address: values.address || null,
       city: values.city || null,
@@ -118,7 +143,7 @@ export function CustomerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {customer ? "Edit Pelanggan" : "Tambah Pelanggan"}
@@ -147,33 +172,91 @@ export function CustomerDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="pic_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nama PIC</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nama kontak person" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Dynamic PIC Fields */}
+              <div className="sm:col-span-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <FormLabel>Nama PIC</FormLabel>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => appendPic({ value: "" })}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Tambah PIC
+                  </Button>
+                </div>
+                {picFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`pic_names.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input placeholder={`Nama PIC ${index + 1}`} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {picFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removePic(index)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>No. Telepon</FormLabel>
-                    <FormControl>
-                      <Input placeholder="08123456789" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Dynamic Phone Fields */}
+              <div className="sm:col-span-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <FormLabel>No. Telepon</FormLabel>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => appendPhone({ value: "" })}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Tambah Telepon
+                  </Button>
+                </div>
+                {phoneFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`phones.${index}.value`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input placeholder={`No. Telepon ${index + 1}`} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {phoneFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removePhone(index)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
 
               <FormField
                 control={form.control}
