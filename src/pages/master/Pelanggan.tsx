@@ -202,26 +202,34 @@ export default function Pelanggan() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {groupedByCity.groups[city].map((customer) => (
-                            <TableRow key={customer.id} className="hover:bg-muted/50">
-                              <TableCell>
-                                <div>
-                                  <p className="font-medium">{customer.company_name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {customer.email || "-"}
-                                  </p>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {customer.pic_name && customer.pic_name.length > 0 
-                                  ? customer.pic_name.join(", ") 
-                                  : "-"}
-                              </TableCell>
-                              <TableCell>
-                                {customer.phone && customer.phone.length > 0 ? (
+                          {groupedByCity.groups[city].map((customer) => {
+                            const picNames = customer.pic_name || [];
+                            const phones = customer.phone || [];
+                            const maxLength = Math.max(picNames.length, phones.length, 1);
+
+                            return (
+                              <TableRow key={customer.id} className="hover:bg-muted/50">
+                                <TableCell>
+                                  <div>
+                                    <p className="font-medium">{customer.company_name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {customer.email || "-"}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
                                   <div className="space-y-1">
-                                    {customer.phone.map((phoneItem, idx) => {
-                                      if (!phoneItem) return null;
+                                    {Array.from({ length: maxLength }, (_, i) => (
+                                      <p key={i}>{picNames[i] || "-"}</p>
+                                    ))}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    {Array.from({ length: maxLength }, (_, i) => {
+                                      const phoneItem = phones[i];
+                                      if (!phoneItem) return <p key={i}>-</p>;
+
                                       let phoneNumber = phoneItem.replace(/[^0-9]/g, "");
                                       if (phoneNumber.startsWith("0")) {
                                         phoneNumber = "62" + phoneNumber.substring(1);
@@ -251,7 +259,7 @@ export default function Pelanggan() {
 
                                       return (
                                         <a
-                                          key={idx}
+                                          key={i}
                                           href={appUrl}
                                           onClick={handleWhatsAppClick}
                                           className="flex items-center gap-1.5 text-primary hover:text-primary/80 hover:underline transition-colors"
@@ -269,10 +277,7 @@ export default function Pelanggan() {
                                       );
                                     })}
                                   </div>
-                                ) : (
-                                  "-"
-                                )}
-                              </TableCell>
+                                </TableCell>
                               <TableCell>
                                 <span className="status-badge status-badge-info">
                                   {typeLabels[customer.customer_type]}
@@ -313,8 +318,9 @@ export default function Pelanggan() {
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </TableCell>
-                            </TableRow>
-                          ))}
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </div>
