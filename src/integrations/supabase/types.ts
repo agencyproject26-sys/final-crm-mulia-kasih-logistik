@@ -128,6 +128,7 @@ export type Database = {
           id: string
           invoice_date: string
           invoice_dp_number: string
+          invoice_pib_number: string | null
           notes: string | null
           part_number: number
           status: string | null
@@ -145,6 +146,7 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_dp_number: string
+          invoice_pib_number?: string | null
           notes?: string | null
           part_number?: number
           status?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_dp_number?: string
+          invoice_pib_number?: string | null
           notes?: string | null
           part_number?: number
           status?: string | null
