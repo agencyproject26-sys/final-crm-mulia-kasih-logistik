@@ -46,6 +46,7 @@ export function InvoiceDPDialog({
   const { data: customers = [] } = useCustomers();
   const [formData, setFormData] = useState({
     invoice_dp_number: "",
+    invoice_pib_number: "",
     part_number: nextPartNumber,
     invoice_date: new Date().toISOString().split("T")[0],
     customer_id: "",
@@ -53,7 +54,7 @@ export function InvoiceDPDialog({
     customer_address: "",
     customer_city: "",
     bl_number: "",
-    description: "",
+    description: "DP ( Down Payment ) import A.N PTP",
     status: "draft",
     notes: "",
   });
@@ -68,6 +69,7 @@ export function InvoiceDPDialog({
     if (invoice) {
       setFormData({
         invoice_dp_number: invoice.invoice_dp_number,
+        invoice_pib_number: invoice.invoice_pib_number || "",
         part_number: invoice.part_number,
         invoice_date: invoice.invoice_date,
         customer_id: invoice.customer_id || "",
@@ -75,7 +77,7 @@ export function InvoiceDPDialog({
         customer_address: invoice.customer_address || "",
         customer_city: invoice.customer_city || "",
         bl_number: invoice.bl_number || "",
-        description: invoice.description || "",
+        description: invoice.description || "DP ( Down Payment ) import A.N PTP",
         status: invoice.status || "draft",
         notes: invoice.notes || "",
       });
@@ -88,6 +90,7 @@ export function InvoiceDPDialog({
       const newNumber = `${Math.floor(Math.random() * 9000) + 1000}/DP-${nextPartNumber}/${year}`;
       setFormData({
         invoice_dp_number: newNumber,
+        invoice_pib_number: "",
         part_number: nextPartNumber,
         invoice_date: today.toISOString().split("T")[0],
         customer_id: "",
@@ -95,7 +98,7 @@ export function InvoiceDPDialog({
         customer_address: "",
         customer_city: "",
         bl_number: "",
-        description: "",
+        description: "DP ( Down Payment ) import A.N PTP",
         status: "draft",
         notes: "",
       });
@@ -150,6 +153,7 @@ export function InvoiceDPDialog({
     onSubmit({
       ...formData,
       customer_id: formData.customer_id || null,
+      invoice_pib_number: formData.invoice_pib_number || null,
       total_amount: totalAmount,
       items,
     });
@@ -176,6 +180,19 @@ export function InvoiceDPDialog({
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label>No. Invoice PIB</Label>
+              <Input
+                value={formData.invoice_pib_number}
+                onChange={(e) =>
+                  setFormData({ ...formData, invoice_pib_number: e.target.value })
+                }
+                placeholder="Masukkan No. Invoice PIB"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Part Number</Label>
               <Input

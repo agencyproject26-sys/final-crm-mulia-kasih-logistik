@@ -12,6 +12,7 @@ export interface InvoiceDPItem {
 export interface InvoiceDP {
   id: string;
   invoice_dp_number: string;
+  invoice_pib_number: string | null;
   part_number: number;
   invoice_date: string;
   customer_id: string | null;
@@ -29,6 +30,7 @@ export interface InvoiceDP {
 
 export interface InvoiceDPInput {
   invoice_dp_number: string;
+  invoice_pib_number?: string | null;
   part_number: number;
   invoice_date: string;
   customer_id?: string | null;
