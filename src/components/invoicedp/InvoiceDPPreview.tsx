@@ -91,6 +91,12 @@ export const InvoiceDPPreview = forwardRef<HTMLDivElement, InvoiceDPPreviewProps
                   <td className="pr-2 text-gray-600">No. Invoice</td>
                   <td className="font-semibold">: {invoice.invoice_dp_number}</td>
                 </tr>
+                {invoice.invoice_pib_number && (
+                  <tr>
+                    <td className="pr-2 text-gray-600">No. Invoice PIB</td>
+                    <td className="font-semibold">: {invoice.invoice_pib_number}</td>
+                  </tr>
+                )}
                 {invoice.bl_number && (
                   <tr>
                     <td className="pr-2 text-gray-600">BL No.</td>
@@ -125,7 +131,7 @@ export const InvoiceDPPreview = forwardRef<HTMLDivElement, InvoiceDPPreviewProps
                   className="border border-gray-300 px-2 py-1.5 font-semibold bg-blue-50 text-blue-800"
                   style={{ fontSize: "10px" }}
                 >
-                  DP (Down Payment) {invoice.description}
+                  {invoice.description}
                 </td>
               </tr>
             )}
