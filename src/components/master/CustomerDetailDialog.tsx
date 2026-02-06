@@ -59,22 +59,22 @@ export function CustomerDetailDialog({
           </div>
 
           <div className="grid gap-4">
-            {customer.pic_name && (
-              <div className="flex items-center gap-3">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">PIC</p>
-                  <p className="font-medium">{customer.pic_name}</p>
-                </div>
-              </div>
-            )}
-
-            {customer.phone && (
-              <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Telepon</p>
-                  <p className="font-medium">{customer.phone}</p>
+            {(customer.pic_name || customer.phone) && (
+              <div className="flex items-start gap-3">
+                <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Kontak</p>
+                  {(() => {
+                    const picNames = customer.pic_name || [];
+                    const phones = customer.phone || [];
+                    const maxLength = Math.max(picNames.length, phones.length);
+                    
+                    return Array.from({ length: maxLength }, (_, i) => (
+                      <p key={i} className="font-medium">
+                        {picNames[i] || "-"} <span className="text-muted-foreground">·</span> {phones[i] || "-"}
+                      </p>
+                    ));
+                  })()}
                 </div>
               </div>
             )}
