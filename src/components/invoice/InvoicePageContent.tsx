@@ -95,7 +95,7 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageCon
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [previewInvoice, setPreviewInvoice] = useState<(Partial<Invoice> & { items: InvoiceItem[] }) | null>(null);
+  const [previewInvoice, setPreviewInvoice] = useState<(Partial<Invoice> & { items: InvoiceItem[]; dp_items?: { label: string; amount: number }[] }) | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
   const filteredInvoices = invoices.filter((invoice) => {
@@ -156,7 +156,13 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageCon
   const openPreviewDialog = async (invoice: Invoice) => {
     const invoiceWithItems = await getInvoiceWithItems(invoice.id);
     if (invoiceWithItems) {
-      setPreviewInvoice({ ...invoiceWithItems, items: invoiceWithItems.items || [] });
+      const dpAmount = Number(invoiceWithItems.down_payment) || 0;
+      const dpItems = dpAmount > 0 ? [{ label: "DP 1", amount: dpAmount }] : [];
+      setPreviewInvoice({
+        ...invoiceWithItems,
+        items: invoiceWithItems.items || [],
+        dp_items: dpItems,
+      });
       setIsPreviewOpen(true);
     }
   };
@@ -169,7 +175,9 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageCon
   const handleDownloadPDF = async (invoice: Invoice) => {
     const invoiceWithItems = await getInvoiceWithItems(invoice.id);
     if (invoiceWithItems) {
-      setPreviewInvoice({ ...invoiceWithItems, items: invoiceWithItems.items || [] });
+      const dpAmount = Number(invoiceWithItems.down_payment) || 0;
+      const dpItems = dpAmount > 0 ? [{ label: "DP 1", amount: dpAmount }] : [];
+      setPreviewInvoice({ ...invoiceWithItems, items: invoiceWithItems.items || [], dp_items: dpItems });
       
       setTimeout(async () => {
         if (!previewRef.current) return;
