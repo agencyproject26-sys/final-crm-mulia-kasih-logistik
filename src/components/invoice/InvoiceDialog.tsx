@@ -76,6 +76,7 @@ export const InvoiceDialog = ({
   const { data: customers = [] } = useCustomers();
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [signerName, setSignerName] = useState("RUDY SURIYANTO");
+  const [dpItems, setDpItems] = useState<{ label: string; amount: number }[]>([]);
   const [bankAccountName, setBankAccountName] = useState("PT. MULIA KASIH LOGISTIK");
   const [bankAccountNumber, setBankAccountNumber] = useState("6910492436");
   const [bankBranch, setBankBranch] = useState("BANK BCA CAB. YOS SUDARSO");
@@ -143,6 +144,12 @@ export const InvoiceDialog = ({
         notes: invoice.notes || "",
       });
       setItems(invoice.items || []);
+      // Restore DP items if available, otherwise create single DP from total
+      if (invoice.down_payment && invoice.down_payment > 0) {
+        setDpItems([{ label: "DP 1", amount: invoice.down_payment }]);
+      } else {
+        setDpItems([]);
+      }
     } else {
       form.reset({
         invoice_number: generateInvoiceNumber(),
@@ -164,6 +171,7 @@ export const InvoiceDialog = ({
         notes: DEFAULT_NOTES,
       });
       setItems(getDefaultItems());
+      setDpItems([]);
     }
   }, [invoice, form, open]);
 
@@ -215,9 +223,31 @@ export const InvoiceDialog = ({
     return items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   };
 
+  const calculateTotalDP = () => {
+    return dpItems.reduce((sum, dp) => sum + (dp.amount || 0), 0);
+  };
+
+  const addDpItem = () => {
+    const nextNum = dpItems.length + 1;
+    setDpItems([...dpItems, { label: `DP ${nextNum}`, amount: 0 }]);
+  };
+
+  const removeDpItem = (index: number) => {
+    const newDpItems = dpItems.filter((_, i) => i !== index);
+    // Re-label
+    const relabeled = newDpItems.map((dp, i) => ({ ...dp, label: `DP ${i + 1}` }));
+    setDpItems(relabeled);
+  };
+
+  const updateDpItem = (index: number, amount: number) => {
+    const newDpItems = [...dpItems];
+    newDpItems[index] = { ...newDpItems[index], amount };
+    setDpItems(newDpItems);
+  };
+
   const handleSubmit = (data: FormData) => {
     const subtotal = calculateTotal();
-    const downPayment = data.down_payment || 0;
+    const downPayment = calculateTotalDP();
     const remaining = subtotal - downPayment;
 
     const invoiceData: InvoiceInput = {
@@ -237,7 +267,7 @@ export const InvoiceDialog = ({
       description: data.description || null,
       delivery_date: data.delivery_date || null,
       subtotal,
-      down_payment: downPayment,
+      down_payment: calculateTotalDP(),
       total_amount: subtotal,
       remaining_amount: remaining,
       status: "draft",
@@ -288,13 +318,16 @@ export const InvoiceDialog = ({
   };
 
   const formValues = form.watch();
+  const totalDP = calculateTotalDP();
   const previewData = {
     ...formValues,
     items,
     subtotal: calculateTotal(),
     total_amount: calculateTotal(),
-    remaining_amount: calculateTotal() - (formValues.down_payment || 0),
+    down_payment: totalDP,
+    remaining_amount: calculateTotal() - totalDP,
     signer_name: signerName,
+    dp_items: dpItems,
     bank_account_name: bankAccountName,
     bank_account_number: bankAccountNumber,
     bank_branch: bankBranch,
@@ -591,31 +624,54 @@ export const InvoiceDialog = ({
 
                   {/* Down Payment */}
                   <div className="border rounded-lg p-4 space-y-4">
-                    <h3 className="font-semibold">Pembayaran</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="down_payment"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Down Payment (DP)</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</span>
-                                <Input
-                                  placeholder="0"
-                                  value={field.value ? formatRupiah(field.value) : ""}
-                                  onChange={(e) => field.onChange(parseRupiah(e.target.value))}
-                                  className="pl-9 text-right"
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-semibold">Pembayaran (Down Payment)</h3>
+                      <Button type="button" variant="outline" size="sm" onClick={addDpItem}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Tambah DP
+                      </Button>
+                    </div>
+                    {dpItems.length > 0 ? (
+                      <div className="space-y-2">
+                        {dpItems.map((dp, index) => (
+                          <div key={index} className="flex gap-2 items-center">
+                            <Input
+                              value={dp.label}
+                              readOnly
+                              className="w-24 bg-muted text-center"
+                            />
+                            <div className="relative flex-1">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</span>
+                              <Input
+                                placeholder="0"
+                                value={dp.amount ? formatRupiah(dp.amount) : ""}
+                                onChange={(e) => updateDpItem(index, parseRupiah(e.target.value))}
+                                className="pl-9 text-right"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeDpItem(index)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Belum ada Down Payment. Klik "Tambah DP" untuk menambahkan.</p>
+                    )}
+                    <div className="grid grid-cols-3 gap-4 pt-2 border-t">
                       <div>
-                        <FormLabel>Total</FormLabel>
+                        <FormLabel>Total DP</FormLabel>
+                        <p className="text-lg font-semibold mt-2">
+                          Rp {calculateTotalDP().toLocaleString("id-ID")}
+                        </p>
+                      </div>
+                      <div>
+                        <FormLabel>Total Invoice</FormLabel>
                         <p className="text-lg font-semibold mt-2">
                           Rp {calculateTotal().toLocaleString("id-ID")}
                         </p>
@@ -623,7 +679,7 @@ export const InvoiceDialog = ({
                       <div>
                         <FormLabel>Sisa Invoice</FormLabel>
                         <p className="text-lg font-semibold mt-2 text-primary">
-                          Rp {(calculateTotal() - (form.watch("down_payment") || 0)).toLocaleString("id-ID")}
+                          Rp {(calculateTotal() - calculateTotalDP()).toLocaleString("id-ID")}
                         </p>
                       </div>
                     </div>

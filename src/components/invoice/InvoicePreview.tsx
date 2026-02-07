@@ -8,6 +8,7 @@ interface InvoicePreviewProps {
   invoice: Partial<Invoice> & {
     items: InvoiceItem[];
     signer_name?: string;
+    dp_items?: { label: string; amount: number }[];
     bank_account_name?: string;
     bank_account_number?: string;
     bank_branch?: string;
@@ -136,19 +137,45 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         </table>
 
         {/* Down Payment */}
-        <div className="flex justify-between items-center mb-1 text-xs">
-          <span className="font-bold">DOWN PAYMENT (DP) : {downPayment > 0 ? formatCurrency(downPayment) : "NO DP"}</span>
-          <div className="border border-black px-4 py-1">
-            <span>Rp {downPayment.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+        {invoice.dp_items && invoice.dp_items.length > 0 ? (
+          <div className="mb-4 text-xs">
+            {invoice.dp_items.map((dp, index) => (
+              <div key={index} className="flex justify-between items-center mb-1">
+                <span className="font-bold">{dp.label} : {formatCurrency(dp.amount)}</span>
+                <div className="border border-black px-4 py-1">
+                  <span>Rp {dp.amount.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-between items-center mb-1 mt-2 pt-1 border-t border-black">
+              <span className="font-bold">TOTAL DP :</span>
+              <div className="border border-black px-4 py-1">
+                <span>Rp {downPayment.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-bold">SISA INVOICE :</span>
+              <div className="border border-black px-4 py-1">
+                <span>Rp {remainingAmount.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div className="flex justify-between items-center mb-4 text-xs">
-          <span className="font-bold">SISA INVOICE :</span>
-          <div className="border border-black px-4 py-1">
-            <span>Rp {remainingAmount.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+        ) : (
+          <div className="mb-4 text-xs">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-bold">DOWN PAYMENT (DP) : NO DP</span>
+              <div className="border border-black px-4 py-1">
+                <span>Rp 0</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-bold">SISA INVOICE :</span>
+              <div className="border border-black px-4 py-1">
+                <span>Rp {remainingAmount.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Terbilang */}
         <div className="mb-4">
