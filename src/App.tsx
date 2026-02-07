@@ -63,6 +63,8 @@ const App = () => (
           {/* Keuangan */}
           <Route path="/keuangan/invoice" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           <Route path="/keuangan/invoice-dp" element={<ProtectedRoute><InvoiceDP /></ProtectedRoute>} />
+          <Route path="/keuangan/invoice-reimbursement" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
+          <Route path="/keuangan/invoice-final" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           <Route path="/keuangan/pembayaran" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           <Route path="/keuangan/pengeluaran" element={<ProtectedRoute><Pengeluaran /></ProtectedRoute>} />
           <Route path="/keuangan/laba-rugi" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
