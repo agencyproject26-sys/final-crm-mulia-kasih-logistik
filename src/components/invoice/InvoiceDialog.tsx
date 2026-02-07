@@ -75,6 +75,7 @@ export const InvoiceDialog = ({
 }: InvoiceDialogProps) => {
   const { data: customers = [] } = useCustomers();
   const [items, setItems] = useState<InvoiceItem[]>([]);
+  const [signerName, setSignerName] = useState("RUDY SURIYANTO");
   const [activeTab, setActiveTab] = useState("form");
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -290,6 +291,7 @@ export const InvoiceDialog = ({
     subtotal: calculateTotal(),
     total_amount: calculateTotal(),
     remaining_amount: calculateTotal() - (formValues.down_payment || 0),
+    signer_name: signerName,
   };
 
   return (
@@ -618,19 +620,31 @@ export const InvoiceDialog = ({
                   </div>
 
                   {/* Notes */}
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Catatan</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Catatan tambahan..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <h3 className="font-semibold">Catatan & Tanda Tangan</h3>
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Catatan</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Catatan tambahan..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div>
+                      <FormLabel>Nama Penandatangan</FormLabel>
+                      <Input
+                        value={signerName}
+                        onChange={(e) => setSignerName(e.target.value)}
+                        placeholder="Nama penandatangan"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
 
                   <div className="flex justify-end gap-3 pt-4">
                     <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
