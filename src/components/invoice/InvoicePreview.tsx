@@ -171,9 +171,9 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           </div>
           <div className="text-center">
             <p className="font-bold text-sm">PT. MULIA KASIH LOGISTIK</p>
-            <div className="h-24 flex items-center justify-center">
+            <div className="h-28 flex items-center justify-center">
               {/* Space for materai + tanda tangan */}
-              <div className="w-20 h-20 border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-400 text-xs">
+              <div className="w-[25mm] h-[25mm] border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-400 text-xs">
                 MATERAI
               </div>
             </div>
