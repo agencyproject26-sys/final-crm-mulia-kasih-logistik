@@ -5,7 +5,13 @@ import { format } from "date-fns";
 import kopSuratNew from "@/assets/kop-surat-mkl-new.jpg";
 
 interface InvoicePreviewProps {
-  invoice: Partial<Invoice> & { items: InvoiceItem[]; signer_name?: string };
+  invoice: Partial<Invoice> & {
+    items: InvoiceItem[];
+    signer_name?: string;
+    bank_account_name?: string;
+    bank_account_number?: string;
+    bank_branch?: string;
+  };
 }
 
 export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
@@ -173,8 +179,8 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         {/* Bank Account */}
         <div className="border-2 border-black p-2 text-center text-sm">
           <p className="font-bold">Acc.</p>
-          <p className="font-bold">PT. MULIA KASIH LOGISTIK</p>
-          <p className="font-bold">6910492436 / BANK BCA CAB. YOS SUDARSO</p>
+          <p className="font-bold">{invoice.bank_account_name || "PT. MULIA KASIH LOGISTIK"}</p>
+          <p className="font-bold">{invoice.bank_account_number || "6910492436"} / {invoice.bank_branch || "BANK BCA CAB. YOS SUDARSO"}</p>
         </div>
       </div>
     );

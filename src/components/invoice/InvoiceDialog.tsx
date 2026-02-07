@@ -76,6 +76,9 @@ export const InvoiceDialog = ({
   const { data: customers = [] } = useCustomers();
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [signerName, setSignerName] = useState("RUDY SURIYANTO");
+  const [bankAccountName, setBankAccountName] = useState("PT. MULIA KASIH LOGISTIK");
+  const [bankAccountNumber, setBankAccountNumber] = useState("6910492436");
+  const [bankBranch, setBankBranch] = useState("BANK BCA CAB. YOS SUDARSO");
   const [activeTab, setActiveTab] = useState("form");
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -292,6 +295,9 @@ export const InvoiceDialog = ({
     total_amount: calculateTotal(),
     remaining_amount: calculateTotal() - (formValues.down_payment || 0),
     signer_name: signerName,
+    bank_account_name: bankAccountName,
+    bank_account_number: bankAccountNumber,
+    bank_branch: bankBranch,
   };
 
   return (
@@ -643,6 +649,35 @@ export const InvoiceDialog = ({
                         placeholder="Nama penandatangan"
                         className="mt-2"
                       />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div>
+                        <FormLabel>Nama Rekening</FormLabel>
+                        <Input
+                          value={bankAccountName}
+                          onChange={(e) => setBankAccountName(e.target.value)}
+                          placeholder="Nama rekening"
+                          className="mt-2"
+                        />
+                      </div>
+                      <div>
+                        <FormLabel>No. Rekening</FormLabel>
+                        <Input
+                          value={bankAccountNumber}
+                          onChange={(e) => setBankAccountNumber(e.target.value)}
+                          placeholder="Nomor rekening"
+                          className="mt-2"
+                        />
+                      </div>
+                      <div>
+                        <FormLabel>Bank & Cabang</FormLabel>
+                        <Input
+                          value={bankBranch}
+                          onChange={(e) => setBankBranch(e.target.value)}
+                          placeholder="Bank dan cabang"
+                          className="mt-2"
+                        />
+                      </div>
                     </div>
                   </div>
 
