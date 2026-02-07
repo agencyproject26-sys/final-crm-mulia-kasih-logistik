@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { Invoice, InvoiceItem } from "@/hooks/useInvoices";
 import { formatCurrency, terbilang } from "@/lib/numberToWords";
 import { format } from "date-fns";
+import kopSuratNew from "@/assets/kop-surat-mkl-new.jpg";
 
 interface InvoicePreviewProps {
   invoice: Partial<Invoice> & { items: InvoiceItem[]; signer_name?: string };
@@ -28,26 +29,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         className="bg-white p-8 max-w-[210mm] mx-auto text-black"
         style={{ fontFamily: "Arial, sans-serif", fontSize: "12px" }}
       >
-        {/* Header */}
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-start gap-4">
-            {/* Logo placeholder - Fixed */}
-            <div className="w-20 h-20 border-2 border-green-800 rounded flex items-center justify-center bg-green-50">
-              <div className="text-center">
-                <div className="text-green-800 font-bold text-xs">MKL</div>
-                <div className="text-green-800 text-[8px]">PT. Mulia Kasih</div>
-                <div className="text-green-800 text-[8px]">Logistik</div>
-              </div>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-green-800">PT. MULIA KASIH LOGISTIK</h1>
-              <p className="text-xs">Office 1 : Kawasan Berikat Nusantara (KBN) Jl. Pontianak Blok C 02/09A,</p>
-              <p className="text-xs ml-12">Marunda, Cilincing, Jakarta Utara - 14120</p>
-              <p className="text-xs">Phone : (021) 38874030</p>
-              <p className="text-xs">E-mail : rudy@mkl-jakarta.com / info@mkl-jakarta.com</p>
-              <p className="text-xs">Web : www.mkl-jakarta.com</p>
-            </div>
-          </div>
+        {/* Header with Kop Surat - Full Width */}
+        <div className="mb-4 border-b-2 border-green-700 pb-3">
+          <img
+            src={kopSuratNew}
+            alt="Kop Surat"
+            className="w-full h-auto object-cover"
+            crossOrigin="anonymous"
+          />
         </div>
 
         {/* Title */}
