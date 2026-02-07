@@ -59,6 +59,7 @@ export const useQuotations = () => {
       const { data, error } = await supabase
         .from("quotations")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -150,14 +151,15 @@ export const useQuotations = () => {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("quotations")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() } as any)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quotations"] });
-      toast.success("Penawaran berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Penawaran dipindahkan ke Recycle Bin");
     },
     onError: (error) => {
       toast.error(mapDatabaseError(error));

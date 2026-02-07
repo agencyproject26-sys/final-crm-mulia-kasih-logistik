@@ -51,6 +51,7 @@ export const useInvoices = () => {
       const { data, error } = await supabase
         .from("invoices")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -144,12 +145,16 @@ export const useInvoices = () => {
 
   const deleteInvoice = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("invoices").delete().eq("id", id);
+      const { error } = await supabase
+        .from("invoices")
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      toast.success("Invoice berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Invoice dipindahkan ke Recycle Bin");
     },
     onError: (error: Error) => {
       toast.error(mapDatabaseError(error));

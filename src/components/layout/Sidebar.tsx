@@ -21,6 +21,7 @@ import {
   Anchor,
   Menu,
   X,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -97,8 +98,8 @@ const navItems: NavItem[] = [
       },
     ],
   },
+  { label: "Recycle Bin", icon: Trash2, href: "/recycle-bin" },
 ];
-
 export function Sidebar() {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>(["Master Data", "Operasional"]);

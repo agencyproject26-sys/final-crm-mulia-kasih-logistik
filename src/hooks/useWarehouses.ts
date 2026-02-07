@@ -38,6 +38,7 @@ export function useWarehouses() {
             company_name
           )
         `)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -103,14 +104,15 @@ export function useDeleteWarehouse() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("warehouses")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() } as any)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
-      toast.success("Data gudang berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Data gudang dipindahkan ke Recycle Bin");
     },
     onError: (error) => {
       toast.error(mapDatabaseError(error));

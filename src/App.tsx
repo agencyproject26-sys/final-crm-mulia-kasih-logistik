@@ -24,6 +24,7 @@ import LaporanUtilisasiTruk from "./pages/laporan/LaporanUtilisasiTruk";
 import LaporanOkupansiGudang from "./pages/laporan/LaporanOkupansiGudang";
 import LaporanKinerjaLayanan from "./pages/laporan/LaporanKinerjaLayanan";
 import LaporanOutstanding from "./pages/laporan/LaporanOutstanding";
+import RecycleBin from "./pages/RecycleBin";
 
 // Components
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -76,6 +77,8 @@ const App = () => (
           {/* Pengaturan */}
           <Route path="/pengaturan" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
           
+          {/* Recycle Bin */}
+          <Route path="/recycle-bin" element={<ProtectedRoute><RecycleBin /></ProtectedRoute>} />
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -32,6 +32,7 @@ export function useVendors() {
       const { data, error } = await supabase
         .from("vendors")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -96,14 +97,15 @@ export function useDeleteVendor() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("vendors")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() } as any)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendors"] });
-      toast.success("Vendor berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Vendor dipindahkan ke Recycle Bin");
     },
     onError: (error) => {
       toast.error(mapDatabaseError(error));
