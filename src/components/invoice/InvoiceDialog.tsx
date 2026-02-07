@@ -78,19 +78,19 @@ export const InvoiceDialog = ({
   const [activeTab, setActiveTab] = useState("form");
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const DEFAULT_ITEM_DESCRIPTIONS = [
-    "Trucking",
-    "Tuslag",
-    "Kawalan Truck",
-    "Buruh Pabrik",
-    "Lolo / Lift Off",
-    "Penumpukan",
-    "DO",
-    "Materai",
+  const DEFAULT_ITEMS: { description: string; amount: number }[] = [
+    { description: "Trucking", amount: 0 },
+    { description: "Tuslag", amount: 0 },
+    { description: "Kawalan Truck", amount: 100000 },
+    { description: "Buruh Pabrik", amount: 100000 },
+    { description: "Lolo / Lift Off", amount: 0 },
+    { description: "Penumpukan", amount: 0 },
+    { description: "DO", amount: 0 },
+    { description: "Materai", amount: 10000 },
   ];
 
   const getDefaultItems = (): InvoiceItem[] =>
-    DEFAULT_ITEM_DESCRIPTIONS.map((desc) => ({ description: desc, amount: 0 }));
+    DEFAULT_ITEMS.map((item) => ({ description: item.description, amount: item.amount }));
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
