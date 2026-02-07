@@ -37,6 +37,7 @@ export function useTrackings() {
             company_name
           )
         `)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -102,14 +103,15 @@ export function useDeleteTracking() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("trackings")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() } as any)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trackings"] });
-      toast.success("Tracking berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Tracking dipindahkan ke Recycle Bin");
     },
     onError: (error) => {
       toast.error(mapDatabaseError(error));

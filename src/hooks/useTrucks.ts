@@ -27,6 +27,7 @@ export const useTrucks = () => {
       const { data, error } = await supabase
         .from("trucks")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -77,12 +78,16 @@ export const useTrucks = () => {
 
   const deleteTruck = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("trucks").delete().eq("id", id);
+      const { error } = await supabase
+        .from("trucks")
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trucks"] });
-      toast.success("Truk berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Truk dipindahkan ke Recycle Bin");
     },
     onError: (error: Error) => {
       toast.error(mapDatabaseError(error));

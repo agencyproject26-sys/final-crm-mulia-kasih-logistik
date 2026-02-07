@@ -26,6 +26,7 @@ export function useCustomers() {
       const { data, error } = await supabase
         .from("customers")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -90,14 +91,15 @@ export function useDeleteCustomer() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("customers")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() } as any)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
-      toast.success("Pelanggan berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Pelanggan dipindahkan ke Recycle Bin");
     },
     onError: (error) => {
       toast.error(mapDatabaseError(error));

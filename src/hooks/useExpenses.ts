@@ -32,6 +32,7 @@ export function useExpenses() {
           vendors(company_name),
           job_orders(job_order_number)
         `)
+        .is("deleted_at", null)
         .order("expense_date", { ascending: false });
 
       if (error) throw error;
@@ -111,14 +112,18 @@ export function useDeleteExpense() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("expenses").delete().eq("id", id);
+      const { error } = await supabase
+        .from("expenses")
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
       toast({
         title: "Berhasil",
-        description: "Pengeluaran berhasil dihapus",
+        description: "Pengeluaran dipindahkan ke Recycle Bin",
       });
     },
     onError: (error: Error) => {

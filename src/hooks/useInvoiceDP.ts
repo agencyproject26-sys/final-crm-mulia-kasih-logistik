@@ -54,6 +54,7 @@ export function useInvoiceDP() {
       const { data, error } = await supabase
         .from("invoice_dp")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -253,12 +254,16 @@ export function useInvoiceDP() {
 
   const deleteInvoiceDP = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("invoice_dp").delete().eq("id", id);
+      const { error } = await supabase
+        .from("invoice_dp")
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices_dp"] });
-      toast.success("Invoice DP berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Invoice DP dipindahkan ke Recycle Bin");
     },
     onError: (error) => {
       toast.error("Gagal menghapus Invoice DP: " + error.message);

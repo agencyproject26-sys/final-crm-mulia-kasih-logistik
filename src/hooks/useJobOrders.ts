@@ -41,6 +41,7 @@ export const useJobOrders = () => {
       const { data, error } = await supabase
         .from("job_orders")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -91,12 +92,16 @@ export const useJobOrders = () => {
 
   const deleteJobOrder = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("job_orders").delete().eq("id", id);
+      const { error } = await supabase
+        .from("job_orders")
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["job_orders"] });
-      toast.success("Job Order berhasil dihapus");
+      queryClient.invalidateQueries({ queryKey: ["recycle-bin"] });
+      toast.success("Job Order dipindahkan ke Recycle Bin");
     },
     onError: (error: Error) => {
       toast.error(mapDatabaseError(error));
