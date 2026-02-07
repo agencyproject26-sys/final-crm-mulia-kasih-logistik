@@ -34,6 +34,7 @@ export interface Invoice {
   status: string | null;
   notes: string | null;
   job_order_id: string | null;
+  dp_items: { label: string; amount: number }[] | null;
   created_at: string;
   updated_at: string;
   items?: InvoiceItem[];
@@ -56,7 +57,7 @@ export const useInvoices = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Invoice[];
+      return (data as unknown as Invoice[]);
     },
   });
 
@@ -177,7 +178,7 @@ export const useInvoices = () => {
       .eq("invoice_id", id)
       .order("created_at", { ascending: true });
 
-    return { ...invoice, items: items || [] } as Invoice;
+    return { ...invoice, items: items || [] } as unknown as Invoice;
   };
 
   return {

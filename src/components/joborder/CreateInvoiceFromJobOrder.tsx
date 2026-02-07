@@ -138,6 +138,7 @@ export const CreateInvoiceFromJobOrder = ({ jobOrder, onSuccess }: CreateInvoice
       down_payment: 0,
       total_amount: subtotal,
       remaining_amount: subtotal,
+      dp_items: null,
       status: "draft",
       notes: notes || null,
       job_order_id: jobOrder.id,
