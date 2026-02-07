@@ -78,7 +78,7 @@ const navItems: NavItem[] = [
           { label: "Invoice Final", href: "/keuangan/invoice-final" },
         ],
       },
-      { label: "Pembayaran", href: "/keuangan/pembayaran" },
+      
       { label: "Pengeluaran", href: "/keuangan/pengeluaran" },
     ],
   },
