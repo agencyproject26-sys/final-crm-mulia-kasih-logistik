@@ -15,6 +15,8 @@ import JobOrder from "./pages/operasional/JobOrder";
 import Tracking from "./pages/operasional/Tracking";
 import Gudang from "./pages/operasional/Gudang";
 import Invoice from "./pages/keuangan/Invoice";
+import InvoiceReimbursement from "./pages/keuangan/InvoiceReimbursement";
+import InvoiceFinal from "./pages/keuangan/InvoiceFinal";
 import InvoiceDP from "./pages/keuangan/InvoiceDP";
 import Pengeluaran from "./pages/keuangan/Pengeluaran";
 import Penawaran from "./pages/sales/Penawaran";
@@ -63,8 +65,8 @@ const App = () => (
           {/* Keuangan */}
           <Route path="/keuangan/invoice" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           <Route path="/keuangan/invoice-dp" element={<ProtectedRoute><InvoiceDP /></ProtectedRoute>} />
-          <Route path="/keuangan/invoice-reimbursement" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
-          <Route path="/keuangan/invoice-final" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
+          <Route path="/keuangan/invoice-reimbursement" element={<ProtectedRoute><InvoiceReimbursement /></ProtectedRoute>} />
+          <Route path="/keuangan/invoice-final" element={<ProtectedRoute><InvoiceFinal /></ProtectedRoute>} />
           <Route path="/keuangan/pembayaran" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
           <Route path="/keuangan/pengeluaran" element={<ProtectedRoute><Pengeluaran /></ProtectedRoute>} />
           <Route path="/keuangan/laba-rugi" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />

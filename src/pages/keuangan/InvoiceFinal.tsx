@@ -1,10 +1,10 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { InvoicePageContent } from "@/components/invoice/InvoicePageContent";
 
-export default function InvoicePage() {
+export default function InvoiceFinalPage() {
   return (
-    <MainLayout title="INVOICE" subtitle="Kelola invoice pelanggan">
-      <InvoicePageContent pageTitle="INVOICE" />
+    <MainLayout title="INVOICE FINAL" subtitle="Kelola invoice final">
+      <InvoicePageContent pageTitle="INVOICE FINAL" />
     </MainLayout>
   );
 }
