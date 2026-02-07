@@ -76,7 +76,7 @@ export const InvoiceDialog = ({
   const { data: customers = [] } = useCustomers();
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [signerName, setSignerName] = useState("RUDY SURIYANTO");
-  const [dpItems, setDpItems] = useState<{ label: string; amount: number }[]>([]);
+  const [dpItems, setDpItems] = useState<{ label: string; amount: number; date: string }[]>([]);
   const [bankAccountName, setBankAccountName] = useState("PT. MULIA KASIH LOGISTIK");
   const [bankAccountNumber, setBankAccountNumber] = useState("6910492436");
   const [bankBranch, setBankBranch] = useState("BANK BCA CAB. YOS SUDARSO");
@@ -145,11 +145,11 @@ export const InvoiceDialog = ({
       });
       setItems(invoice.items || []);
       // Restore DP items from saved dp_items array
-      const savedDpItems = invoice.dp_items as { label: string; amount: number }[] | null;
+      const savedDpItems = invoice.dp_items as { label: string; amount: number; date?: string }[] | null;
       if (savedDpItems && Array.isArray(savedDpItems) && savedDpItems.length > 0) {
-        setDpItems(savedDpItems);
+        setDpItems(savedDpItems.map(dp => ({ ...dp, date: dp.date || "" })));
       } else if (invoice.down_payment && invoice.down_payment > 0) {
-        setDpItems([{ label: "DP 1", amount: invoice.down_payment }]);
+        setDpItems([{ label: "DP 1", amount: invoice.down_payment, date: "" }]);
       } else {
         setDpItems([]);
       }
@@ -232,7 +232,7 @@ export const InvoiceDialog = ({
 
   const addDpItem = () => {
     const nextNum = dpItems.length + 1;
-    setDpItems([...dpItems, { label: `DP ${nextNum}`, amount: 0 }]);
+    setDpItems([...dpItems, { label: `DP ${nextNum}`, amount: 0, date: new Date().toISOString().split("T")[0] }]);
   };
 
   const removeDpItem = (index: number) => {
@@ -242,9 +242,9 @@ export const InvoiceDialog = ({
     setDpItems(relabeled);
   };
 
-  const updateDpItem = (index: number, amount: number) => {
+  const updateDpItem = (index: number, field: 'amount' | 'date', value: number | string) => {
     const newDpItems = [...dpItems];
-    newDpItems[index] = { ...newDpItems[index], amount };
+    newDpItems[index] = { ...newDpItems[index], [field]: value };
     setDpItems(newDpItems);
   };
 
@@ -644,12 +644,18 @@ export const InvoiceDialog = ({
                               readOnly
                               className="w-24 bg-muted text-center"
                             />
+                            <Input
+                              type="date"
+                              value={dp.date || ""}
+                              onChange={(e) => updateDpItem(index, 'date', e.target.value)}
+                              className="w-40"
+                            />
                             <div className="relative flex-1">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</span>
                               <Input
                                 placeholder="0"
                                 value={dp.amount ? formatRupiah(dp.amount) : ""}
-                                onChange={(e) => updateDpItem(index, parseRupiah(e.target.value))}
+                                onChange={(e) => updateDpItem(index, 'amount', parseRupiah(e.target.value))}
                                 className="pl-9 text-right"
                               />
                             </div>
