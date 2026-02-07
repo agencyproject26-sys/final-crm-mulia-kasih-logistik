@@ -24,6 +24,7 @@ export interface Invoice {
   flight_vessel: string | null;
   origin: string | null;
   no_pen: string | null;
+  no_invoice: string | null;
   description: string | null;
   delivery_date: string | null;
   subtotal: number;
