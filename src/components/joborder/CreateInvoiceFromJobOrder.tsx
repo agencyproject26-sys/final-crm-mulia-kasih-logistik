@@ -131,6 +131,7 @@ export const CreateInvoiceFromJobOrder = ({ jobOrder, onSuccess }: CreateInvoice
       flight_vessel: null,
       origin: jobOrder.lokasi,
       no_pen: null,
+      no_invoice: null,
       description: `${invoiceCategories[selectedCategory].label} - ${jobOrder.job_order_number}`,
       delivery_date: null,
       subtotal,

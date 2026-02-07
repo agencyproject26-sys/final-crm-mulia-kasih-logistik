@@ -49,6 +49,7 @@ const formSchema = z.object({
   flight_vessel: z.string().optional(),
   origin: z.string().optional(),
   no_pen: z.string().optional(),
+  no_invoice: z.string().optional(),
   description: z.string().optional(),
   delivery_date: z.string().optional(),
   down_payment: z.coerce.number().min(0).default(0),
@@ -92,6 +93,7 @@ export const InvoiceDialog = ({
       flight_vessel: "",
       origin: "",
       no_pen: "",
+      no_invoice: "",
       description: "",
       delivery_date: "",
       down_payment: 0,
@@ -114,6 +116,7 @@ export const InvoiceDialog = ({
         flight_vessel: invoice.flight_vessel || "",
         origin: invoice.origin || "",
         no_pen: invoice.no_pen || "",
+        no_invoice: (invoice as any).no_invoice || "",
         description: invoice.description || "",
         delivery_date: invoice.delivery_date || "",
         down_payment: invoice.down_payment || 0,
@@ -134,6 +137,7 @@ export const InvoiceDialog = ({
         flight_vessel: "",
         origin: "",
         no_pen: "",
+        no_invoice: "",
         description: "",
         delivery_date: "",
         down_payment: 0,
@@ -199,6 +203,7 @@ export const InvoiceDialog = ({
       flight_vessel: data.flight_vessel || null,
       origin: data.origin || null,
       no_pen: data.no_pen || null,
+      no_invoice: data.no_invoice || null,
       description: data.description || null,
       delivery_date: data.delivery_date || null,
       subtotal,
@@ -458,6 +463,19 @@ export const InvoiceDialog = ({
                             <FormLabel>No. PEN</FormLabel>
                             <FormControl>
                               <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="no_invoice"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Invoice No</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Nomor invoice terkait" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

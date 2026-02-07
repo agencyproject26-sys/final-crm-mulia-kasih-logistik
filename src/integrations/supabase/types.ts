@@ -272,6 +272,7 @@ export type Database = {
           invoice_number: string
           job_order_id: string | null
           no_aju: string | null
+          no_invoice: string | null
           no_pen: string | null
           notes: string | null
           origin: string | null
@@ -299,6 +300,7 @@ export type Database = {
           invoice_number: string
           job_order_id?: string | null
           no_aju?: string | null
+          no_invoice?: string | null
           no_pen?: string | null
           notes?: string | null
           origin?: string | null
@@ -326,6 +328,7 @@ export type Database = {
           invoice_number?: string
           job_order_id?: string | null
           no_aju?: string | null
+          no_invoice?: string | null
           no_pen?: string | null
           notes?: string | null
           origin?: string | null

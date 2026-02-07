@@ -1,0 +1,1 @@
+ALTER TABLE public.invoices ADD COLUMN no_invoice text NULL;
