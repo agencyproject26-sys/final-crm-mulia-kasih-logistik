@@ -124,13 +124,13 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           <tbody>
             {invoice.items?.map((item, index) => (
               <tr key={index}>
-                <td className="border-b border-r border-black p-2">{item.description}</td>
-                <td className="border-b border-black p-2 text-right">Rp {item.amount.toLocaleString("id-ID")}</td>
+              <td className="border-b border-r border-black p-2">{item.description}</td>
+                <td className="border-b border-black p-2 text-right">Rp {item.amount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
               </tr>
             ))}
             <tr className="font-bold bg-gray-50">
               <td className="border-b border-r border-black p-2">TOTAL</td>
-              <td className="border-b border-black p-2 text-right">Rp {totalAmount.toLocaleString("id-ID")}</td>
+              <td className="border-b border-black p-2 text-right">Rp {totalAmount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
             </tr>
           </tbody>
         </table>
@@ -139,14 +139,14 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         <div className="flex justify-between items-center mb-1 text-xs">
           <span className="font-bold">DOWN PAYMENT (DP) : {downPayment > 0 ? formatCurrency(downPayment) : "NO DP"}</span>
           <div className="border border-black px-4 py-1">
-            <span>Rp {downPayment.toLocaleString("id-ID")}</span>
+            <span>Rp {downPayment.toLocaleString("id-ID").replace(/,/g, ".")}</span>
           </div>
         </div>
 
         <div className="flex justify-between items-center mb-4 text-xs">
           <span className="font-bold">SISA INVOICE :</span>
           <div className="border border-black px-4 py-1">
-            <span>Rp {remainingAmount.toLocaleString("id-ID")}</span>
+            <span>Rp {remainingAmount.toLocaleString("id-ID").replace(/,/g, ".")}</span>
           </div>
         </div>
 

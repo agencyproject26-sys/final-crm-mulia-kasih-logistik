@@ -600,11 +600,15 @@ export const InvoiceDialog = ({
                           <FormItem>
                             <FormLabel>Down Payment (DP)</FormLabel>
                             <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                {...field}
-                              />
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</span>
+                                <Input
+                                  placeholder="0"
+                                  value={field.value ? formatRupiah(field.value) : ""}
+                                  onChange={(e) => field.onChange(parseRupiah(e.target.value))}
+                                  className="pl-9 text-right"
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
