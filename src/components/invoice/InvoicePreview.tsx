@@ -8,7 +8,7 @@ interface InvoicePreviewProps {
   invoice: Partial<Invoice> & {
     items: InvoiceItem[];
     signer_name?: string;
-    dp_items?: { label: string; amount: number }[];
+    dp_items?: { label: string; amount: number; date?: string }[];
     bank_account_name?: string;
     bank_account_number?: string;
     bank_branch?: string;
@@ -141,7 +141,9 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           <div className="mb-4 text-xs">
             {invoice.dp_items.map((dp, index) => (
               <div key={index} className="flex justify-between items-center mb-1">
-                <span className="font-bold">{dp.label} : {formatCurrency(dp.amount)}</span>
+                <span className="font-bold">
+                  {dp.label}{dp.date ? ` (${formatDate(dp.date)})` : ''} : {formatCurrency(dp.amount)}
+                </span>
                 <div className="border border-black px-4 py-1">
                   <span>Rp {dp.amount.toLocaleString("id-ID").replace(/,/g, ".")}</span>
                 </div>

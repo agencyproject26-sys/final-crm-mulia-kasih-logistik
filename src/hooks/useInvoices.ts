@@ -34,7 +34,7 @@ export interface Invoice {
   status: string | null;
   notes: string | null;
   job_order_id: string | null;
-  dp_items: { label: string; amount: number }[] | null;
+  dp_items: { label: string; amount: number; date?: string }[] | null;
   created_at: string;
   updated_at: string;
   items?: InvoiceItem[];
