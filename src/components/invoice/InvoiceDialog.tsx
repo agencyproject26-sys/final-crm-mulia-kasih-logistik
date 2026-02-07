@@ -78,6 +78,20 @@ export const InvoiceDialog = ({
   const [activeTab, setActiveTab] = useState("form");
   const previewRef = useRef<HTMLDivElement>(null);
 
+  const DEFAULT_ITEM_DESCRIPTIONS = [
+    "Trucking",
+    "Tuslag",
+    "Kawalan Truck",
+    "Buruh Pabrik",
+    "Lolo / Lift Off",
+    "Penumpukan",
+    "DO",
+    "Materai",
+  ];
+
+  const getDefaultItems = (): InvoiceItem[] =>
+    DEFAULT_ITEM_DESCRIPTIONS.map((desc) => ({ description: desc, amount: 0 }));
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -143,7 +157,7 @@ export const InvoiceDialog = ({
         down_payment: 0,
         notes: "",
       });
-      setItems([{ description: "", amount: 0 }]);
+      setItems(getDefaultItems());
     }
   }, [invoice, form, open]);
 
@@ -523,7 +537,7 @@ export const InvoiceDialog = ({
                       {items.map((item, index) => (
                         <div key={index} className="flex gap-2 items-center">
                           <Input
-                            placeholder="Deskripsi (contoh: Trucking, Tuslag, dll)"
+                            placeholder="Keterangan item biaya"
                             value={item.description}
                             onChange={(e) => updateItem(index, "description", e.target.value)}
                             className="flex-1"
@@ -540,7 +554,6 @@ export const InvoiceDialog = ({
                             variant="ghost"
                             size="icon"
                             onClick={() => removeItem(index)}
-                            disabled={items.length === 1}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
