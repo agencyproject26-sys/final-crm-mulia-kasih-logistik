@@ -203,7 +203,7 @@ export default function InvoicePage() {
   };
 
   return (
-    <MainLayout title="INVOICE REIMBURSEMENT" subtitle="Kelola invoice pelanggan">
+    <MainLayout title="INVOICE" subtitle="Kelola invoice pelanggan">
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4 mb-6">
         <Card className="stat-card">
