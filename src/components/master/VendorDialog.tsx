@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Plus, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,8 +33,10 @@ import { Vendor, VendorInput } from "@/hooks/useVendors";
 
 const vendorSchema = z.object({
   company_name: z.string().min(1, "Nama perusahaan wajib diisi"),
-  pic_name: z.string().optional(),
-  phone: z.string().optional(),
+  contacts: z.array(z.object({
+    name: z.string(),
+    phone: z.string(),
+  })).default([{ name: "", phone: "" }]),
   email: z.string().email("Email tidak valid").optional().or(z.literal("")),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -68,8 +71,7 @@ export function VendorDialog({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
       company_name: "",
-      pic_name: "",
-      phone: "",
+      contacts: [{ name: "", phone: "" }],
       email: "",
       address: "",
       city: "",
@@ -84,12 +86,25 @@ export function VendorDialog({
     },
   });
 
+  const { fields: contactFields, append: appendContact, remove: removeContact } = useFieldArray({
+    control: form.control,
+    name: "contacts",
+  });
+
   useEffect(() => {
     if (vendor) {
+      const picNames = vendor.pic_name || [];
+      const phones = vendor.phone || [];
+      const maxLength = Math.max(picNames.length, phones.length, 1);
+
+      const contacts = Array.from({ length: maxLength }, (_, i) => ({
+        name: picNames[i] || "",
+        phone: phones[i] || "",
+      }));
+
       form.reset({
         company_name: vendor.company_name,
-        pic_name: vendor.pic_name || "",
-        phone: vendor.phone || "",
+        contacts: contacts.length > 0 ? contacts : [{ name: "", phone: "" }],
         email: vendor.email || "",
         address: vendor.address || "",
         city: vendor.city || "",
@@ -105,8 +120,7 @@ export function VendorDialog({
     } else {
       form.reset({
         company_name: "",
-        pic_name: "",
-        phone: "",
+        contacts: [{ name: "", phone: "" }],
         email: "",
         address: "",
         city: "",
@@ -123,10 +137,17 @@ export function VendorDialog({
   }, [vendor, form]);
 
   const handleSubmit = (values: VendorFormValues) => {
+    const picNames = values.contacts
+      .map(c => c.name.trim())
+      .filter(v => v !== "");
+    const phones = values.contacts
+      .map(c => c.phone.trim())
+      .filter(v => v !== "");
+
     onSubmit({
       company_name: values.company_name,
-      pic_name: values.pic_name || null,
-      phone: values.phone || null,
+      pic_name: picNames.length > 0 ? picNames : null,
+      phone: phones.length > 0 ? phones : null,
       email: values.email || null,
       address: values.address || null,
       city: values.city || null,
@@ -220,33 +241,61 @@ export function VendorDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="pic_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nama PIC</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Paired PIC and Phone Fields */}
+              <div className="sm:col-span-2 border rounded-lg p-4 bg-muted/30 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm text-foreground">Kontak Perusahaan</h4>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => appendContact({ name: "", phone: "" })}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Tambah Kontak
+                  </Button>
+                </div>
 
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telepon</FormLabel>
-                    <FormControl>
-                      <Input placeholder="021-12345678" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {contactFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2 items-start">
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input placeholder="Nama PIC" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`contacts.${index}.phone`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input placeholder="No. Telepon" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {contactFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeContact(index)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
 
               <FormField
                 control={form.control}

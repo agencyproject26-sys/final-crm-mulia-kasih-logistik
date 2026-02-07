@@ -6,8 +6,8 @@ import { mapDatabaseError } from "@/lib/errorHandler";
 export interface Vendor {
   id: string;
   company_name: string;
-  pic_name: string | null;
-  phone: string | null;
+  pic_name: string[] | null;
+  phone: string[] | null;
   email: string | null;
   address: string | null;
   city: string | null;

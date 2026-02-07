@@ -681,8 +681,8 @@ export type Database = {
           id: string
           npwp: string | null
           party: string | null
-          phone: string | null
-          pic_name: string | null
+          phone: string[] | null
+          pic_name: string[] | null
           services: string | null
           status: string | null
           updated_at: string
@@ -701,8 +701,8 @@ export type Database = {
           id?: string
           npwp?: string | null
           party?: string | null
-          phone?: string | null
-          pic_name?: string | null
+          phone?: string[] | null
+          pic_name?: string[] | null
           services?: string | null
           status?: string | null
           updated_at?: string
@@ -721,8 +721,8 @@ export type Database = {
           id?: string
           npwp?: string | null
           party?: string | null
-          phone?: string | null
-          pic_name?: string | null
+          phone?: string[] | null
+          pic_name?: string[] | null
           services?: string | null
           status?: string | null
           updated_at?: string
