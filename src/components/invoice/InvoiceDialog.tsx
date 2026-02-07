@@ -89,6 +89,8 @@ export const InvoiceDialog = ({
     { description: "Materai", amount: 10000 },
   ];
 
+  const DEFAULT_NOTES = `Enclosure :\nAll cheques be crossed and made payable to MULIA KASIH LOGISTIK\nInterest at 1% per month will be charged on overdue account.\nAny complaints/disputes regarding this invoice should be lodged within\n1 days from date of invoice.`;
+
   const getDefaultItems = (): InvoiceItem[] =>
     DEFAULT_ITEMS.map((item) => ({ description: item.description, amount: item.amount }));
 
@@ -111,7 +113,7 @@ export const InvoiceDialog = ({
       description: "",
       delivery_date: "",
       down_payment: 0,
-      notes: "",
+      notes: DEFAULT_NOTES,
     },
   });
 
@@ -155,7 +157,7 @@ export const InvoiceDialog = ({
         description: "",
         delivery_date: "",
         down_payment: 0,
-        notes: "",
+        notes: DEFAULT_NOTES,
       });
       setItems(getDefaultItems());
     }
