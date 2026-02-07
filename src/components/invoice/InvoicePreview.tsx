@@ -4,7 +4,7 @@ import { formatCurrency, terbilang } from "@/lib/numberToWords";
 import { format } from "date-fns";
 
 interface InvoicePreviewProps {
-  invoice: Partial<Invoice> & { items: InvoiceItem[] };
+  invoice: Partial<Invoice> & { items: InvoiceItem[]; signer_name?: string };
 }
 
 export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
@@ -177,7 +177,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                 MATERAI
               </div>
             </div>
-            <p className="font-bold mt-2 border-t border-black pt-1">RUDY SURIVANTO</p>
+            <p className="font-bold mt-2 border-t border-black pt-1">{invoice.signer_name || "RUDY SURIYANTO"}</p>
           </div>
         </div>
 
