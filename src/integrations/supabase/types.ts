@@ -330,6 +330,7 @@ export type Database = {
           delivery_date: string | null
           description: string | null
           down_payment: number
+          dp_items: Json | null
           flight_vessel: string | null
           id: string
           invoice_date: string
@@ -358,6 +359,7 @@ export type Database = {
           delivery_date?: string | null
           description?: string | null
           down_payment?: number
+          dp_items?: Json | null
           flight_vessel?: string | null
           id?: string
           invoice_date?: string
@@ -386,6 +388,7 @@ export type Database = {
           delivery_date?: string | null
           description?: string | null
           down_payment?: number
+          dp_items?: Json | null
           flight_vessel?: string | null
           id?: string
           invoice_date?: string
@@ -432,6 +435,7 @@ export type Database = {
           delivery_date: string | null
           description: string | null
           down_payment: number
+          dp_items: Json | null
           flight_vessel: string | null
           id: string
           invoice_date: string
@@ -460,6 +464,7 @@ export type Database = {
           delivery_date?: string | null
           description?: string | null
           down_payment?: number
+          dp_items?: Json | null
           flight_vessel?: string | null
           id?: string
           invoice_date?: string
@@ -488,6 +493,7 @@ export type Database = {
           delivery_date?: string | null
           description?: string | null
           down_payment?: number
+          dp_items?: Json | null
           flight_vessel?: string | null
           id?: string
           invoice_date?: string
@@ -519,6 +525,7 @@ export type Database = {
           delivery_date: string | null
           description: string | null
           down_payment: number
+          dp_items: Json | null
           flight_vessel: string | null
           id: string
           invoice_date: string
@@ -547,6 +554,7 @@ export type Database = {
           delivery_date?: string | null
           description?: string | null
           down_payment?: number
+          dp_items?: Json | null
           flight_vessel?: string | null
           id?: string
           invoice_date?: string
@@ -575,6 +583,7 @@ export type Database = {
           delivery_date?: string | null
           description?: string | null
           down_payment?: number
+          dp_items?: Json | null
           flight_vessel?: string | null
           id?: string
           invoice_date?: string

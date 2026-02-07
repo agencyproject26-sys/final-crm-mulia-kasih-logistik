@@ -144,8 +144,11 @@ export const InvoiceDialog = ({
         notes: invoice.notes || "",
       });
       setItems(invoice.items || []);
-      // Restore DP items if available, otherwise create single DP from total
-      if (invoice.down_payment && invoice.down_payment > 0) {
+      // Restore DP items from saved dp_items array
+      const savedDpItems = invoice.dp_items as { label: string; amount: number }[] | null;
+      if (savedDpItems && Array.isArray(savedDpItems) && savedDpItems.length > 0) {
+        setDpItems(savedDpItems);
+      } else if (invoice.down_payment && invoice.down_payment > 0) {
         setDpItems([{ label: "DP 1", amount: invoice.down_payment }]);
       } else {
         setDpItems([]);
@@ -267,9 +270,10 @@ export const InvoiceDialog = ({
       description: data.description || null,
       delivery_date: data.delivery_date || null,
       subtotal,
-      down_payment: calculateTotalDP(),
+      down_payment: downPayment,
       total_amount: subtotal,
       remaining_amount: remaining,
+      dp_items: dpItems.length > 0 ? dpItems : null,
       status: "draft",
       notes: data.notes || null,
       job_order_id: invoice?.job_order_id || null,

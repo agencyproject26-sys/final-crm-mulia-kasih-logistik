@@ -156,8 +156,12 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageCon
   const openPreviewDialog = async (invoice: Invoice) => {
     const invoiceWithItems = await getInvoiceWithItems(invoice.id);
     if (invoiceWithItems) {
-      const dpAmount = Number(invoiceWithItems.down_payment) || 0;
-      const dpItems = dpAmount > 0 ? [{ label: "DP 1", amount: dpAmount }] : [];
+      const savedDpItems = invoiceWithItems.dp_items as { label: string; amount: number }[] | null;
+      const dpItems = savedDpItems && Array.isArray(savedDpItems) && savedDpItems.length > 0
+        ? savedDpItems
+        : Number(invoiceWithItems.down_payment) > 0
+          ? [{ label: "DP 1", amount: Number(invoiceWithItems.down_payment) }]
+          : [];
       setPreviewInvoice({
         ...invoiceWithItems,
         items: invoiceWithItems.items || [],
@@ -175,8 +179,12 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageCon
   const handleDownloadPDF = async (invoice: Invoice) => {
     const invoiceWithItems = await getInvoiceWithItems(invoice.id);
     if (invoiceWithItems) {
-      const dpAmount = Number(invoiceWithItems.down_payment) || 0;
-      const dpItems = dpAmount > 0 ? [{ label: "DP 1", amount: dpAmount }] : [];
+      const savedDpItems = invoiceWithItems.dp_items as { label: string; amount: number }[] | null;
+      const dpItems = savedDpItems && Array.isArray(savedDpItems) && savedDpItems.length > 0
+        ? savedDpItems
+        : Number(invoiceWithItems.down_payment) > 0
+          ? [{ label: "DP 1", amount: Number(invoiceWithItems.down_payment) }]
+          : [];
       setPreviewInvoice({ ...invoiceWithItems, items: invoiceWithItems.items || [], dp_items: dpItems });
       
       setTimeout(async () => {
