@@ -52,11 +52,25 @@ export function VendorDetailDialog({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">PIC</p>
-              <p className="font-medium">{vendor.pic_name || "-"}</p>
+              <div className="space-y-1">
+                {vendor.pic_name && vendor.pic_name.length > 0
+                  ? vendor.pic_name.map((name, i) => (
+                      <p key={i} className="font-medium">{name}</p>
+                    ))
+                  : <p className="font-medium">-</p>
+                }
+              </div>
             </div>
             <div>
               <p className="text-muted-foreground">Telepon</p>
-              <p className="font-medium">{vendor.phone || "-"}</p>
+              <div className="space-y-1">
+                {vendor.phone && vendor.phone.length > 0
+                  ? vendor.phone.map((ph, i) => (
+                      <p key={i} className="font-medium">{ph}</p>
+                    ))
+                  : <p className="font-medium">-</p>
+                }
+              </div>
             </div>
             <div>
               <p className="text-muted-foreground">Email</p>
