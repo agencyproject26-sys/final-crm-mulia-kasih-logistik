@@ -189,6 +189,16 @@ export const InvoiceDialog = ({
     }
   };
 
+  const formatRupiah = (value: number): string => {
+    if (!value && value !== 0) return "";
+    return value.toLocaleString("id-ID");
+  };
+
+  const parseRupiah = (value: string): number => {
+    const cleaned = value.replace(/[^0-9]/g, "");
+    return Number(cleaned) || 0;
+  };
+
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
@@ -542,13 +552,15 @@ export const InvoiceDialog = ({
                             onChange={(e) => updateItem(index, "description", e.target.value)}
                             className="flex-1"
                           />
-                          <Input
-                            type="number"
-                            placeholder="Jumlah (Rp)"
-                            value={item.amount || ""}
-                            onChange={(e) => updateItem(index, "amount", Number(e.target.value))}
-                            className="w-40"
-                          />
+                          <div className="relative w-48">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</span>
+                            <Input
+                              placeholder="0"
+                              value={item.amount ? formatRupiah(item.amount) : ""}
+                              onChange={(e) => updateItem(index, "amount", parseRupiah(e.target.value))}
+                              className="pl-9 text-right"
+                            />
+                          </div>
                           <Button
                             type="button"
                             variant="ghost"
