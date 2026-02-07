@@ -237,13 +237,19 @@ export default function Pelanggan() {
 
                                       const waUrl = `https://wa.me/${phoneNumber}`;
 
+                                      const handleWhatsAppClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        window.open(waUrl, "_blank", "noopener,noreferrer");
+                                      };
+
                                       return (
                                         <a
                                           key={i}
                                           href={waUrl}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          onClick={(e) => e.stopPropagation()}
+                                          onClick={handleWhatsAppClick}
                                           className="flex items-center gap-1.5 text-primary hover:text-primary/80 hover:underline transition-colors"
                                           title="Chat via WhatsApp"
                                         >
