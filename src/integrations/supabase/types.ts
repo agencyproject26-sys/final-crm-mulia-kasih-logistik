@@ -222,6 +222,38 @@ export type Database = {
           },
         ]
       }
+      invoice_final_items: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_final_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices_final"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_items: {
         Row: {
           amount: number
@@ -250,6 +282,38 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_reimbursement_items: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_reimbursement_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices_reimbursement"
             referencedColumns: ["id"]
           },
         ]
@@ -355,6 +419,180 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      invoices_final: {
+        Row: {
+          bl_number: string | null
+          created_at: string
+          customer_address: string | null
+          customer_city: string | null
+          customer_id: string | null
+          customer_name: string
+          deleted_at: string | null
+          delivery_date: string | null
+          description: string | null
+          down_payment: number
+          flight_vessel: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          job_order_id: string | null
+          no_aju: string | null
+          no_invoice: string | null
+          no_pen: string | null
+          notes: string | null
+          origin: string | null
+          party: string | null
+          remaining_amount: number
+          status: string | null
+          subtotal: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          bl_number?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_id?: string | null
+          customer_name: string
+          deleted_at?: string | null
+          delivery_date?: string | null
+          description?: string | null
+          down_payment?: number
+          flight_vessel?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          job_order_id?: string | null
+          no_aju?: string | null
+          no_invoice?: string | null
+          no_pen?: string | null
+          notes?: string | null
+          origin?: string | null
+          party?: string | null
+          remaining_amount?: number
+          status?: string | null
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          bl_number?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          deleted_at?: string | null
+          delivery_date?: string | null
+          description?: string | null
+          down_payment?: number
+          flight_vessel?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          job_order_id?: string | null
+          no_aju?: string | null
+          no_invoice?: string | null
+          no_pen?: string | null
+          notes?: string | null
+          origin?: string | null
+          party?: string | null
+          remaining_amount?: number
+          status?: string | null
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invoices_reimbursement: {
+        Row: {
+          bl_number: string | null
+          created_at: string
+          customer_address: string | null
+          customer_city: string | null
+          customer_id: string | null
+          customer_name: string
+          deleted_at: string | null
+          delivery_date: string | null
+          description: string | null
+          down_payment: number
+          flight_vessel: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          job_order_id: string | null
+          no_aju: string | null
+          no_invoice: string | null
+          no_pen: string | null
+          notes: string | null
+          origin: string | null
+          party: string | null
+          remaining_amount: number
+          status: string | null
+          subtotal: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          bl_number?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_id?: string | null
+          customer_name: string
+          deleted_at?: string | null
+          delivery_date?: string | null
+          description?: string | null
+          down_payment?: number
+          flight_vessel?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          job_order_id?: string | null
+          no_aju?: string | null
+          no_invoice?: string | null
+          no_pen?: string | null
+          notes?: string | null
+          origin?: string | null
+          party?: string | null
+          remaining_amount?: number
+          status?: string | null
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          bl_number?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_city?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          deleted_at?: string | null
+          delivery_date?: string | null
+          description?: string | null
+          down_payment?: number
+          flight_vessel?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          job_order_id?: string | null
+          no_aju?: string | null
+          no_invoice?: string | null
+          no_pen?: string | null
+          notes?: string | null
+          origin?: string | null
+          party?: string | null
+          remaining_amount?: number
+          status?: string | null
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       job_orders: {
         Row: {

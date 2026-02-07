@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import type { UseMutationResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,7 +37,7 @@ import {
   FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useInvoices, Invoice, InvoiceInput, InvoiceItem } from "@/hooks/useInvoices";
+import { Invoice, InvoiceInput, InvoiceItem } from "@/hooks/useInvoices";
 import { InvoiceDialog } from "@/components/invoice/InvoiceDialog";
 import { InvoicePreview } from "@/components/invoice/InvoicePreview";
 import { DeleteInvoiceDialog } from "@/components/invoice/DeleteInvoiceDialog";
@@ -70,12 +71,24 @@ const statusLabels: Record<string, string> = {
   overdue: "Jatuh Tempo",
 };
 
-interface InvoicePageContentProps {
-  pageTitle: string;
+
+
+interface InvoiceHookReturn {
+  invoices: Invoice[];
+  isLoading: boolean;
+  createInvoice: UseMutationResult<any, Error, InvoiceInput>;
+  updateInvoice: UseMutationResult<any, Error, Partial<Invoice> & { id: string; items?: InvoiceItem[] }>;
+  deleteInvoice: UseMutationResult<void, Error, string>;
+  getInvoiceWithItems: (id: string) => Promise<Invoice | null>;
 }
 
-export function InvoicePageContent({ pageTitle }: InvoicePageContentProps) {
-  const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice, getInvoiceWithItems } = useInvoices();
+interface InvoicePageContentProps {
+  pageTitle: string;
+  useInvoiceHook: () => InvoiceHookReturn;
+}
+
+export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageContentProps) {
+  const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice, getInvoiceWithItems } = useInvoiceHook();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
