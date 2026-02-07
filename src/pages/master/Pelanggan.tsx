@@ -235,33 +235,15 @@ export default function Pelanggan() {
                                         phoneNumber = "62" + phoneNumber.substring(1);
                                       }
 
-                                      const appUrl = `whatsapp://send?phone=${phoneNumber}`;
-                                      const webUrl = `https://wa.me/${phoneNumber}`;
-
-                                      const handleWhatsAppClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-                                        e.stopPropagation();
-                                        e.preventDefault();
-
-                                        try {
-                                          window.location.href = appUrl;
-                                        } catch {
-                                          // ignore
-                                        }
-
-                                        window.setTimeout(() => {
-                                          try {
-                                            window.open(webUrl, "_blank", "noopener,noreferrer");
-                                          } catch {
-                                            // ignore
-                                          }
-                                        }, 800);
-                                      };
+                                      const waUrl = `https://wa.me/${phoneNumber}`;
 
                                       return (
                                         <a
                                           key={i}
-                                          href={appUrl}
-                                          onClick={handleWhatsAppClick}
+                                          href={waUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
                                           className="flex items-center gap-1.5 text-primary hover:text-primary/80 hover:underline transition-colors"
                                           title="Chat via WhatsApp"
                                         >
