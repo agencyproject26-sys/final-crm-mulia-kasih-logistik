@@ -240,7 +240,13 @@ export default function Pelanggan() {
                                       const handleWhatsAppClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        window.open(waUrl, "_blank", "noopener,noreferrer");
+                                        // Try opening native WhatsApp app first
+                                        const appUrl = `whatsapp://send?phone=${phoneNumber}`;
+                                        const newWindow = window.open(appUrl, "_self");
+                                        // Fallback to wa.me after short delay if app didn't open
+                                        setTimeout(() => {
+                                          window.open(waUrl, "_blank", "noopener,noreferrer");
+                                        }, 1500);
                                       };
 
                                       return (
