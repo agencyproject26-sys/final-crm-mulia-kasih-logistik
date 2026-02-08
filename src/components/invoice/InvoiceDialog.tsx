@@ -95,6 +95,10 @@ export const InvoiceDialog = ({
     { description: "Lolo / Lift Off", amount: 0 },
     { description: "Penumpukan", amount: 0 },
     { description: "DO", amount: 0 },
+    { description: "Handling Dok Custom", amount: 0 },
+    { description: "Pemotongan Quota & Form COO", amount: 300000 },
+    { description: "ADM Document", amount: 200000 },
+    { description: "Edi / PPJK", amount: 250000 },
     { description: "Materai", amount: 10000 },
   ];
 
