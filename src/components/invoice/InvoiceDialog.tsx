@@ -310,22 +310,29 @@ export const InvoiceDialog = ({
 
         setItems(detailedItems);
 
-        // 3. Find submitted Invoices as DP data (from invoices table, status = submitted)
+        // 3. Find submitted (non-draft) Invoices as DP data
         if (reimbData.customer_id) {
-          const { data: submittedInvoices } = await supabase
+          let dpQuery = supabase
             .from("invoices")
             .select("*")
             .eq("customer_id", reimbData.customer_id)
-            .eq("status", "submitted")
+            .neq("status", "draft")
             .is("deleted_at", null)
-            .order("created_at", { ascending: true });
+            .order("invoice_date", { ascending: true });
+
+          // Also filter by bl_number for more precise matching
+          if (blNumber) {
+            dpQuery = dpQuery.eq("bl_number", blNumber.trim());
+          }
+
+          const { data: submittedInvoices } = await dpQuery;
 
           if (submittedInvoices && submittedInvoices.length > 0) {
             dpFoundResult = true;
             dpCount = submittedInvoices.length;
             const newDpItems = submittedInvoices.map((inv, i) => ({
               label: `DP ${i + 1}`,
-              amount: Number(inv.total_amount),
+              amount: Number(inv.down_payment) > 0 ? Number(inv.down_payment) : Number(inv.total_amount),
               date: inv.invoice_date || "",
             }));
             setDpItems(newDpItems);
