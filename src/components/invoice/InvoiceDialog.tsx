@@ -88,13 +88,6 @@ export const InvoiceDialog = ({
   const [reimbursementFound, setReimbursementFound] = useState(false);
 
   const DEFAULT_ITEMS: { description: string; amount: number }[] = [
-    { description: "Trucking", amount: 0 },
-    { description: "Tuslag", amount: 0 },
-    { description: "Kawalan Truck", amount: 100000 },
-    { description: "Buruh Pabrik", amount: 100000 },
-    { description: "Lolo / Lift Off", amount: 0 },
-    { description: "Penumpukan", amount: 0 },
-    { description: "DO", amount: 0 },
     { description: "Handling Dok Custom", amount: 0 },
     { description: "Pemotongan Quota & Form COO", amount: 300000 },
     { description: "ADM Document", amount: 200000 },
