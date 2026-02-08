@@ -85,9 +85,10 @@ interface InvoiceHookReturn {
 interface InvoicePageContentProps {
   pageTitle: string;
   useInvoiceHook: () => InvoiceHookReturn;
+  showSeparateCostItems?: boolean;
 }
 
-export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageContentProps) {
+export function InvoicePageContent({ pageTitle, useInvoiceHook, showSeparateCostItems = false }: InvoicePageContentProps) {
   const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice, getInvoiceWithItems } = useInvoiceHook();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -434,6 +435,7 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageCon
         onSubmit={selectedInvoice ? handleUpdate : handleCreate}
         invoice={selectedInvoice}
         isLoading={createInvoice.isPending || updateInvoice.isPending}
+        showSeparateCostItems={showSeparateCostItems}
       />
 
       <DeleteInvoiceDialog
