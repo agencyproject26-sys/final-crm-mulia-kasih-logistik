@@ -107,8 +107,16 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
       invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.customer_name.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (activeTab === "all") return matchesSearch;
-    return matchesSearch && invoice.status === activeTab;
+    if (!matchesSearch) return false;
+
+    if (enableFinalIntegration) {
+      if (activeTab === "positive") return Number(invoice.remaining_amount) >= 0;
+      if (activeTab === "negative") return Number(invoice.remaining_amount) < 0;
+      return true; // "all"
+    }
+
+    if (activeTab === "all") return true;
+    return invoice.status === activeTab;
   });
 
   const totalAmount = invoices.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
@@ -278,7 +286,21 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
       <div className="rounded-xl border border-border bg-card">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 border-b border-border">
-          {hideStatusColumn ? (
+        {enableFinalIntegration ? (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="all">Semua</TabsTrigger>
+                <TabsTrigger value="positive" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-600">
+                  <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1.5" />
+                  Positif ({invoices.filter(i => Number(i.remaining_amount) >= 0).length})
+                </TabsTrigger>
+                <TabsTrigger value="negative" className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-600">
+                  <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1.5" />
+                  Negatif ({invoices.filter(i => Number(i.remaining_amount) < 0).length})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          ) : hideStatusColumn ? (
             <Tabs value="all" onValueChange={() => {}}>
               <TabsList>
                 <TabsTrigger value="all">Semua</TabsTrigger>
@@ -371,7 +393,7 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
                       <TableCell className="text-right font-medium text-green-500">
                         {formatRupiah(Number(invoice.down_payment))}
                       </TableCell>
-                      <TableCell className="text-right font-medium text-destructive">
+                      <TableCell className={cn("text-right font-medium", Number(invoice.remaining_amount) >= 0 ? "text-green-600" : "text-red-500")}>
                         {formatRupiah(Number(invoice.remaining_amount))}
                       </TableCell>
                       <TableCell>
