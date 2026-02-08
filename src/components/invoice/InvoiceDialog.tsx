@@ -68,6 +68,7 @@ interface InvoiceDialogProps {
   isLoading?: boolean;
   defaultItems?: { description: string; amount: number }[];
   enableFinalIntegration?: boolean;
+  hideReimbursementLookup?: boolean;
 }
 
 export const InvoiceDialog = ({
@@ -78,6 +79,7 @@ export const InvoiceDialog = ({
   isLoading,
   defaultItems,
   enableFinalIntegration,
+  hideReimbursementLookup,
 }: InvoiceDialogProps) => {
   const { data: customers = [] } = useCustomers();
   const [items, setItems] = useState<InvoiceItem[]>([]);
@@ -647,8 +649,8 @@ export const InvoiceDialog = ({
                     />
                   </div>
 
-                  {/* Reimbursement Lookup - only for non-final pages */}
-                  {!enableFinalIntegration && (
+                  {/* Reimbursement Lookup - only for non-final pages and when not hidden */}
+                  {!enableFinalIntegration && !hideReimbursementLookup && (
                     <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
                       <h3 className="font-semibold flex items-center gap-2">
                         <Search className="h-4 w-4" />

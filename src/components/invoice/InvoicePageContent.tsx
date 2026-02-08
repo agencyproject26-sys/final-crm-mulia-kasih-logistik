@@ -87,9 +87,10 @@ interface InvoicePageContentProps {
   useInvoiceHook: () => InvoiceHookReturn;
   defaultItems?: { description: string; amount: number }[];
   enableFinalIntegration?: boolean;
+  hideReimbursementLookup?: boolean;
 }
 
-export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, enableFinalIntegration }: InvoicePageContentProps) {
+export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, enableFinalIntegration, hideReimbursementLookup }: InvoicePageContentProps) {
   const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice, getInvoiceWithItems } = useInvoiceHook();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -438,6 +439,7 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
         isLoading={createInvoice.isPending || updateInvoice.isPending}
         defaultItems={defaultItems}
         enableFinalIntegration={enableFinalIntegration}
+        hideReimbursementLookup={hideReimbursementLookup}
       />
 
       <DeleteInvoiceDialog
