@@ -66,7 +66,6 @@ interface InvoiceDialogProps {
   onSubmit: (data: InvoiceInput) => void;
   invoice?: Invoice | null;
   isLoading?: boolean;
-  showSeparateCostItems?: boolean;
 }
 
 export const InvoiceDialog = ({
@@ -75,11 +74,9 @@ export const InvoiceDialog = ({
   onSubmit,
   invoice,
   isLoading,
-  showSeparateCostItems = false,
 }: InvoiceDialogProps) => {
   const { data: customers = [] } = useCustomers();
   const [items, setItems] = useState<InvoiceItem[]>([]);
-  const [costItems, setCostItems] = useState<InvoiceItem[]>([]);
   const [signerName, setSignerName] = useState("RUDY SURIYANTO");
   const [dpItems, setDpItems] = useState<{ label: string; amount: number; date: string }[]>([]);
   const [bankAccountName, setBankAccountName] = useState("PT. MULIA KASIH LOGISTIK");
@@ -91,10 +88,14 @@ export const InvoiceDialog = ({
   const [reimbursementFound, setReimbursementFound] = useState(false);
 
   const DEFAULT_ITEMS: { description: string; amount: number }[] = [
-    { description: "Handling Dok Custom", amount: 0 },
-    { description: "Pemotongan Quota & Form COO", amount: 300000 },
-    { description: "ADM Document", amount: 200000 },
-    { description: "Edi / PPJK", amount: 250000 },
+    { description: "Trucking", amount: 0 },
+    { description: "Tuslag", amount: 0 },
+    { description: "Kawalan Truck", amount: 100000 },
+    { description: "Buruh Pabrik", amount: 100000 },
+    { description: "Lolo / Lift Off", amount: 0 },
+    { description: "Penumpukan", amount: 0 },
+    { description: "DO", amount: 0 },
+    { description: "Materai", amount: 10000 },
   ];
 
   const DEFAULT_NOTES = `Enclosure :\nAll cheques be crossed and made payable to MULIA KASIH LOGISTIK\nInterest at 1% per month will be charged on overdue account.\nAny complaints/disputes regarding this invoice should be lodged within\n1 days from date of invoice.`;
@@ -171,26 +172,6 @@ export const InvoiceDialog = ({
     }
   }, [form]);
 
-  const splitItemsFromInvoice = (allItems: InvoiceItem[]) => {
-    const defaultDescriptions = DEFAULT_ITEMS.map(d => d.description.toLowerCase());
-    const cost: InvoiceItem[] = [];
-    const inv: InvoiceItem[] = [];
-    allItems.forEach(item => {
-      if (defaultDescriptions.includes(item.description.toLowerCase())) {
-        cost.push(item);
-      } else {
-        inv.push(item);
-      }
-    });
-    // Ensure all default cost items exist
-    DEFAULT_ITEMS.forEach(def => {
-      if (!cost.find(c => c.description.toLowerCase() === def.description.toLowerCase())) {
-        cost.push({ description: def.description, amount: def.amount });
-      }
-    });
-    return { cost, inv };
-  };
-
   useEffect(() => {
     if (invoice) {
       form.reset({
@@ -212,13 +193,7 @@ export const InvoiceDialog = ({
         down_payment: invoice.down_payment || 0,
         notes: invoice.notes || "",
       });
-      if (showSeparateCostItems) {
-        const { cost, inv } = splitItemsFromInvoice(invoice.items || []);
-        setCostItems(cost);
-        setItems(inv.length > 0 ? inv : [{ description: "", amount: 0 }]);
-      } else {
-        setItems(invoice.items || []);
-      }
+      setItems(invoice.items || []);
       // Restore DP items from saved dp_items array
       const savedDpItems = invoice.dp_items as { label: string; amount: number; date?: string }[] | null;
       if (savedDpItems && Array.isArray(savedDpItems) && savedDpItems.length > 0) {
@@ -248,12 +223,7 @@ export const InvoiceDialog = ({
         down_payment: 0,
         notes: DEFAULT_NOTES,
       });
-      if (showSeparateCostItems) {
-        setCostItems(getDefaultItems());
-        setItems([{ description: "", amount: 0 }]);
-      } else {
-        setItems(getDefaultItems());
-      }
+      setItems(getDefaultItems());
       setDpItems([]);
       setReimbursementFound(false);
     }
@@ -303,22 +273,8 @@ export const InvoiceDialog = ({
     setItems(newItems);
   };
 
-  const updateCostItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
-    const newItems = [...costItems];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setCostItems(newItems);
-  };
-
-  const calculateCostTotal = () => {
-    return costItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-  };
-
   const calculateTotal = () => {
-    const invoiceTotal = items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-    if (showSeparateCostItems) {
-      return calculateCostTotal() + invoiceTotal;
-    }
-    return invoiceTotal;
+    return items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   };
 
   const calculateTotalDP = () => {
@@ -372,9 +328,7 @@ export const InvoiceDialog = ({
       status: "draft",
       notes: data.notes || null,
       job_order_id: invoice?.job_order_id || null,
-      items: showSeparateCostItems
-        ? [...costItems.filter((item) => item.description.trim() !== ""), ...items.filter((item) => item.description.trim() !== "")]
-        : items.filter((item) => item.description.trim() !== ""),
+      items: items.filter((item) => item.description.trim() !== ""),
     };
 
     onSubmit(invoiceData);
@@ -422,7 +376,7 @@ export const InvoiceDialog = ({
   const totalDP = calculateTotalDP();
   const previewData = {
     ...formValues,
-    items: showSeparateCostItems ? [...costItems, ...items] : items,
+    items,
     subtotal: calculateTotal(),
     total_amount: calculateTotal(),
     down_payment: totalDP,
@@ -718,43 +672,10 @@ export const InvoiceDialog = ({
                     </div>
                   </div>
 
-                  {/* Cost Items - Separate section for Reimbursement */}
-                  {showSeparateCostItems && (
-                    <div className="border rounded-lg p-4 space-y-4">
-                      <h3 className="font-semibold">Item Biaya</h3>
-                      <div className="space-y-2">
-                        {costItems.map((item, index) => (
-                          <div key={index} className="flex gap-2 items-center">
-                            <Input
-                              value={item.description}
-                              onChange={(e) => updateCostItem(index, "description", e.target.value)}
-                              className="flex-1"
-                            />
-                            <div className="relative w-48">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</span>
-                              <Input
-                                placeholder="0"
-                                value={item.amount ? formatRupiah(item.amount) : ""}
-                                onChange={(e) => updateCostItem(index, "amount", parseRupiah(e.target.value))}
-                                className="pl-9 text-right"
-                              />
-                            </div>
-                            <div className="w-9" /> {/* Spacer to align with invoice items */}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex justify-end">
-                        <p className="font-semibold text-sm">
-                          Subtotal Biaya: Rp {calculateCostTotal().toLocaleString("id-ID")}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Line Items */}
                   <div className="border rounded-lg p-4 space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-semibold">{showSeparateCostItems ? "Item Invoice" : "Item Biaya"}</h3>
+                      <h3 className="font-semibold">Item Biaya</h3>
                       <Button type="button" variant="outline" size="sm" onClick={addItem}>
                         <Plus className="h-4 w-4 mr-1" />
                         Tambah Item
@@ -764,7 +685,7 @@ export const InvoiceDialog = ({
                       {items.map((item, index) => (
                         <div key={index} className="flex gap-2 items-center">
                           <Input
-                            placeholder={showSeparateCostItems ? "Keterangan item invoice" : "Keterangan item biaya"}
+                            placeholder="Keterangan item biaya"
                             value={item.description}
                             onChange={(e) => updateItem(index, "description", e.target.value)}
                             className="flex-1"
@@ -791,7 +712,7 @@ export const InvoiceDialog = ({
                     </div>
                     <div className="flex justify-end">
                       <p className="font-semibold">
-                        {showSeparateCostItems ? "Grand " : ""}Total: Rp {calculateTotal().toLocaleString("id-ID")}
+                        Total: Rp {calculateTotal().toLocaleString("id-ID")}
                       </p>
                     </div>
                   </div>

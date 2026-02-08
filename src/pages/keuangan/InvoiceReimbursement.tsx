@@ -5,7 +5,7 @@ import { useInvoicesReimbursement } from "@/hooks/useInvoicesReimbursement";
 export default function InvoiceReimbursementPage() {
   return (
     <MainLayout title="INVOICE REIMBURSEMENT" subtitle="Kelola invoice reimbursement">
-      <InvoicePageContent pageTitle="INVOICE REIMBURSEMENT" useInvoiceHook={useInvoicesReimbursement} showSeparateCostItems />
+      <InvoicePageContent pageTitle="INVOICE REIMBURSEMENT" useInvoiceHook={useInvoicesReimbursement} />
     </MainLayout>
   );
 }
