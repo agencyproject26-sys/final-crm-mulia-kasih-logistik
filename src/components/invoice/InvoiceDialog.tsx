@@ -318,22 +318,22 @@ export const InvoiceDialog = ({
 
         setItems(detailedItems);
 
-        // 3. Find submitted (non-draft) Invoices as DP data, matched by no_invoice
+        // 3. Find Invoices with DP data, matched by no_invoice
         if (noInvoice) {
-          const { data: submittedInvoices } = await supabase
+          const { data: invoicesWithDp } = await supabase
             .from("invoices")
             .select("*")
             .eq("no_invoice", noInvoice.trim())
-            .neq("status", "draft")
+            .gt("down_payment", 0)
             .is("deleted_at", null)
             .order("invoice_date", { ascending: true });
 
-          if (submittedInvoices && submittedInvoices.length > 0) {
+          if (invoicesWithDp && invoicesWithDp.length > 0) {
             dpFoundResult = true;
-            dpCount = submittedInvoices.length;
-            const newDpItems = submittedInvoices.map((inv, i) => ({
+            dpCount = invoicesWithDp.length;
+            const newDpItems = invoicesWithDp.map((inv, i) => ({
               label: `DP ${i + 1}`,
-              amount: Number(inv.down_payment) > 0 ? Number(inv.down_payment) : Number(inv.total_amount),
+              amount: Number(inv.down_payment),
               date: inv.invoice_date || "",
             }));
             setDpItems(newDpItems);
