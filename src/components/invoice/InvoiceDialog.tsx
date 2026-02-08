@@ -90,12 +90,17 @@ export const InvoiceDialog = ({
   const previewRef = useRef<HTMLDivElement>(null);
   const [isSearchingReimbursement, setIsSearchingReimbursement] = useState(false);
   const [reimbursementFound, setReimbursementFound] = useState(false);
-  const [invoiceLookupNumber, setInvoiceLookupNumber] = useState("");
-  const [isSearchingInvoice, setIsSearchingInvoice] = useState(false);
-  const [invoiceFound, setInvoiceFound] = useState(false);
-  const [dpLookupNumber, setDpLookupNumber] = useState("");
-  const [isSearchingDP, setIsSearchingDP] = useState(false);
-  const [dpFound, setDpFound] = useState(false);
+  // Unified final integration state
+  const [finalLookupNumber, setFinalLookupNumber] = useState("");
+  const [isSearchingFinal, setIsSearchingFinal] = useState(false);
+  const [finalIntegrationResult, setFinalIntegrationResult] = useState<{
+    invoiceFound: boolean;
+    reimbursementFound: boolean;
+    dpFound: boolean;
+    invoiceAmount: number;
+    reimbursementAmount: number;
+    dpCount: number;
+  } | null>(null);
 
   const FALLBACK_ITEMS: { description: string; amount: number }[] = [
     { description: "Trucking", amount: 0 },
@@ -191,78 +196,121 @@ export const InvoiceDialog = ({
     }
   }, [form, enableFinalIntegration]);
 
-  const lookupInvoice = useCallback(async (invoiceNumber: string) => {
-    if (!invoiceNumber || invoiceNumber.trim().length < 3) {
-      setInvoiceFound(false);
-      return;
-    }
-    setIsSearchingInvoice(true);
+  const lookupAllFromInvoice = useCallback(async (invoiceNumber: string) => {
+    if (!invoiceNumber || invoiceNumber.trim().length < 3) return;
+    setIsSearchingFinal(true);
+    setFinalIntegrationResult(null);
+
+    let invoiceFoundResult = false;
+    let reimbursementFoundResult = false;
+    let dpFoundResult = false;
+    let invoiceAmount = 0;
+    let reimbursementAmount = 0;
+    let dpCount = 0;
+
     try {
-      const { data, error } = await supabase
+      // 1. Find the Invoice
+      const { data: invoiceData, error: invoiceError } = await supabase
         .from("invoices")
         .select("*")
         .eq("invoice_number", invoiceNumber.trim())
         .is("deleted_at", null)
         .maybeSingle();
 
-      if (error) throw error;
+      if (invoiceError) throw invoiceError;
 
-      if (data) {
-        setInvoiceFound(true);
+      if (invoiceData) {
+        invoiceFoundResult = true;
+        invoiceAmount = Number(invoiceData.total_amount) || 0;
+
+        // Auto-fill customer & shipment data
+        form.setValue("customer_name", invoiceData.customer_name || "");
+        form.setValue("customer_address", invoiceData.customer_address || "");
+        form.setValue("customer_city", invoiceData.customer_city || "");
+        form.setValue("no_aju", invoiceData.no_aju || "");
+        form.setValue("bl_number", invoiceData.bl_number || "");
+        form.setValue("party", invoiceData.party || "");
+        form.setValue("flight_vessel", invoiceData.flight_vessel || "");
+        form.setValue("origin", invoiceData.origin || "");
+        form.setValue("no_pen", invoiceData.no_pen || "");
+        form.setValue("no_invoice", invoiceData.no_invoice || "");
+        form.setValue("description", invoiceData.description || "");
+        form.setValue("delivery_date", invoiceData.delivery_date || "");
+        if (invoiceData.customer_id) {
+          form.setValue("customer_id", invoiceData.customer_id);
+        }
+
+        // Update "Invoice" item amount
         setItems(prev => prev.map(item =>
           item.description === "Invoice"
-            ? { ...item, amount: Number(data.total_amount) || 0 }
+            ? { ...item, amount: invoiceAmount }
             : item
         ));
-        toast.success("Data Invoice berhasil dimuat");
+
+        // 2. Find Reimbursement using shared no_invoice
+        const noInvoice = invoiceData.no_invoice;
+        const blNumber = invoiceData.bl_number;
+
+        if (noInvoice) {
+          const { data: reimbData } = await supabase
+            .from("invoices_reimbursement")
+            .select("*")
+            .eq("no_invoice", noInvoice.trim())
+            .is("deleted_at", null)
+            .maybeSingle();
+
+          if (reimbData) {
+            reimbursementFoundResult = true;
+            reimbursementAmount = Number(reimbData.total_amount) || 0;
+            setItems(prev => prev.map(item =>
+              item.description === "Invoice Reimbursement"
+                ? { ...item, amount: reimbursementAmount }
+                : item
+            ));
+          }
+        }
+
+        // 3. Find Invoice DP using bl_number
+        if (blNumber) {
+          const { data: dpData } = await supabase
+            .from("invoice_dp")
+            .select("*")
+            .eq("bl_number", blNumber.trim())
+            .is("deleted_at", null)
+            .order("part_number", { ascending: true });
+
+          if (dpData && dpData.length > 0) {
+            dpFoundResult = true;
+            dpCount = dpData.length;
+            const newDpItems = dpData.map((dp, i) => ({
+              label: `DP ${i + 1}`,
+              amount: Number(dp.total_amount),
+              date: dp.invoice_date || "",
+            }));
+            setDpItems(newDpItems);
+          }
+        }
+
+        setFinalIntegrationResult({
+          invoiceFound: invoiceFoundResult,
+          reimbursementFound: reimbursementFoundResult,
+          dpFound: dpFoundResult,
+          invoiceAmount,
+          reimbursementAmount,
+          dpCount,
+        });
+
+        toast.success("Data berhasil dimuat dari Invoice");
       } else {
-        setInvoiceFound(false);
         toast.error("Invoice tidak ditemukan");
       }
     } catch (err) {
-      console.error("Invoice lookup error:", err);
-      setInvoiceFound(false);
+      console.error("Unified lookup error:", err);
+      toast.error("Gagal mencari data Invoice");
     } finally {
-      setIsSearchingInvoice(false);
+      setIsSearchingFinal(false);
     }
-  }, []);
-
-  const lookupInvoiceDP = useCallback(async (dpNumber: string) => {
-    if (!dpNumber || dpNumber.trim().length < 3) {
-      setDpFound(false);
-      return;
-    }
-    setIsSearchingDP(true);
-    try {
-      const { data, error } = await supabase
-        .from("invoice_dp")
-        .select("*")
-        .eq("invoice_dp_number", dpNumber.trim())
-        .is("deleted_at", null)
-        .order("part_number", { ascending: true });
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        setDpFound(true);
-        const newDpItems = data.map((dp, i) => ({
-          label: `DP ${i + 1}`,
-          amount: Number(dp.total_amount),
-          date: dp.invoice_date || "",
-        }));
-        setDpItems(newDpItems);
-        toast.success(`${data.length} Invoice DP berhasil dimuat`);
-      } else {
-        setDpFound(false);
-        toast.error("Invoice DP tidak ditemukan");
-      }
-    } catch (err) {
-      console.error("Invoice DP lookup error:", err);
-      setDpFound(false);
-    } finally {
-      setIsSearchingDP(false);
-    }
-  }, []);
+  }, [form]);
 
   useEffect(() => {
     if (invoice) {
@@ -318,10 +366,8 @@ export const InvoiceDialog = ({
       setItems(getDefaultItems());
       setDpItems([]);
       setReimbursementFound(false);
-      setInvoiceLookupNumber("");
-      setInvoiceFound(false);
-      setDpLookupNumber("");
-      setDpFound(false);
+      setFinalLookupNumber("");
+      setFinalIntegrationResult(null);
     }
   }, [invoice, form, open]);
 
@@ -553,128 +599,103 @@ export const InvoiceDialog = ({
                     />
                   </div>
 
-                  {/* Reimbursement Lookup */}
-                  <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <Search className="h-4 w-4" />
-                      Integrasi Invoice Reimbursement
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                      Masukkan nomor Invoice Reimbursement untuk mengisi data otomatis (Customer, B/L, Party, dll.)
-                    </p>
-                    <div className="flex gap-2 items-end">
-                      <div className="flex-1">
-                        <FormLabel>Nomor Invoice Reimbursement</FormLabel>
-                        <Input
-                          placeholder="Contoh: INV/MITRA/027115/2026"
-                          value={form.watch("no_invoice") || ""}
-                          onChange={(e) => form.setValue("no_invoice", e.target.value)}
-                          className="mt-1"
-                        />
+                  {/* Reimbursement Lookup - only for non-final pages */}
+                  {!enableFinalIntegration && (
+                    <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        Integrasi Invoice Reimbursement
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Masukkan nomor Invoice Reimbursement untuk mengisi data otomatis (Customer, B/L, Party, dll.)
+                      </p>
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <FormLabel>Nomor Invoice Reimbursement</FormLabel>
+                          <Input
+                            placeholder="Contoh: INV/MITRA/027115/2026"
+                            value={form.watch("no_invoice") || ""}
+                            onChange={(e) => form.setValue("no_invoice", e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => lookupReimbursement(form.getValues("no_invoice") || "")}
+                          disabled={isSearchingReimbursement}
+                        >
+                          {isSearchingReimbursement ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Search className="h-4 w-4 mr-2" />
+                          )}
+                          Cari
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => lookupReimbursement(form.getValues("no_invoice") || "")}
-                        disabled={isSearchingReimbursement}
-                      >
-                        {isSearchingReimbursement ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Search className="h-4 w-4 mr-2" />
-                        )}
-                        Cari
-                      </Button>
+                      {reimbursementFound && (
+                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
+                          ✓ Data ditemukan dan telah diisi otomatis
+                        </Badge>
+                      )}
                     </div>
-                    {reimbursementFound && (
-                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
-                        ✓ Data ditemukan dan telah diisi otomatis
-                      </Badge>
-                    )}
-                  </div>
+                  )}
 
                   {enableFinalIntegration && (
-                    <>
-                      {/* Invoice Lookup */}
-                      <div className="border rounded-lg p-4 space-y-3 bg-blue-500/5">
-                        <h3 className="font-semibold flex items-center gap-2">
-                          <Search className="h-4 w-4" />
-                          Integrasi Invoice
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          Masukkan nomor Invoice untuk mengambil total nominal Invoice
-                        </p>
-                        <div className="flex gap-2 items-end">
-                          <div className="flex-1">
-                            <FormLabel>Nomor Invoice</FormLabel>
-                            <Input
-                              placeholder="Contoh: INV/MITRA/027115/2026"
-                              value={invoiceLookupNumber}
-                              onChange={(e) => setInvoiceLookupNumber(e.target.value)}
-                              className="mt-1"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => lookupInvoice(invoiceLookupNumber)}
-                            disabled={isSearchingInvoice}
-                          >
-                            {isSearchingInvoice ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Search className="h-4 w-4 mr-2" />
-                            )}
-                            Cari
-                          </Button>
+                    <div className="border rounded-lg p-4 space-y-3 bg-accent/50">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        Integrasi Invoice Final
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Masukkan Nomor Invoice untuk otomatis mengambil data Invoice, Invoice Reimbursement, dan Invoice DP sekaligus
+                      </p>
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <FormLabel>Nomor Invoice</FormLabel>
+                          <Input
+                            placeholder="Contoh: INV/MITRA/022284/2026"
+                            value={finalLookupNumber}
+                            onChange={(e) => setFinalLookupNumber(e.target.value)}
+                            className="mt-1"
+                          />
                         </div>
-                        {invoiceFound && (
-                          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30">
-                            ✓ Total nominal Invoice berhasil dimuat
-                          </Badge>
-                        )}
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => lookupAllFromInvoice(finalLookupNumber)}
+                          disabled={isSearchingFinal}
+                        >
+                          {isSearchingFinal ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Search className="h-4 w-4 mr-2" />
+                          )}
+                          Cari Semua
+                        </Button>
                       </div>
-
-                      {/* Invoice DP Lookup */}
-                      <div className="border rounded-lg p-4 space-y-3 bg-yellow-500/5">
-                        <h3 className="font-semibold flex items-center gap-2">
-                          <Search className="h-4 w-4" />
-                          Integrasi Invoice DP
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          Masukkan nomor Invoice DP untuk mengambil data Down Payment
-                        </p>
-                        <div className="flex gap-2 items-end">
-                          <div className="flex-1">
-                            <FormLabel>Nomor Invoice DP</FormLabel>
-                            <Input
-                              placeholder="Contoh: INV-DP/MITRA/027115/2026"
-                              value={dpLookupNumber}
-                              onChange={(e) => setDpLookupNumber(e.target.value)}
-                              className="mt-1"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => lookupInvoiceDP(dpLookupNumber)}
-                            disabled={isSearchingDP}
-                          >
-                            {isSearchingDP ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Search className="h-4 w-4 mr-2" />
-                            )}
-                            Cari
-                          </Button>
+                      {finalIntegrationResult && (
+                        <div className="space-y-1">
+                          <Badge variant="outline" className={finalIntegrationResult.invoiceFound ? "bg-green-500/10 text-green-600 border-green-500/30" : "bg-destructive/10 text-destructive border-destructive/30"}>
+                            {finalIntegrationResult.invoiceFound
+                              ? `✓ Invoice: ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(finalIntegrationResult.invoiceAmount)}`
+                              : "✗ Invoice tidak ditemukan"}
+                          </Badge>
+                          <br />
+                          <Badge variant="outline" className={finalIntegrationResult.reimbursementFound ? "bg-green-500/10 text-green-600 border-green-500/30" : "bg-muted text-muted-foreground border-border"}>
+                            {finalIntegrationResult.reimbursementFound
+                              ? `✓ Reimbursement: ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(finalIntegrationResult.reimbursementAmount)}`
+                              : "— Reimbursement tidak ditemukan"}
+                          </Badge>
+                          <br />
+                          <Badge variant="outline" className={finalIntegrationResult.dpFound ? "bg-green-500/10 text-green-600 border-green-500/30" : "bg-muted text-muted-foreground border-border"}>
+                            {finalIntegrationResult.dpFound
+                              ? `✓ Invoice DP: ${finalIntegrationResult.dpCount} data ditemukan`
+                              : "— Invoice DP tidak ditemukan"}
+                          </Badge>
                         </div>
-                        {dpFound && (
-                          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30">
-                            ✓ Data DP berhasil dimuat
-                          </Badge>
-                        )}
-                      </div>
-                    </>
+                      )}
+                    </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4">
