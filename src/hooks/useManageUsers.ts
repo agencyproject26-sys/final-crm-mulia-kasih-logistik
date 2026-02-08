@@ -8,6 +8,7 @@ interface UserWithRoles {
   created_at: string;
   last_sign_in_at: string | null;
   roles: string[];
+  menu_access: string[];
 }
 
 interface MyRolesInfo {
@@ -15,6 +16,7 @@ interface MyRolesInfo {
   email: string;
   roles: string[];
   isAdmin: boolean;
+  menu_access: string[];
 }
 
 export function useManageUsers() {
