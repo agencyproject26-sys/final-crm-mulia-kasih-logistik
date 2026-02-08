@@ -92,7 +92,6 @@ export const InvoiceDialog = ({
     { description: "Pemotongan Quota & Form COO", amount: 300000 },
     { description: "ADM Document", amount: 200000 },
     { description: "Edi / PPJK", amount: 250000 },
-    { description: "Materai", amount: 10000 },
   ];
 
   const DEFAULT_NOTES = `Enclosure :\nAll cheques be crossed and made payable to MULIA KASIH LOGISTIK\nInterest at 1% per month will be charged on overdue account.\nAny complaints/disputes regarding this invoice should be lodged within\n1 days from date of invoice.`;
