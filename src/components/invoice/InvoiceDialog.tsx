@@ -163,7 +163,9 @@ export const InvoiceDialog = ({
 
       if (data) {
         setReimbursementFound(true);
-        // Auto-fill fields from reimbursement - editable
+        // Auto-fill ALL fields from reimbursement - editable
+        form.setValue("invoice_number", data.invoice_number || "");
+        form.setValue("invoice_date", data.invoice_date || new Date().toISOString().split("T")[0]);
         form.setValue("customer_name", data.customer_name || "");
         form.setValue("customer_address", data.customer_address || "");
         form.setValue("customer_city", data.customer_city || "");
