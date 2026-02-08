@@ -28,6 +28,7 @@ const menuIcons: Record<string, React.ElementType> = {
   operasional: Package,
   keuangan: Receipt,
   laporan: BarChart3,
+  pengaturan: Shield,
 };
 
 export function MenuAccessManager({ users, onUpdated }: MenuAccessManagerProps) {
@@ -196,7 +197,7 @@ export function MenuAccessManager({ users, onUpdated }: MenuAccessManagerProps) 
               })}
               {users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     Tidak ada pengguna ditemukan
                   </TableCell>
                 </TableRow>

@@ -8,6 +8,7 @@ export const ALL_MENU_KEYS = [
   { key: "operasional", label: "Operasional" },
   { key: "keuangan", label: "Keuangan" },
   { key: "laporan", label: "Laporan" },
+  { key: "pengaturan", label: "Pengaturan" },
 ] as const;
 
 export type MenuKey = typeof ALL_MENU_KEYS[number]["key"];
