@@ -196,8 +196,8 @@ export const InvoiceDialog = ({
     }
   }, [form, enableFinalIntegration]);
 
-  const lookupAllFromInvoice = useCallback(async (invoiceNumber: string) => {
-    if (!invoiceNumber || invoiceNumber.trim().length < 3) return;
+  const lookupAllFromReimbursement = useCallback(async (reimbursementNumber: string) => {
+    if (!reimbursementNumber || reimbursementNumber.trim().length < 3) return;
     setIsSearchingFinal(true);
     setFinalIntegrationResult(null);
 
@@ -209,62 +209,62 @@ export const InvoiceDialog = ({
     let dpCount = 0;
 
     try {
-      // 1. Find the Invoice
-      const { data: invoiceData, error: invoiceError } = await supabase
-        .from("invoices")
+      // 1. Find the Reimbursement first
+      const { data: reimbData, error: reimbError } = await supabase
+        .from("invoices_reimbursement")
         .select("*")
-        .eq("invoice_number", invoiceNumber.trim())
+        .eq("invoice_number", reimbursementNumber.trim())
         .is("deleted_at", null)
         .maybeSingle();
 
-      if (invoiceError) throw invoiceError;
+      if (reimbError) throw reimbError;
 
-      if (invoiceData) {
-        invoiceFoundResult = true;
-        invoiceAmount = Number(invoiceData.total_amount) || 0;
+      if (reimbData) {
+        reimbursementFoundResult = true;
+        reimbursementAmount = Number(reimbData.total_amount) || 0;
 
-        // Auto-fill customer & shipment data
-        form.setValue("customer_name", invoiceData.customer_name || "");
-        form.setValue("customer_address", invoiceData.customer_address || "");
-        form.setValue("customer_city", invoiceData.customer_city || "");
-        form.setValue("no_aju", invoiceData.no_aju || "");
-        form.setValue("bl_number", invoiceData.bl_number || "");
-        form.setValue("party", invoiceData.party || "");
-        form.setValue("flight_vessel", invoiceData.flight_vessel || "");
-        form.setValue("origin", invoiceData.origin || "");
-        form.setValue("no_pen", invoiceData.no_pen || "");
-        form.setValue("no_invoice", invoiceData.no_invoice || "");
-        form.setValue("description", invoiceData.description || "");
-        form.setValue("delivery_date", invoiceData.delivery_date || "");
-        if (invoiceData.customer_id) {
-          form.setValue("customer_id", invoiceData.customer_id);
+        // Auto-fill customer & shipment data from reimbursement
+        form.setValue("customer_name", reimbData.customer_name || "");
+        form.setValue("customer_address", reimbData.customer_address || "");
+        form.setValue("customer_city", reimbData.customer_city || "");
+        form.setValue("no_aju", reimbData.no_aju || "");
+        form.setValue("bl_number", reimbData.bl_number || "");
+        form.setValue("party", reimbData.party || "");
+        form.setValue("flight_vessel", reimbData.flight_vessel || "");
+        form.setValue("origin", reimbData.origin || "");
+        form.setValue("no_pen", reimbData.no_pen || "");
+        form.setValue("no_invoice", reimbData.no_invoice || "");
+        form.setValue("description", reimbData.description || "");
+        form.setValue("delivery_date", reimbData.delivery_date || "");
+        if (reimbData.customer_id) {
+          form.setValue("customer_id", reimbData.customer_id);
         }
 
-        // Update "Invoice" item amount
+        // Update "Invoice Reimbursement" item amount
         setItems(prev => prev.map(item =>
-          item.description === "Invoice"
-            ? { ...item, amount: invoiceAmount }
+          item.description === "Invoice Reimbursement"
+            ? { ...item, amount: reimbursementAmount }
             : item
         ));
 
-        // 2. Find Reimbursement using shared no_invoice
-        const noInvoice = invoiceData.no_invoice;
-        const blNumber = invoiceData.bl_number;
+        // 2. Find Invoice using shared no_invoice
+        const noInvoice = reimbData.no_invoice;
+        const blNumber = reimbData.bl_number;
 
         if (noInvoice) {
-          const { data: reimbData } = await supabase
-            .from("invoices_reimbursement")
+          const { data: invoiceData } = await supabase
+            .from("invoices")
             .select("*")
             .eq("no_invoice", noInvoice.trim())
             .is("deleted_at", null)
             .maybeSingle();
 
-          if (reimbData) {
-            reimbursementFoundResult = true;
-            reimbursementAmount = Number(reimbData.total_amount) || 0;
+          if (invoiceData) {
+            invoiceFoundResult = true;
+            invoiceAmount = Number(invoiceData.total_amount) || 0;
             setItems(prev => prev.map(item =>
-              item.description === "Invoice Reimbursement"
-                ? { ...item, amount: reimbursementAmount }
+              item.description === "Invoice"
+                ? { ...item, amount: invoiceAmount }
                 : item
             ));
           }
@@ -300,13 +300,13 @@ export const InvoiceDialog = ({
           dpCount,
         });
 
-        toast.success("Data berhasil dimuat dari Invoice");
+        toast.success("Data berhasil dimuat dari Invoice Reimbursement");
       } else {
-        toast.error("Invoice tidak ditemukan");
+        toast.error("Invoice Reimbursement tidak ditemukan");
       }
     } catch (err) {
       console.error("Unified lookup error:", err);
-      toast.error("Gagal mencari data Invoice");
+      toast.error("Gagal mencari data");
     } finally {
       setIsSearchingFinal(false);
     }
@@ -648,13 +648,13 @@ export const InvoiceDialog = ({
                         Integrasi Invoice Final
                       </h3>
                       <p className="text-xs text-muted-foreground">
-                        Masukkan Nomor Invoice untuk otomatis mengambil data Invoice, Invoice Reimbursement, dan Invoice DP sekaligus
+                        Masukkan Nomor Invoice Reimbursement untuk otomatis mengambil data Reimbursement, Invoice, dan Invoice DP sekaligus
                       </p>
                       <div className="flex gap-2 items-end">
                         <div className="flex-1">
-                          <FormLabel>Nomor Invoice</FormLabel>
+                          <FormLabel>Nomor Invoice Reimbursement</FormLabel>
                           <Input
-                            placeholder="Contoh: INV/MITRA/022284/2026"
+                            placeholder="Contoh: INV/MITRA/027115/2026"
                             value={finalLookupNumber}
                             onChange={(e) => setFinalLookupNumber(e.target.value)}
                             className="mt-1"
@@ -663,7 +663,7 @@ export const InvoiceDialog = ({
                         <Button
                           type="button"
                           variant="secondary"
-                          onClick={() => lookupAllFromInvoice(finalLookupNumber)}
+                          onClick={() => lookupAllFromReimbursement(finalLookupNumber)}
                           disabled={isSearchingFinal}
                         >
                           {isSearchingFinal ? (
