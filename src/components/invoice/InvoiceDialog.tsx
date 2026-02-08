@@ -318,7 +318,7 @@ export const InvoiceDialog = ({
 
         setItems(detailedItems);
 
-        // 3. Find Invoices with DP data, matched by no_invoice
+        // 3. Find Invoices with DP data, matched by no_invoice — pull detailed dp_items
         if (noInvoice) {
           const { data: invoicesWithDp } = await supabase
             .from("invoices")
@@ -330,13 +330,37 @@ export const InvoiceDialog = ({
 
           if (invoicesWithDp && invoicesWithDp.length > 0) {
             dpFoundResult = true;
-            dpCount = invoicesWithDp.length;
-            const newDpItems = invoicesWithDp.map((inv, i) => ({
+
+            // Collect all DP items from all matching invoices
+            const allDpItems: { label: string; amount: number; date: string }[] = [];
+
+            invoicesWithDp.forEach((inv) => {
+              const savedDpItems = inv.dp_items as { label: string; amount: number; date?: string }[] | null;
+              if (savedDpItems && Array.isArray(savedDpItems) && savedDpItems.length > 0) {
+                savedDpItems.forEach((dp) => {
+                  allDpItems.push({
+                    label: dp.label || "DP",
+                    amount: Number(dp.amount) || 0,
+                    date: dp.date || inv.invoice_date || "",
+                  });
+                });
+              } else {
+                allDpItems.push({
+                  label: "DP",
+                  amount: Number(inv.down_payment),
+                  date: inv.invoice_date || "",
+                });
+              }
+            });
+
+            // Re-label sequentially: DP 1, DP 2, DP 3...
+            const relabeled = allDpItems.map((dp, i) => ({
+              ...dp,
               label: `DP ${i + 1}`,
-              amount: Number(inv.down_payment),
-              date: inv.invoice_date || "",
             }));
-            setDpItems(newDpItems);
+
+            dpCount = relabeled.length;
+            setDpItems(relabeled);
           }
         }
 
