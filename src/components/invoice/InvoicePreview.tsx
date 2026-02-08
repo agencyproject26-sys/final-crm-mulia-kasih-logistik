@@ -47,7 +47,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         </div>
 
         {/* Title */}
-        <h2 className="text-center font-bold text-lg mb-4 underline">INVOICE REIMBURSEMENT</h2>
+        <h2 className="text-center font-bold text-lg mb-4 underline">INVOICE</h2>
 
         {/* Customer & Invoice Info */}
         <div className="flex justify-between mb-4">
