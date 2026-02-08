@@ -240,16 +240,18 @@ export const InvoiceDialog = ({
           form.setValue("customer_id", reimbData.customer_id);
         }
 
-        // Update "Invoice Reimbursement" item amount
-        setItems(prev => prev.map(item =>
-          item.description === "Invoice Reimbursement"
-            ? { ...item, amount: reimbursementAmount }
-            : item
-        ));
+        // Fetch Reimbursement items detail
+        const { data: reimbItems } = await supabase
+          .from("invoice_reimbursement_items")
+          .select("*")
+          .eq("invoice_id", reimbData.id)
+          .order("created_at", { ascending: true });
 
         // 2. Find Invoice using shared no_invoice
         const noInvoice = reimbData.no_invoice;
         const blNumber = reimbData.bl_number;
+
+        let invoiceItems: { description: string; amount: number }[] = [];
 
         if (noInvoice) {
           const { data: invoiceData } = await supabase
@@ -262,13 +264,51 @@ export const InvoiceDialog = ({
           if (invoiceData) {
             invoiceFoundResult = true;
             invoiceAmount = Number(invoiceData.total_amount) || 0;
-            setItems(prev => prev.map(item =>
-              item.description === "Invoice"
-                ? { ...item, amount: invoiceAmount }
-                : item
-            ));
+
+            // Fetch Invoice items detail
+            const { data: invItems } = await supabase
+              .from("invoice_items")
+              .select("*")
+              .eq("invoice_id", invoiceData.id)
+              .order("created_at", { ascending: true });
+
+            if (invItems && invItems.length > 0) {
+              invoiceItems = invItems.map(item => ({
+                description: item.description,
+                amount: Number(item.amount) || 0,
+              }));
+            }
           }
         }
+
+        // Build detailed items list
+        const detailedItems: { description: string; amount: number }[] = [];
+
+        // Add Reimbursement items with prefix
+        if (reimbItems && reimbItems.length > 0) {
+          reimbItems.forEach(item => {
+            detailedItems.push({
+              description: `Reimbursement - ${item.description}`,
+              amount: Number(item.amount) || 0,
+            });
+          });
+        } else {
+          detailedItems.push({ description: "Invoice Reimbursement", amount: reimbursementAmount });
+        }
+
+        // Add Invoice items with prefix
+        if (invoiceItems.length > 0) {
+          invoiceItems.forEach(item => {
+            detailedItems.push({
+              description: `Invoice - ${item.description}`,
+              amount: item.amount,
+            });
+          });
+        } else if (invoiceFoundResult) {
+          detailedItems.push({ description: "Invoice", amount: invoiceAmount });
+        }
+
+        setItems(detailedItems);
 
         // 3. Find Invoice DP using bl_number
         if (blNumber) {
