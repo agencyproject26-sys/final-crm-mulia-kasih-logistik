@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
 
-    // ACTION: list-users - List all users with their roles
+    // ACTION: list-users - List all users with their roles and menu access
     if (action === "list-users") {
       if (!isAdmin) {
         return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
       }
 
       const { data: allRoles } = await adminClient.from("user_roles").select("*");
+      const { data: allMenuAccess } = await adminClient.from("user_menu_access").select("*");
 
       const users = authUsers.users.map((u) => ({
         id: u.id,
@@ -77,6 +78,9 @@ Deno.serve(async (req) => {
         roles: (allRoles || [])
           .filter((r) => r.user_id === u.id)
           .map((r) => r.role),
+        menu_access: (allMenuAccess || [])
+          .filter((m) => m.user_id === u.id)
+          .map((m) => m.menu_key),
       }));
 
       console.log(`Listed ${users.length} users for admin ${caller.email}`);
@@ -168,11 +172,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ACTION: my-roles - Get current user's roles (no admin required)
+    // ACTION: my-roles - Get current user's roles and menu access (no admin required)
     if (action === "my-roles") {
       const { data: myRoles } = await adminClient
         .from("user_roles")
         .select("role")
+        .eq("user_id", caller.id);
+
+      const { data: myMenuAccess } = await adminClient
+        .from("user_menu_access")
+        .select("menu_key")
         .eq("user_id", caller.id);
 
       return new Response(
@@ -181,6 +190,7 @@ Deno.serve(async (req) => {
           email: caller.email,
           roles: (myRoles || []).map((r) => r.role),
           isAdmin,
+          menu_access: (myMenuAccess || []).map((m) => m.menu_key),
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -213,8 +223,67 @@ Deno.serve(async (req) => {
         });
       }
 
+      // The trigger will auto-assign all menu access for admin
       console.log(`First admin setup: ${caller.email} (${caller.id})`);
       return new Response(JSON.stringify({ success: true, message: "Anda sekarang adalah admin pertama!" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ACTION: update-menu-access - Update menu access for a user
+    if (action === "update-menu-access") {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const body = await req.json();
+      const { user_id, menu_keys } = body;
+
+      if (!user_id || !Array.isArray(menu_keys)) {
+        return new Response(JSON.stringify({ error: "user_id and menu_keys[] required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const validMenuKeys = ["dashboard", "master-data", "sales-crm", "operasional", "keuangan", "laporan"];
+      const filteredKeys = menu_keys.filter((k: string) => validMenuKeys.includes(k));
+
+      // Delete all existing menu access for this user
+      const { error: delError } = await adminClient
+        .from("user_menu_access")
+        .delete()
+        .eq("user_id", user_id);
+
+      if (delError) {
+        console.error("Delete menu access error:", delError);
+        return new Response(JSON.stringify({ error: delError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Insert new menu access entries
+      if (filteredKeys.length > 0) {
+        const rows = filteredKeys.map((key: string) => ({ user_id, menu_key: key }));
+        const { error: insError } = await adminClient
+          .from("user_menu_access")
+          .insert(rows);
+
+        if (insError) {
+          console.error("Insert menu access error:", insError);
+          return new Response(JSON.stringify({ error: insError.message }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      console.log(`Admin ${caller.email} updated menu access for user ${user_id}: [${filteredKeys.join(", ")}]`);
+      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

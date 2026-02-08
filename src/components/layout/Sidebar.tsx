@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useMenuAccess, MenuKey } from "@/hooks/useMenuAccess";
 import {
   LayoutDashboard,
   Users,
@@ -36,13 +37,15 @@ interface NavItem {
   icon: React.ElementType;
   href?: string;
   children?: SubNavItem[];
+  menuKey?: MenuKey;
 }
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/", menuKey: "dashboard" },
   {
     label: "Master Data",
     icon: Building2,
+    menuKey: "master-data",
     children: [
       { label: "Pelanggan", href: "/master/pelanggan" },
       { label: "Vendor", href: "/master/vendor" },
@@ -51,6 +54,7 @@ const navItems: NavItem[] = [
   {
     label: "Sales & CRM",
     icon: Handshake,
+    menuKey: "sales-crm",
     children: [
       { label: "Penawaran Exp' Imp", href: "/sales/penawaran" },
       { label: "Penawaran Domestik", href: "/sales/penawaran-domestik" },
@@ -59,6 +63,7 @@ const navItems: NavItem[] = [
   {
     label: "Operasional",
     icon: Package,
+    menuKey: "operasional",
     children: [
       { label: "Job Order", href: "/operasional/job-order" },
       { label: "Tracking", href: "/operasional/tracking" },
@@ -68,6 +73,7 @@ const navItems: NavItem[] = [
   {
     label: "Keuangan",
     icon: Receipt,
+    menuKey: "keuangan",
     children: [
       { label: "Invoice DP", href: "/keuangan/invoice-dp" },
       { 
@@ -85,6 +91,7 @@ const navItems: NavItem[] = [
   {
     label: "Laporan",
     icon: BarChart3,
+    menuKey: "laporan",
     children: [
       { label: "Laporan Keuangan", href: "/laporan/keuangan" },
       { 
@@ -103,8 +110,17 @@ const navItems: NavItem[] = [
 ];
 export function Sidebar() {
   const location = useLocation();
+  const { menuAccess, isLoading: isMenuLoading } = useMenuAccess();
   const [expandedItems, setExpandedItems] = useState<string[]>(["Master Data", "Operasional"]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Filter nav items based on menu access
+  const filteredNavItems = navItems.filter((item) => {
+    // Items without menuKey (Pengaturan, Recycle Bin) are always visible
+    if (!item.menuKey) return true;
+    // Show menu only if user has access
+    return menuAccess.includes(item.menuKey);
+  });
 
   const toggleExpanded = (label: string) => {
     setExpandedItems((prev) =>
@@ -214,7 +230,7 @@ export function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <div key={item.label}>
                 {item.href ? (
                   <Link

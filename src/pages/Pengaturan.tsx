@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useManageUsers } from "@/hooks/useManageUsers";
+import { MenuAccessManager } from "@/components/settings/MenuAccessManager";
 import { Shield, ShieldCheck, UserPlus, Users, Crown, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -263,6 +264,14 @@ export default function Pengaturan() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Menu Access Management - Admin Only */}
+        {myInfo?.isAdmin && (
+          <MenuAccessManager
+            users={users}
+            onUpdated={() => fetchUsers()}
+          />
         )}
 
         {/* System Info */}
