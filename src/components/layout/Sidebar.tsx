@@ -105,7 +105,7 @@ const navItems: NavItem[] = [
       },
     ],
   },
-  { label: "Pengaturan", icon: Settings, href: "/pengaturan" },
+  { label: "Pengaturan", icon: Settings, href: "/pengaturan", menuKey: "pengaturan" },
   { label: "Recycle Bin", icon: Trash2, href: "/recycle-bin" },
 ];
 export function Sidebar() {
