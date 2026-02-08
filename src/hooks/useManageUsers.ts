@@ -9,6 +9,7 @@ interface UserWithRoles {
   last_sign_in_at: string | null;
   roles: string[];
   menu_access: string[];
+  approval_status: string;
 }
 
 interface MyRolesInfo {
@@ -17,6 +18,7 @@ interface MyRolesInfo {
   roles: string[];
   isAdmin: boolean;
   menu_access: string[];
+  approval_status: string;
 }
 
 export function useManageUsers() {
@@ -26,13 +28,6 @@ export function useManageUsers() {
   const [isActionLoading, setIsActionLoading] = useState(false);
 
   const fetchMyRoles = useCallback(async () => {
-    const { data, error } = await supabase.functions.invoke("manage-users", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      body: undefined,
-    });
-
-    // Use query params via direct fetch for GET with params
     const session = (await supabase.auth.getSession()).data.session;
     if (!session) return;
 

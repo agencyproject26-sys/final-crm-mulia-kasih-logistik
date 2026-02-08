@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
 
       const { data: allRoles } = await adminClient.from("user_roles").select("*");
       const { data: allMenuAccess } = await adminClient.from("user_menu_access").select("*");
+      const { data: allApprovals } = await adminClient.from("user_approvals").select("*");
 
       const users = authUsers.users.map((u) => ({
         id: u.id,
@@ -81,6 +82,7 @@ Deno.serve(async (req) => {
         menu_access: (allMenuAccess || [])
           .filter((m) => m.user_id === u.id)
           .map((m) => m.menu_key),
+        approval_status: (allApprovals || []).find((a) => a.user_id === u.id)?.status || "pending",
       }));
 
       console.log(`Listed ${users.length} users for admin ${caller.email}`);
@@ -172,7 +174,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ACTION: my-roles - Get current user's roles and menu access (no admin required)
+    // ACTION: my-roles - Get current user's roles, menu access, and approval status (no admin required)
     if (action === "my-roles") {
       const { data: myRoles } = await adminClient
         .from("user_roles")
@@ -184,6 +186,12 @@ Deno.serve(async (req) => {
         .select("menu_key")
         .eq("user_id", caller.id);
 
+      const { data: myApproval } = await adminClient
+        .from("user_approvals")
+        .select("status")
+        .eq("user_id", caller.id)
+        .maybeSingle();
+
       return new Response(
         JSON.stringify({
           user_id: caller.id,
@@ -191,6 +199,7 @@ Deno.serve(async (req) => {
           roles: (myRoles || []).map((r) => r.role),
           isAdmin,
           menu_access: (myMenuAccess || []).map((m) => m.menu_key),
+          approval_status: myApproval?.status || "pending",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -283,6 +292,86 @@ Deno.serve(async (req) => {
       }
 
       console.log(`Admin ${caller.email} updated menu access for user ${user_id}: [${filteredKeys.join(", ")}]`);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ACTION: approve-user - Approve a pending user
+    if (action === "approve-user") {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const body = await req.json();
+      const { user_id } = body;
+
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error: approveError } = await adminClient
+        .from("user_approvals")
+        .upsert(
+          { user_id, status: "approved", reviewed_by: caller.id, reviewed_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        );
+
+      if (approveError) {
+        console.error("Approve user error:", approveError);
+        return new Response(JSON.stringify({ error: approveError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`Admin ${caller.email} approved user ${user_id}`);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ACTION: reject-user - Reject a pending user
+    if (action === "reject-user") {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const body = await req.json();
+      const { user_id } = body;
+
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error: rejectError } = await adminClient
+        .from("user_approvals")
+        .upsert(
+          { user_id, status: "rejected", reviewed_by: caller.id, reviewed_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        );
+
+      if (rejectError) {
+        console.error("Reject user error:", rejectError);
+        return new Response(JSON.stringify({ error: rejectError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`Admin ${caller.email} rejected user ${user_id}`);
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

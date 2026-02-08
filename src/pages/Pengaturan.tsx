@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useManageUsers } from "@/hooks/useManageUsers";
 import { MenuAccessManager } from "@/components/settings/MenuAccessManager";
+import { UserApprovalManager } from "@/components/settings/UserApprovalManager";
 import { Shield, ShieldCheck, UserPlus, Users, Crown, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -144,6 +145,14 @@ export default function Pengaturan() {
               </Button>
             </CardContent>
           </Card>
+        )}
+
+        {/* User Approval - Admin Only */}
+        {myInfo?.isAdmin && (
+          <UserApprovalManager
+            users={users}
+            onUpdated={() => fetchUsers()}
+          />
         )}
 
         {/* User Management - Admin Only */}
