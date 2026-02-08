@@ -310,12 +310,13 @@ export const InvoiceDialog = ({
 
         setItems(detailedItems);
 
-        // 3. Find Invoice DP using bl_number
+        // 3. Find Invoice DP using bl_number (only submitted ones)
         if (blNumber) {
           const { data: dpData } = await supabase
             .from("invoice_dp")
             .select("*")
             .eq("bl_number", blNumber.trim())
+            .neq("status", "draft")
             .is("deleted_at", null)
             .order("part_number", { ascending: true });
 
