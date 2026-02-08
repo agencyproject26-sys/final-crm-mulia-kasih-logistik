@@ -13,10 +13,11 @@ interface InvoicePreviewProps {
     bank_account_number?: string;
     bank_branch?: string;
   };
+  title?: string;
 }
 
 export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
-  ({ invoice }, ref) => {
+  ({ invoice, title = "INVOICE" }, ref) => {
     const formatDate = (date: string | null | undefined) => {
       if (!date) return "-";
       try {
@@ -47,7 +48,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         </div>
 
         {/* Title */}
-        <h2 className="text-center font-bold text-lg mb-4 underline">INVOICE</h2>
+        <h2 className="text-center font-bold text-lg mb-4 underline">{title}</h2>
 
         {/* Customer & Invoice Info */}
         <div className="flex justify-between mb-4">
