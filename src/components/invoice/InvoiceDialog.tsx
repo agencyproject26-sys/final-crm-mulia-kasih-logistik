@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { supabase } from "@/integrations/supabase/client";
 import * as z from "zod";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -32,9 +33,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Download, Eye, FileText } from "lucide-react";
+import { Plus, Trash2, Download, Eye, FileText, Search, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   invoice_number: z.string().min(1, "Nomor invoice wajib diisi"),
@@ -82,6 +84,8 @@ export const InvoiceDialog = ({
   const [bankBranch, setBankBranch] = useState("BANK BCA CAB. YOS SUDARSO");
   const [activeTab, setActiveTab] = useState("form");
   const previewRef = useRef<HTMLDivElement>(null);
+  const [isSearchingReimbursement, setIsSearchingReimbursement] = useState(false);
+  const [reimbursementFound, setReimbursementFound] = useState(false);
 
   const DEFAULT_ITEMS: { description: string; amount: number }[] = [
     { description: "Trucking", amount: 0 },
@@ -121,6 +125,52 @@ export const InvoiceDialog = ({
       notes: DEFAULT_NOTES,
     },
   });
+
+  const lookupReimbursement = useCallback(async (invoiceNumber: string) => {
+    if (!invoiceNumber || invoiceNumber.trim().length < 3) {
+      setReimbursementFound(false);
+      return;
+    }
+    setIsSearchingReimbursement(true);
+    try {
+      const { data, error } = await supabase
+        .from("invoices_reimbursement")
+        .select("*")
+        .eq("invoice_number", invoiceNumber.trim())
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setReimbursementFound(true);
+        // Auto-fill fields from reimbursement - editable
+        form.setValue("customer_name", data.customer_name || "");
+        form.setValue("customer_address", data.customer_address || "");
+        form.setValue("customer_city", data.customer_city || "");
+        form.setValue("no_aju", data.no_aju || "");
+        form.setValue("bl_number", data.bl_number || "");
+        form.setValue("party", data.party || "");
+        form.setValue("flight_vessel", data.flight_vessel || "");
+        form.setValue("origin", data.origin || "");
+        form.setValue("no_pen", data.no_pen || "");
+        form.setValue("no_invoice", data.no_invoice || invoiceNumber);
+        form.setValue("description", data.description || "");
+        form.setValue("delivery_date", data.delivery_date || "");
+        if (data.customer_id) {
+          form.setValue("customer_id", data.customer_id);
+        }
+        toast.success("Data dari Invoice Reimbursement berhasil dimuat");
+      } else {
+        setReimbursementFound(false);
+      }
+    } catch (err) {
+      console.error("Reimbursement lookup error:", err);
+      setReimbursementFound(false);
+    } finally {
+      setIsSearchingReimbursement(false);
+    }
+  }, [form]);
 
   useEffect(() => {
     if (invoice) {
@@ -175,6 +225,7 @@ export const InvoiceDialog = ({
       });
       setItems(getDefaultItems());
       setDpItems([]);
+      setReimbursementFound(false);
     }
   }, [invoice, form, open]);
 
@@ -406,6 +457,46 @@ export const InvoiceDialog = ({
                     />
                   </div>
 
+                  {/* Reimbursement Lookup */}
+                  <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Search className="h-4 w-4" />
+                      Integrasi Invoice Reimbursement
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Masukkan nomor Invoice Reimbursement untuk mengisi data otomatis (Customer, B/L, Party, dll.)
+                    </p>
+                    <div className="flex gap-2 items-end">
+                      <div className="flex-1">
+                        <FormLabel>Nomor Invoice Reimbursement</FormLabel>
+                        <Input
+                          placeholder="Contoh: INV/MITRA/027115/2026"
+                          value={form.watch("no_invoice") || ""}
+                          onChange={(e) => form.setValue("no_invoice", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => lookupReimbursement(form.getValues("no_invoice") || "")}
+                        disabled={isSearchingReimbursement}
+                      >
+                        {isSearchingReimbursement ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Search className="h-4 w-4 mr-2" />
+                        )}
+                        Cari
+                      </Button>
+                    </div>
+                    {reimbursementFound && (
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
+                        ✓ Data ditemukan dan telah diisi otomatis
+                      </Badge>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -544,7 +635,7 @@ export const InvoiceDialog = ({
                         name="no_invoice"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Invoice No</FormLabel>
+                            <FormLabel>Invoice No. {reimbursementFound && <Badge variant="outline" className="ml-1 text-[10px] py-0 bg-green-500/10 text-green-600 border-green-500/30">Reimbursement</Badge>}</FormLabel>
                             <FormControl>
                               <Input placeholder="Nomor invoice terkait" {...field} />
                             </FormControl>
