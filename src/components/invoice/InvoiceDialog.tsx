@@ -88,14 +88,10 @@ export const InvoiceDialog = ({
   const [reimbursementFound, setReimbursementFound] = useState(false);
 
   const DEFAULT_ITEMS: { description: string; amount: number }[] = [
-    { description: "Trucking", amount: 0 },
-    { description: "Tuslag", amount: 0 },
-    { description: "Kawalan Truck", amount: 100000 },
-    { description: "Buruh Pabrik", amount: 100000 },
-    { description: "Lolo / Lift Off", amount: 0 },
-    { description: "Penumpukan", amount: 0 },
-    { description: "DO", amount: 0 },
-    { description: "Materai", amount: 10000 },
+    { description: "Handling Dok Custom", amount: 0 },
+    { description: "Pemotongan Quota & Form COO", amount: 300000 },
+    { description: "ADM Document", amount: 200000 },
+    { description: "Edi / PPJK", amount: 250000 },
   ];
 
   const DEFAULT_NOTES = `Enclosure :\nAll cheques be crossed and made payable to MULIA KASIH LOGISTIK\nInterest at 1% per month will be charged on overdue account.\nAny complaints/disputes regarding this invoice should be lodged within\n1 days from date of invoice.`;
