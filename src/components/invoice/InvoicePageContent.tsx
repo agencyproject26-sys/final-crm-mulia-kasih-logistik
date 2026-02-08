@@ -440,6 +440,7 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
         defaultItems={defaultItems}
         enableFinalIntegration={enableFinalIntegration}
         hideReimbursementLookup={hideReimbursementLookup}
+        previewTitle={pageTitle}
       />
 
       <DeleteInvoiceDialog
@@ -460,7 +461,7 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
             </Button>
           </div>
           <ScrollArea className="h-[70vh]">
-            {previewInvoice && <InvoicePreview ref={previewRef} invoice={previewInvoice} />}
+            {previewInvoice && <InvoicePreview ref={previewRef} invoice={previewInvoice} title={pageTitle} />}
           </ScrollArea>
         </DialogContent>
       </Dialog>
@@ -468,7 +469,7 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
       {/* Hidden preview for PDF generation */}
       {previewInvoice && !isPreviewOpen && (
         <div className="fixed left-[-9999px] top-0">
-          <InvoicePreview ref={previewRef} invoice={previewInvoice} />
+          <InvoicePreview ref={previewRef} invoice={previewInvoice} title={pageTitle} />
         </div>
       )}
     </>

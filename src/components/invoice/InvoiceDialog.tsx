@@ -69,6 +69,7 @@ interface InvoiceDialogProps {
   defaultItems?: { description: string; amount: number }[];
   enableFinalIntegration?: boolean;
   hideReimbursementLookup?: boolean;
+  previewTitle?: string;
 }
 
 export const InvoiceDialog = ({
@@ -80,6 +81,7 @@ export const InvoiceDialog = ({
   defaultItems,
   enableFinalIntegration,
   hideReimbursementLookup,
+  previewTitle,
 }: InvoiceDialogProps) => {
   const { data: customers = [] } = useCustomers();
   const [items, setItems] = useState<InvoiceItem[]>([]);
@@ -1130,7 +1132,7 @@ export const InvoiceDialog = ({
               </Button>
             </div>
             <ScrollArea className="h-[60vh] border rounded-lg">
-              <InvoicePreview ref={previewRef} invoice={previewData} />
+              <InvoicePreview ref={previewRef} invoice={previewData} title={previewTitle} />
             </ScrollArea>
           </TabsContent>
         </Tabs>
