@@ -318,22 +318,15 @@ export const InvoiceDialog = ({
 
         setItems(detailedItems);
 
-        // 3. Find submitted (non-draft) Invoices as DP data
-        if (reimbData.customer_id) {
-          let dpQuery = supabase
+        // 3. Find submitted (non-draft) Invoices as DP data, matched by no_invoice
+        if (noInvoice) {
+          const { data: submittedInvoices } = await supabase
             .from("invoices")
             .select("*")
-            .eq("customer_id", reimbData.customer_id)
+            .eq("no_invoice", noInvoice.trim())
             .neq("status", "draft")
             .is("deleted_at", null)
             .order("invoice_date", { ascending: true });
-
-          // Also filter by bl_number for more precise matching
-          if (blNumber) {
-            dpQuery = dpQuery.eq("bl_number", blNumber.trim());
-          }
-
-          const { data: submittedInvoices } = await dpQuery;
 
           if (submittedInvoices && submittedInvoices.length > 0) {
             dpFoundResult = true;
