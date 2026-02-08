@@ -227,7 +227,9 @@ export const InvoiceDialog = ({
         reimbursementFoundResult = true;
         reimbursementAmount = Number(reimbData.total_amount) || 0;
 
-        // Auto-fill customer & shipment data from reimbursement
+        // Auto-fill ALL fields from reimbursement including invoice number & date
+        form.setValue("invoice_number", reimbData.invoice_number || "");
+        form.setValue("invoice_date", reimbData.invoice_date || new Date().toISOString().split("T")[0]);
         form.setValue("customer_name", reimbData.customer_name || "");
         form.setValue("customer_address", reimbData.customer_address || "");
         form.setValue("customer_city", reimbData.customer_city || "");
