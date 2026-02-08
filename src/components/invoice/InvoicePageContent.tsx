@@ -91,6 +91,7 @@ interface InvoicePageContentProps {
 }
 
 export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, enableFinalIntegration, hideReimbursementLookup }: InvoicePageContentProps) {
+  const hideStatusColumn = enableFinalIntegration;
   const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice, getInvoiceWithItems } = useInvoiceHook();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -277,16 +278,24 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
       <div className="rounded-xl border border-border bg-card">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 border-b border-border">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="all">Semua</TabsTrigger>
-              <TabsTrigger value="draft">Draft</TabsTrigger>
-              <TabsTrigger value="sent">Terkirim</TabsTrigger>
-              <TabsTrigger value="partial">Sebagian</TabsTrigger>
-              <TabsTrigger value="paid">Lunas</TabsTrigger>
-              <TabsTrigger value="overdue">Jatuh Tempo</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {hideStatusColumn ? (
+            <Tabs value="all" onValueChange={() => {}}>
+              <TabsList>
+                <TabsTrigger value="all">Semua</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="all">Semua</TabsTrigger>
+                <TabsTrigger value="draft">Draft</TabsTrigger>
+                <TabsTrigger value="sent">Terkirim</TabsTrigger>
+                <TabsTrigger value="partial">Sebagian</TabsTrigger>
+                <TabsTrigger value="paid">Lunas</TabsTrigger>
+                <TabsTrigger value="overdue">Jatuh Tempo</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
           <div className="flex gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -318,20 +327,20 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
                 <TableHead className="text-right">DP</TableHead>
                 <TableHead className="text-right">Sisa</TableHead>
                 <TableHead>Tanggal</TableHead>
-                <TableHead>Status</TableHead>
+                {!hideStatusColumn && <TableHead>Status</TableHead>}
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={hideStatusColumn ? 7 : 8} className="text-center py-8">
                     Memuat data...
                   </TableCell>
                 </TableRow>
               ) : filteredInvoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={hideStatusColumn ? 7 : 8} className="text-center py-8">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <FileText className="h-8 w-8" />
                       <p>Belum ada invoice</p>
@@ -368,18 +377,20 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
                       <TableCell>
                         {new Date(invoice.invoice_date).toLocaleDateString("id-ID")}
                       </TableCell>
-                      <TableCell>
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                            statusInfo.bg,
-                            statusInfo.text
-                          )}
-                        >
-                          <StatusIcon className="h-3 w-3" />
-                          {statusLabels[invoice.status || "draft"]}
-                        </span>
-                      </TableCell>
+                      {!hideStatusColumn && (
+                        <TableCell>
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                              statusInfo.bg,
+                              statusInfo.text
+                            )}
+                          >
+                            <StatusIcon className="h-3 w-3" />
+                            {statusLabels[invoice.status || "draft"]}
+                          </span>
+                        </TableCell>
+                      )}
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
