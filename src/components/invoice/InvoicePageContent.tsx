@@ -85,10 +85,9 @@ interface InvoiceHookReturn {
 interface InvoicePageContentProps {
   pageTitle: string;
   useInvoiceHook: () => InvoiceHookReturn;
-  defaultItems?: { description: string; amount: number }[];
 }
 
-export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems }: InvoicePageContentProps) {
+export function InvoicePageContent({ pageTitle, useInvoiceHook }: InvoicePageContentProps) {
   const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice, getInvoiceWithItems } = useInvoiceHook();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -435,7 +434,6 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems }: 
         onSubmit={selectedInvoice ? handleUpdate : handleCreate}
         invoice={selectedInvoice}
         isLoading={createInvoice.isPending || updateInvoice.isPending}
-        defaultItems={defaultItems}
       />
 
       <DeleteInvoiceDialog
