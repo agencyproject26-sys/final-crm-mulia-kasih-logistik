@@ -91,7 +91,7 @@ interface InvoicePageContentProps {
 }
 
 export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, enableFinalIntegration, hideReimbursementLookup }: InvoicePageContentProps) {
-  const hideStatusColumn = enableFinalIntegration;
+  const hideStatusColumn = true;
   const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice, getInvoiceWithItems } = useInvoiceHook();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
