@@ -27,6 +27,7 @@ import LaporanOkupansiGudang from "./pages/laporan/LaporanOkupansiGudang";
 import LaporanKinerjaLayanan from "./pages/laporan/LaporanKinerjaLayanan";
 import LaporanOutstanding from "./pages/laporan/LaporanOutstanding";
 import RecycleBin from "./pages/RecycleBin";
+import Pengaturan from "./pages/Pengaturan";
 
 // Components
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -79,7 +80,7 @@ const App = () => (
           <Route path="/laporan/kinerja-layanan" element={<ProtectedRoute><LaporanKinerjaLayanan /></ProtectedRoute>} />
           <Route path="/laporan/manajemen" element={<ProtectedRoute><LaporanOutstanding /></ProtectedRoute>} />
           {/* Pengaturan */}
-          <Route path="/pengaturan" element={<ProtectedRoute><Pelanggan /></ProtectedRoute>} />
+          <Route path="/pengaturan" element={<ProtectedRoute><Pengaturan /></ProtectedRoute>} />
           
           {/* Recycle Bin */}
           <Route path="/recycle-bin" element={<ProtectedRoute><RecycleBin /></ProtectedRoute>} />
