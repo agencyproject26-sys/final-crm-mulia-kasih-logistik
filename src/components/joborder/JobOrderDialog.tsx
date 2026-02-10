@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { JobOrderInvoiceUploads } from "./JobOrderInvoiceUploads";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -526,6 +527,11 @@ export const JobOrderDialog = ({
                 </FormItem>
               )}
             />
+
+            {/* Invoice Uploads - only when editing */}
+            {jobOrder && (
+              <JobOrderInvoiceUploads jobOrderId={jobOrder.id} />
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button
