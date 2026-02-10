@@ -182,7 +182,22 @@ function CategoryRow({
             <DialogTitle>Preview - {category.label}</DialogTitle>
           </DialogHeader>
           {previewUrl && (
-            <iframe src={previewUrl} className="w-full h-[70vh] rounded-lg border" title="File Preview" />
+            /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(previewUrl) ? (
+              <div className="w-full max-h-[70vh] overflow-auto flex items-start justify-center">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="max-w-full h-auto object-contain rounded-lg"
+                />
+              </div>
+            ) : (
+              <iframe
+                src={previewUrl}
+                className="w-full h-[70vh] rounded-lg border"
+                style={{ transform: "scale(0.75)", transformOrigin: "top left", width: "133%", height: "93vh" }}
+                title="File Preview"
+              />
+            )
           )}
         </DialogContent>
       </Dialog>
