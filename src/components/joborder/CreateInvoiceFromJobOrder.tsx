@@ -31,8 +31,8 @@ const CATEGORIES: { key: InvoiceCategory; label: string; icon: React.ElementType
   { key: "perpanjangan_do", label: "Invoice Perpanjangan DO", icon: Clock, color: "text-blue-500" },
   { key: "perpanjangan_tila", label: "Invoice Perpanjangan Tila", icon: Clock, color: "text-purple-500" },
   { key: "gerakan", label: "Invoice Gerakan", icon: Move, color: "text-orange-500" },
+  { key: "foto_repair", label: "Foto Repair", icon: Wrench, color: "text-amber-500" },
   { key: "lain_lain", label: "Invoice Lain-lain", icon: MoreHorizontal, color: "text-muted-foreground" },
-  { key: "foto_repair", label: "Upload Foto Repair", icon: Wrench, color: "text-amber-500" },
 ];
 
 const BUCKET = "job-order-invoices";
