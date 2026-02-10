@@ -102,7 +102,7 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const location = useLocation();
   const { menuAccess, isLoading: isMenuLoading } = useMenuAccess();
-  const [expandedItems, setExpandedItems] = useState<string[]>(["Master Data", "Operasional"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Filter nav items based on menu access
