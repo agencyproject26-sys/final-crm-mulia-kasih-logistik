@@ -21,7 +21,7 @@ interface CreateInvoiceFromJobOrderProps {
   onSuccess?: () => void;
 }
 
-type InvoiceCategory = "penumpukan" | "do" | "spjm" | "repair" | "perpanjangan_do" | "perpanjangan_tila" | "gerakan" | "lain_lain";
+type InvoiceCategory = "penumpukan" | "do" | "spjm" | "repair" | "perpanjangan_do" | "perpanjangan_tila" | "gerakan" | "lain_lain" | "foto_repair";
 
 const CATEGORIES: { key: InvoiceCategory; label: string; icon: React.ElementType; color: string }[] = [
   { key: "penumpukan", label: "Invoice Penumpukan", icon: Package, color: "text-primary" },
@@ -32,6 +32,7 @@ const CATEGORIES: { key: InvoiceCategory; label: string; icon: React.ElementType
   { key: "perpanjangan_tila", label: "Invoice Perpanjangan Tila", icon: Clock, color: "text-purple-500" },
   { key: "gerakan", label: "Invoice Gerakan", icon: Move, color: "text-orange-500" },
   { key: "lain_lain", label: "Invoice Lain-lain", icon: MoreHorizontal, color: "text-muted-foreground" },
+  { key: "foto_repair", label: "Upload Foto Repair", icon: Wrench, color: "text-amber-500" },
 ];
 
 const BUCKET = "job-order-invoices";
