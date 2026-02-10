@@ -94,15 +94,6 @@ const navItems: NavItem[] = [
     menuKey: "laporan",
     children: [
       { label: "Laporan Keuangan", href: "/laporan/keuangan" },
-      { 
-        label: "Laporan Operasional",
-        children: [
-          { label: "Laporan Pengiriman", href: "/laporan/pengiriman" },
-          { label: "Utilisasi Truk", href: "/laporan/utilisasi-truk" },
-          { label: "Okupansi Gudang", href: "/laporan/okupansi-gudang" },
-          { label: "Kinerja Layanan", href: "/laporan/kinerja-layanan" },
-        ],
-      },
     ],
   },
   { label: "Pengaturan", icon: Settings, href: "/pengaturan", menuKey: "pengaturan" },
