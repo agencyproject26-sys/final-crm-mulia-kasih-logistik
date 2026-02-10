@@ -42,6 +42,7 @@ const formSchema = z.object({
   exp_do: z.date().nullable().optional(),
   status_do: z.string().optional(),
   pembayaran_do: z.string().optional(),
+  status: z.string().optional(),
   lokasi: z.string().optional(),
   tujuan: z.string().optional(),
   respond_bc: z.string().optional(),
@@ -89,6 +90,12 @@ const statusBlOptions: SelectOption[] = [
   { value: "telex_release", label: "Telex Release" },
 ];
 
+const statusOptions: SelectOption[] = [
+  { value: "original", label: "Original" },
+  { value: "lc", label: "LC" },
+  { value: "sea_waybill", label: "Sea Waybill" },
+];
+
 export const JobOrderDialog = ({
   open,
   onOpenChange,
@@ -113,6 +120,7 @@ export const JobOrderDialog = ({
       exp_do: null,
       status_do: "pending",
       pembayaran_do: "belum_lunas",
+      status: "",
       lokasi: "",
       tujuan: "",
       respond_bc: "",
@@ -138,6 +146,7 @@ export const JobOrderDialog = ({
           exp_do: jobOrder.exp_do ? new Date(jobOrder.exp_do) : null,
           status_do: jobOrder.status_do || "pending",
           pembayaran_do: jobOrder.pembayaran_do || "belum_lunas",
+          status: jobOrder.status || "",
           lokasi: jobOrder.lokasi || "",
           tujuan: jobOrder.tujuan || "",
           respond_bc: jobOrder.respond_bc || "",
@@ -157,6 +166,7 @@ export const JobOrderDialog = ({
           exp_do: null,
           status_do: "pending",
           pembayaran_do: "belum_lunas",
+          status: "",
           lokasi: "",
           tujuan: "",
           respond_bc: "",
@@ -197,7 +207,7 @@ export const JobOrderDialog = ({
       customer_id: data.customer_id || null,
       customer_name: data.customer_name || null,
       notes: data.notes || null,
-      status: "active",
+      status: data.status || null,
     };
     onSubmit(input);
   };
@@ -341,7 +351,7 @@ export const JobOrderDialog = ({
               />
             </div>
 
-            {/* Row 4: EXP DO */}
+            {/* Row 4: EXP DO & Status */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -375,6 +385,26 @@ export const JobOrderDialog = ({
                         />
                       </PopoverContent>
                     </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <FormControl>
+                      <SearchableSelect
+                        value={field.value || ""}
+                        options={statusOptions}
+                        placeholder="Pilih status"
+                        searchPlaceholder="Cari status..."
+                        onChange={field.onChange}
+                        allowClear={true}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

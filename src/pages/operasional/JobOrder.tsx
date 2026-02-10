@@ -77,6 +77,12 @@ const respondBcLabels: Record<string, string> = {
   pending: "Pending",
 };
 
+const statusLabels: Record<string, string> = {
+  original: "Original",
+  lc: "LC",
+  sea_waybill: "Sea Waybill",
+};
+
 export default function JobOrderPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -273,8 +279,9 @@ export default function JobOrderPage() {
                     <TableHead>BL Number</TableHead>
                     <TableHead>ETA Kapal</TableHead>
                     <TableHead>Lokasi → Tujuan</TableHead>
-                    <TableHead>Status DO</TableHead>
-                    <TableHead>Respond BC</TableHead>
+                     <TableHead>Status DO</TableHead>
+                     <TableHead>Status</TableHead>
+                     <TableHead>Respond BC</TableHead>
                     <TableHead>Invoice</TableHead>
                     <TableHead>PDF</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
@@ -298,9 +305,12 @@ export default function JobOrderPage() {
                         <Badge className={cn("text-xs", statusDoStyles[order.status_do || "pending"])}>
                           {statusDoLabels[order.status_do || "pending"]}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={cn("text-xs", respondBcStyles[order.respond_bc || "pending"])}>
+                       </TableCell>
+                       <TableCell>
+                         <span className="text-sm">{statusLabels[order.status || ""] || "-"}</span>
+                       </TableCell>
+                       <TableCell>
+                         <Badge className={cn("text-xs", respondBcStyles[order.respond_bc || "pending"])}>
                           {respondBcLabels[order.respond_bc || "pending"]}
                         </Badge>
                       </TableCell>
