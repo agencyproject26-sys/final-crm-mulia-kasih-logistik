@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FileText, ChevronDown, Receipt, Banknote, Package, Upload, Wrench, Clock, Move, MoreHorizontal } from "lucide-react";
+import { useState, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { FileText, ChevronDown, Receipt, Package, Upload, Wrench, Clock, Move, MoreHorizontal, Banknote, Eye, Download, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -14,14 +13,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { JobOrder } from "@/hooks/useJobOrders";
-import { useInvoices, InvoiceInput, InvoiceItem } from "@/hooks/useInvoices";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface CreateInvoiceFromJobOrderProps {
@@ -42,142 +36,136 @@ const invoiceCategories: Record<InvoiceCategory, { label: string; icon: React.El
   lain_lain: { label: "Invoice Lain-lain", icon: MoreHorizontal, color: "text-muted-foreground" },
 };
 
+const BUCKET = "job-order-invoices";
+
+interface StorageFile {
+  name: string;
+  id: string;
+  created_at: string;
+}
+
 export const CreateInvoiceFromJobOrder = ({ jobOrder, onSuccess }: CreateInvoiceFromJobOrderProps) => {
-  const navigate = useNavigate();
-  const { createInvoice } = useInvoices();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<InvoiceCategory | null>(null);
-  const [items, setItems] = useState<{ description: string; amount: number }[]>([
-    { description: "", amount: 0 },
-  ]);
-  const [notes, setNotes] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadCategoryRef = useRef<InvoiceCategory | null>(null);
+  const queryClient = useQueryClient();
 
-  const generateInvoiceNumber = (category: InvoiceCategory): string => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const random = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
-    const prefixMap: Record<InvoiceCategory, string> = {
-      penumpukan: "PNP",
-      do: "DO",
-      spjm: "SPJM",
-      repair: "RPR",
-      perpanjangan_do: "PDO",
-      perpanjangan_tila: "PTL",
-      gerakan: "GRK",
-      lain_lain: "LLL",
-    };
-    const prefix = prefixMap[category];
-    return `INV-${prefix}${year}${month}-${random}`;
+  const folderPath = selectedCategory ? `${jobOrder.id}/${selectedCategory}` : "";
+
+  const { data: files = [], isLoading: isFilesLoading } = useQuery({
+    queryKey: ["job-order-files", jobOrder.id, selectedCategory],
+    queryFn: async () => {
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .list(`${jobOrder.id}/${selectedCategory}`, { sortBy: { column: "created_at", order: "desc" } });
+      if (error) throw error;
+      return (data || []).filter((f) => f.name !== ".emptyFolderPlaceholder") as StorageFile[];
+    },
+    enabled: !!selectedCategory,
+  });
+
+  const triggerUpload = (category: InvoiceCategory) => {
+    uploadCategoryRef.current = category;
+    fileInputRef.current?.click();
   };
 
-  const openCreateDialog = (category: InvoiceCategory) => {
-    setSelectedCategory(category);
-    setItems([{ description: invoiceCategories[category].label, amount: 0 }]);
-    setNotes("");
-    setIsDialogOpen(true);
-  };
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const category = uploadCategoryRef.current;
+    if (!file || !category) return;
 
-  const addItem = () => {
-    setItems([...items, { description: "", amount: 0 }]);
-  };
+    setIsUploading(true);
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${jobOrder.id}/${category}/${fileName}`;
 
-  const removeItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
+      const { error } = await supabase.storage.from(BUCKET).upload(filePath, file);
+      if (error) throw error;
+
+      toast.success(`File berhasil diupload ke ${invoiceCategories[category].label}`);
+      // If dialog is open for this category, refresh files
+      if (selectedCategory === category) {
+        queryClient.invalidateQueries({ queryKey: ["job-order-files", jobOrder.id, category] });
+      }
+      // Also open the dialog to show the uploaded file
+      setSelectedCategory(category);
+      queryClient.invalidateQueries({ queryKey: ["job-order-files", jobOrder.id, category] });
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      toast.error("Gagal mengupload file");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const updateItem = (index: number, field: "description" | "amount", value: string | number) => {
-    const newItems = [...items];
-    if (field === "amount") {
-      newItems[index].amount = Number(value) || 0;
-    } else {
-      newItems[index].description = String(value);
-    }
-    setItems(newItems);
-  };
-
-  const calculateTotal = () => {
-    return items.reduce((sum, item) => sum + item.amount, 0);
-  };
-
-  const handleCreate = () => {
+  const handleView = (fileName: string) => {
     if (!selectedCategory) return;
+    const { data } = supabase.storage
+      .from(BUCKET)
+      .getPublicUrl(`${jobOrder.id}/${selectedCategory}/${fileName}`);
+    setPreviewUrl(data.publicUrl);
+  };
 
-    const subtotal = calculateTotal();
-    const invoiceItems: InvoiceItem[] = items
-      .filter((item) => item.description.trim() !== "")
-      .map((item) => ({
-        description: item.description,
-        amount: item.amount,
-      }));
+  const handleDownload = async (fileName: string) => {
+    if (!selectedCategory) return;
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .download(`${jobOrder.id}/${selectedCategory}/${fileName}`);
 
-    if (invoiceItems.length === 0) {
-      toast.error("Tambahkan minimal 1 item");
+    if (error) {
+      toast.error("Gagal mengunduh file");
       return;
     }
 
-    const invoiceData: InvoiceInput = {
-      invoice_number: generateInvoiceNumber(selectedCategory),
-      invoice_date: new Date().toISOString().split("T")[0],
-      no_aju: jobOrder.aju,
-      bl_number: jobOrder.bl_number,
-      customer_id: jobOrder.customer_id,
-      customer_name: jobOrder.customer_name || "",
-      customer_address: null,
-      customer_city: null,
-      party: jobOrder.party,
-      flight_vessel: null,
-      origin: jobOrder.lokasi,
-      no_pen: null,
-      no_invoice: null,
-      description: `${invoiceCategories[selectedCategory].label} - ${jobOrder.job_order_number}`,
-      delivery_date: null,
-      subtotal,
-      down_payment: 0,
-      total_amount: subtotal,
-      remaining_amount: subtotal,
-      dp_items: null,
-      status: "draft",
-      notes: notes || null,
-      job_order_id: jobOrder.id,
-      items: invoiceItems,
-    };
-
-    createInvoice.mutate(invoiceData, {
-      onSuccess: () => {
-        setIsDialogOpen(false);
-        setSelectedCategory(null);
-        toast.success(`${invoiceCategories[selectedCategory].label} berhasil dibuat`);
-        onSuccess?.();
-      },
-    });
+    const url = URL.createObjectURL(data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName.replace(/^\d+_/, "");
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  const formatRupiah = (value: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(value);
+  const handleDelete = async (fileName: string) => {
+    if (!selectedCategory) return;
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .remove([`${jobOrder.id}/${selectedCategory}/${fileName}`]);
+
+    if (error) {
+      toast.error("Gagal menghapus file");
+      return;
+    }
+
+    toast.success("File berhasil dihapus");
+    queryClient.invalidateQueries({ queryKey: ["job-order-files", jobOrder.id, selectedCategory] });
   };
 
   return (
     <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        onChange={handleFileSelected}
+        className="hidden"
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+      />
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1">
-            <Receipt className="h-4 w-4" />
+          <Button variant="outline" size="sm" className="gap-1" disabled={isUploading}>
+            {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
             Invoice
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuContent align="end" className="w-64 bg-popover">
           {(Object.keys(invoiceCategories) as InvoiceCategory[]).map((category) => {
             const { label, icon: Icon, color } = invoiceCategories[category];
             return (
-              <DropdownMenuItem key={category} onClick={() => openCreateDialog(category)}>
+              <DropdownMenuItem key={category} onClick={() => triggerUpload(category)}>
                 <div className="flex items-center gap-2">
                   <Upload className="h-4 w-4" />
                   <Icon className={`h-4 w-4 ${color}`} />
@@ -186,96 +174,87 @@ export const CreateInvoiceFromJobOrder = ({ jobOrder, onSuccess }: CreateInvoice
               </DropdownMenuItem>
             );
           })}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate("/keuangan/invoice")}>
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Lihat Semua Invoice
-            </div>
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Files Dialog - shows uploaded files for a category */}
+      <Dialog open={!!selectedCategory} onOpenChange={(open) => !open && setSelectedCategory(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              Buat {selectedCategory && invoiceCategories[selectedCategory].label}
+              {selectedCategory && invoiceCategories[selectedCategory].label} - {jobOrder.job_order_number}
             </DialogTitle>
-            <DialogDescription>
-              Buat invoice baru dari Job Order {jobOrder.job_order_number}
-            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            {/* Job Order Info */}
-            <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
-              <p><span className="text-muted-foreground">Customer:</span> {jobOrder.customer_name || "-"}</p>
-              <p><span className="text-muted-foreground">BL:</span> {jobOrder.bl_number || "-"}</p>
-              <p><span className="text-muted-foreground">AJU:</span> {jobOrder.aju || "-"}</p>
-            </div>
+          {/* Upload more button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => selectedCategory && triggerUpload(selectedCategory)}
+            disabled={isUploading}
+            className="w-full"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4 mr-2" />
+            )}
+            {isUploading ? "Mengupload..." : "Upload File Lagi"}
+          </Button>
 
-            {/* Items */}
-            <div className="space-y-3">
-              <Label>Item Invoice</Label>
-              {items.map((item, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    placeholder="Deskripsi"
-                    value={item.description}
-                    onChange={(e) => updateItem(index, "description", e.target.value)}
-                    className="flex-1"
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Jumlah"
-                    value={item.amount || ""}
-                    onChange={(e) => updateItem(index, "amount", e.target.value)}
-                    className="w-32"
-                  />
-                  {items.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeItem(index)}
-                    >
-                      ×
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                + Tambah Item
-              </Button>
-            </div>
-
-            {/* Total */}
-            <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg">
-              <span className="font-medium">Total</span>
-              <span className="text-lg font-bold">{formatRupiah(calculateTotal())}</span>
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-2">
-              <Label>Catatan</Label>
-              <Textarea
-                placeholder="Catatan invoice (opsional)"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-              />
-            </div>
+          {/* File list */}
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {isFilesLoading ? (
+              <div className="text-center py-4 text-muted-foreground">Memuat...</div>
+            ) : files.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Belum ada file</p>
+              </div>
+            ) : (
+              files.map((file) => {
+                const displayName = file.name.replace(/^\d+_/, "");
+                return (
+                  <div
+                    key={file.id}
+                    className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm truncate">{displayName}</span>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleView(file.name)} title="Lihat">
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownload(file.name)} title="Download">
+                        <Download className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(file.name)} title="Hapus">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Batal
-            </Button>
-            <Button onClick={handleCreate} disabled={createInvoice.isPending}>
-              {createInvoice.isPending ? "Membuat..." : "Buat Invoice"}
-            </Button>
-          </DialogFooter>
+      {/* Preview Dialog */}
+      <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Preview File</DialogTitle>
+          </DialogHeader>
+          {previewUrl && (
+            <iframe
+              src={previewUrl}
+              className="w-full h-[70vh] rounded-lg border"
+              title="File Preview"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
