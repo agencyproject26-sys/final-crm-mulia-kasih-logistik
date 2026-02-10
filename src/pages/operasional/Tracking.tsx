@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { format } from "date-fns";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,27 +126,30 @@ export default function TrackingPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nama PT</TableHead>
-                <TableHead>AJU</TableHead>
-                <TableHead>No Container</TableHead>
-                <TableHead>Depo Kosongan</TableHead>
-                <TableHead>Nama Sopir</TableHead>
-                <TableHead>No Telpon</TableHead>
-                <TableHead>Nomer Polisi</TableHead>
-                <TableHead>Tujuan</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                    <TableHead>AJU</TableHead>
+                    <TableHead>No Container</TableHead>
+                    <TableHead>Ukuran</TableHead>
+                    <TableHead>Tgl Pengiriman</TableHead>
+                    <TableHead>Lokasi Muat</TableHead>
+                    <TableHead>Depo Kosongan</TableHead>
+                    <TableHead>Nama Sopir</TableHead>
+                    <TableHead>No Telpon</TableHead>
+                    <TableHead>Nomer Polisi</TableHead>
+                    <TableHead>Tujuan</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8">
+                   <TableCell colSpan={13} className="text-center py-8">
                     Memuat data...
                   </TableCell>
                 </TableRow>
               ) : filteredTrackings?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8">
+                   <TableCell colSpan={13} className="text-center py-8">
                     <div className="flex flex-col items-center gap-2">
                       <Truck className="h-8 w-8 text-muted-foreground" />
                       <p>Tidak ada data tracking</p>
@@ -162,6 +166,13 @@ export default function TrackingPage() {
                     <TableCell className="font-mono">
                       {tracking.container_number || "-"}
                     </TableCell>
+                    <TableCell>{tracking.container_size ? `${tracking.container_size}'` : "-"}</TableCell>
+                    <TableCell>
+                      {tracking.shipping_date
+                        ? format(new Date(tracking.shipping_date), "dd/MM/yyyy")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>{tracking.lokasi_muat || "-"}</TableCell>
                     <TableCell>{tracking.depo_kosongan || "-"}</TableCell>
                     <TableCell>{tracking.driver_name || "-"}</TableCell>
                     <TableCell>{tracking.driver_phone || "-"}</TableCell>

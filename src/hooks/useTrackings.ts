@@ -16,6 +16,9 @@ export interface Tracking {
   destination: string | null;
   status: string | null;
   notes: string | null;
+  shipping_date: string | null;
+  lokasi_muat: string | null;
+  container_size: string | null;
   created_at: string;
   updated_at: string;
   vendors?: {
