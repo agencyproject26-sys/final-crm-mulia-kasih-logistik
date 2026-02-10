@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +29,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { Tracking, TrackingInput } from "@/hooks/useTrackings";
 import { useVendors } from "@/hooks/useVendors";
 
@@ -42,6 +47,9 @@ const trackingSchema = z.object({
   destination: z.string().optional(),
   status: z.string().optional(),
   notes: z.string().optional(),
+  shipping_date: z.date().nullable().optional(),
+  lokasi_muat: z.string().optional(),
+  container_size: z.string().optional(),
 });
 
 type TrackingFormValues = z.infer<typeof trackingSchema>;
@@ -77,6 +85,9 @@ export function TrackingDialog({
       destination: "",
       status: "in_transit",
       notes: "",
+      shipping_date: null,
+      lokasi_muat: "",
+      container_size: "",
     },
   });
 
@@ -94,6 +105,9 @@ export function TrackingDialog({
         destination: tracking.destination || "",
         status: tracking.status || "in_transit",
         notes: tracking.notes || "",
+        shipping_date: tracking.shipping_date ? new Date(tracking.shipping_date) : null,
+        lokasi_muat: tracking.lokasi_muat || "",
+        container_size: tracking.container_size || "",
       });
     } else {
       form.reset({
@@ -108,6 +122,9 @@ export function TrackingDialog({
         destination: "",
         status: "in_transit",
         notes: "",
+        shipping_date: null,
+        lokasi_muat: "",
+        container_size: "",
       });
     }
   }, [tracking, form]);
@@ -133,6 +150,9 @@ export function TrackingDialog({
       destination: values.destination || null,
       status: values.status || "in_transit",
       notes: values.notes || null,
+      shipping_date: values.shipping_date ? values.shipping_date.toISOString().split("T")[0] : null,
+      lokasi_muat: values.lokasi_muat || null,
+      container_size: values.container_size || null,
     };
     onSubmit(data);
   };
@@ -309,6 +329,79 @@ export function TrackingDialog({
                         <SelectItem value="unloading">Unloading</SelectItem>
                         <SelectItem value="delivered">Delivered</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="shipping_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tanggal Pengiriman</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "dd/MM/yyyy") : "Pilih tanggal"}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value || undefined}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lokasi_muat"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lokasi Muat</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Lokasi muat barang" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="container_size"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ukuran Kontainer</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih ukuran" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="20">20'</SelectItem>
+                        <SelectItem value="40">40'</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

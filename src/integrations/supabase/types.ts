@@ -797,6 +797,7 @@ export type Database = {
           aju: string | null
           company_name: string
           container_number: string | null
+          container_size: string | null
           created_at: string
           deleted_at: string | null
           depo_kosongan: string | null
@@ -804,8 +805,10 @@ export type Database = {
           driver_name: string | null
           driver_phone: string | null
           id: string
+          lokasi_muat: string | null
           notes: string | null
           plate_number: string | null
+          shipping_date: string | null
           status: string | null
           updated_at: string
           vendor_id: string | null
@@ -814,6 +817,7 @@ export type Database = {
           aju?: string | null
           company_name: string
           container_number?: string | null
+          container_size?: string | null
           created_at?: string
           deleted_at?: string | null
           depo_kosongan?: string | null
@@ -821,8 +825,10 @@ export type Database = {
           driver_name?: string | null
           driver_phone?: string | null
           id?: string
+          lokasi_muat?: string | null
           notes?: string | null
           plate_number?: string | null
+          shipping_date?: string | null
           status?: string | null
           updated_at?: string
           vendor_id?: string | null
@@ -831,6 +837,7 @@ export type Database = {
           aju?: string | null
           company_name?: string
           container_number?: string | null
+          container_size?: string | null
           created_at?: string
           deleted_at?: string | null
           depo_kosongan?: string | null
@@ -838,8 +845,10 @@ export type Database = {
           driver_name?: string | null
           driver_phone?: string | null
           id?: string
+          lokasi_muat?: string | null
           notes?: string | null
           plate_number?: string | null
+          shipping_date?: string | null
           status?: string | null
           updated_at?: string
           vendor_id?: string | null
