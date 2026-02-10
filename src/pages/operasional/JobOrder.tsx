@@ -47,7 +47,7 @@ import { DeleteJobOrderDialog } from "@/components/joborder/DeleteJobOrderDialog
 import { CreateInvoiceFromJobOrder } from "@/components/joborder/CreateInvoiceFromJobOrder";
 import { CreateInvoiceDPFromJobOrder } from "@/components/joborder/CreateInvoiceDPFromJobOrder";
 import { JobOrderInvoicesDialog } from "@/components/joborder/JobOrderInvoicesDialog";
-import { JobOrderFileUpload } from "@/components/joborder/JobOrderFileUpload";
+
 
 const statusDoStyles: Record<string, string> = {
   pending: "bg-muted text-muted-foreground",
@@ -306,10 +306,6 @@ export default function JobOrderPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <JobOrderFileUpload
-                            jobOrderId={order.id}
-                            jobOrderNumber={order.job_order_number}
-                          />
                           <CreateInvoiceFromJobOrder jobOrder={order} />
                           <CreateInvoiceDPFromJobOrder jobOrder={order} />
                           <Button
