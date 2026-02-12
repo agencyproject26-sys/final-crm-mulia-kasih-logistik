@@ -54,7 +54,7 @@ export function InvoiceDPDialog({
     customer_address: "",
     customer_city: "",
     bl_number: "",
-    description: "DP ( Down Payment ) import A.N PTP",
+    description: "DP ( Down Payment ) Import PTP A.N",
     status: "draft",
     notes: "",
   });
@@ -77,7 +77,7 @@ export function InvoiceDPDialog({
         customer_address: invoice.customer_address || "",
         customer_city: invoice.customer_city || "",
         bl_number: invoice.bl_number || "",
-        description: invoice.description || "DP ( Down Payment ) import A.N PTP",
+        description: invoice.description || "DP ( Down Payment ) Import PTP A.N",
         status: invoice.status || "draft",
         notes: invoice.notes || "",
       });
@@ -98,7 +98,7 @@ export function InvoiceDPDialog({
         customer_address: "",
         customer_city: "",
         bl_number: "",
-        description: "DP ( Down Payment ) import A.N PTP",
+        description: "DP ( Down Payment ) Import PTP A.N",
         status: "draft",
         notes: "",
       });
