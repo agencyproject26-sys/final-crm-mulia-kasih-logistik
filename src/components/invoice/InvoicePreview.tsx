@@ -30,7 +30,8 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
 
     const totalAmount = invoice.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
     const downPayment = invoice.down_payment || 0;
-    const remainingAmount = totalAmount - downPayment;
+    const reimbursementRemaining = invoice.reimbursement_remaining || 0;
+    const remainingAmount = totalAmount + reimbursementRemaining - downPayment;
 
     return (
       <div
