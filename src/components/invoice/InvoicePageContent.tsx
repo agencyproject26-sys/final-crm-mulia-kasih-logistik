@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const formatRupiah = (value: number) => {
   return new Intl.NumberFormat("id-ID", {
@@ -99,8 +100,23 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [previewInvoice, setPreviewInvoice] = useState<(Partial<Invoice> & { items: InvoiceItem[]; dp_items?: { label: string; amount: number }[] }) | null>(null);
+  const [previewInvoice, setPreviewInvoice] = useState<(Partial<Invoice> & { items: InvoiceItem[]; dp_items?: { label: string; amount: number }[]; reimbursement_remaining?: number | null }) | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const fetchReimbursementRemaining = useCallback(async (invoiceNumber: string | null): Promise<number | null> => {
+    if (!invoiceNumber) return null;
+    try {
+      const { data } = await supabase
+        .from("invoices_reimbursement")
+        .select("remaining_amount")
+        .eq("invoice_number", invoiceNumber.trim())
+        .is("deleted_at", null)
+        .maybeSingle();
+      return data ? Number(data.remaining_amount) || 0 : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
@@ -174,10 +190,14 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
         : Number(invoiceWithItems.down_payment) > 0
           ? [{ label: "DP 1", amount: Number(invoiceWithItems.down_payment) }]
           : [];
+      const reimbRemaining = !hideReimbursementLookup
+        ? await fetchReimbursementRemaining(invoiceWithItems.invoice_number)
+        : null;
       setPreviewInvoice({
         ...invoiceWithItems,
         items: invoiceWithItems.items || [],
         dp_items: dpItems,
+        reimbursement_remaining: reimbRemaining,
       });
       setIsPreviewOpen(true);
     }
@@ -197,7 +217,10 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
         : Number(invoiceWithItems.down_payment) > 0
           ? [{ label: "DP 1", amount: Number(invoiceWithItems.down_payment) }]
           : [];
-      setPreviewInvoice({ ...invoiceWithItems, items: invoiceWithItems.items || [], dp_items: dpItems });
+      const reimbRemaining = !hideReimbursementLookup
+        ? await fetchReimbursementRemaining(invoiceWithItems.invoice_number)
+        : null;
+      setPreviewInvoice({ ...invoiceWithItems, items: invoiceWithItems.items || [], dp_items: dpItems, reimbursement_remaining: reimbRemaining });
       
       setTimeout(async () => {
         if (!previewRef.current) return;

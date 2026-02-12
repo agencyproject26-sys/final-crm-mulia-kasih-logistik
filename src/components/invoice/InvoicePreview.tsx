@@ -12,6 +12,7 @@ interface InvoicePreviewProps {
     bank_account_name?: string;
     bank_account_number?: string;
     bank_branch?: string;
+    reimbursement_remaining?: number | null;
   };
   title?: string;
 }
@@ -136,6 +137,18 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             </tr>
           </tbody>
         </table>
+
+        {/* Reimbursement Remaining (Sisa Invoice Reimbursement) */}
+        {invoice.reimbursement_remaining != null && invoice.reimbursement_remaining !== 0 && (
+          <div className="mb-4 text-xs">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-bold">SISA INVOICE REIMBURSEMENT :</span>
+              <div className="border border-black px-4 py-1">
+                <span>Rp {invoice.reimbursement_remaining.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Down Payment */}
         {invoice.dp_items && invoice.dp_items.length > 0 ? (
