@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Download, Eye, FileText, Search, Loader2, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Trash2, Download, Eye, FileText, Search, Loader2, GripVertical } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -474,12 +474,24 @@ export const InvoiceDialog = ({
     }
   };
 
-  const moveItem = (index: number, direction: "up" | "down") => {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= items.length) return;
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    setDragIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === index) return;
     const newItems = [...items];
-    [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
+    const [moved] = newItems.splice(dragIndex, 1);
+    newItems.splice(index, 0, moved);
     setItems(newItems);
+    setDragIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
   };
 
   const formatRupiah = (value: number): string => {
@@ -967,14 +979,16 @@ export const InvoiceDialog = ({
                     </div>
                     <div className="space-y-2">
                       {items.map((item, index) => (
-                        <div key={index} className="flex gap-2 items-center">
-                          <div className="flex flex-col">
-                            <Button type="button" variant="ghost" size="icon" className="h-5 w-5" disabled={index === 0} onClick={() => moveItem(index, "up")}>
-                              <ArrowUp className="h-3 w-3" />
-                            </Button>
-                            <Button type="button" variant="ghost" size="icon" className="h-5 w-5" disabled={index === items.length - 1} onClick={() => moveItem(index, "down")}>
-                              <ArrowDown className="h-3 w-3" />
-                            </Button>
+                        <div
+                          key={index}
+                          className={`flex gap-2 items-center rounded-md transition-colors ${dragIndex === index ? "opacity-50 bg-muted" : ""}`}
+                          draggable
+                          onDragStart={() => handleDragStart(index)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <div className="cursor-grab active:cursor-grabbing text-muted-foreground">
+                            <GripVertical className="h-5 w-5" />
                           </div>
                           <Input
                             placeholder="Keterangan item biaya"
