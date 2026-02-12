@@ -92,6 +92,10 @@ const statusOptions: SelectOption[] = [
   { value: "original", label: "Original" },
   { value: "lc", label: "LC" },
   { value: "sea_waybill", label: "Sea Waybill" },
+  { value: "pending", label: "Pending" },
+  { value: "received", label: "Received" },
+  { value: "surrendered", label: "Surrendered" },
+  { value: "telex_release", label: "Telex Release" },
 ];
 
 export const JobOrderDialog = ({
@@ -392,7 +396,7 @@ export const JobOrderDialog = ({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>Status BL</FormLabel>
                     <FormControl>
                       <SearchableSelect
                         value={field.value || ""}
