@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Download, Eye, FileText, Search, Loader2 } from "lucide-react";
+import { Plus, Trash2, Download, Eye, FileText, Search, Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -472,6 +472,14 @@ export const InvoiceDialog = ({
     if (items.length > 1) {
       setItems(items.filter((_, i) => i !== index));
     }
+  };
+
+  const moveItem = (index: number, direction: "up" | "down") => {
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= items.length) return;
+    const newItems = [...items];
+    [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
+    setItems(newItems);
   };
 
   const formatRupiah = (value: number): string => {
@@ -960,6 +968,14 @@ export const InvoiceDialog = ({
                     <div className="space-y-2">
                       {items.map((item, index) => (
                         <div key={index} className="flex gap-2 items-center">
+                          <div className="flex flex-col">
+                            <Button type="button" variant="ghost" size="icon" className="h-5 w-5" disabled={index === 0} onClick={() => moveItem(index, "up")}>
+                              <ArrowUp className="h-3 w-3" />
+                            </Button>
+                            <Button type="button" variant="ghost" size="icon" className="h-5 w-5" disabled={index === items.length - 1} onClick={() => moveItem(index, "down")}>
+                              <ArrowDown className="h-3 w-3" />
+                            </Button>
+                          </div>
                           <Input
                             placeholder="Keterangan item biaya"
                             value={item.description}
