@@ -621,6 +621,7 @@ export type Database = {
           party: string | null
           payment_status: string | null
           pembayaran_do: string | null
+          repair: string | null
           respond_bc: string | null
           status: string | null
           status_bl: string | null
@@ -647,6 +648,7 @@ export type Database = {
           party?: string | null
           payment_status?: string | null
           pembayaran_do?: string | null
+          repair?: string | null
           respond_bc?: string | null
           status?: string | null
           status_bl?: string | null
@@ -673,6 +675,7 @@ export type Database = {
           party?: string | null
           payment_status?: string | null
           pembayaran_do?: string | null
+          repair?: string | null
           respond_bc?: string | null
           status?: string | null
           status_bl?: string | null

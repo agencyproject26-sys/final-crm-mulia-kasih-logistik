@@ -1,0 +1,1 @@
+ALTER TABLE public.job_orders ADD COLUMN repair text NULL;

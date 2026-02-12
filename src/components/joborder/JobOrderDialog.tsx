@@ -47,6 +47,7 @@ const formSchema = z.object({
   tujuan: z.string().optional(),
   respond_bc: z.string().optional(),
   status_bl: z.string().optional(),
+  repair: z.string().optional(),
   customer_id: z.string().optional(),
   customer_name: z.string().optional(),
   notes: z.string().optional(),
@@ -127,6 +128,7 @@ export const JobOrderDialog = ({
       tujuan: "",
       respond_bc: "",
       status_bl: "",
+      repair: "",
       customer_id: "",
       customer_name: "",
       notes: "",
@@ -153,6 +155,7 @@ export const JobOrderDialog = ({
           tujuan: jobOrder.tujuan || "",
           respond_bc: jobOrder.respond_bc || "",
           status_bl: jobOrder.status_bl || "",
+          repair: (jobOrder as any).repair || "",
           customer_id: jobOrder.customer_id || "",
           customer_name: jobOrder.customer_name || "",
           notes: jobOrder.notes || "",
@@ -173,6 +176,7 @@ export const JobOrderDialog = ({
           tujuan: "",
           respond_bc: "",
           status_bl: "",
+          repair: "",
           customer_id: "",
           customer_name: "",
           notes: "",
@@ -206,6 +210,7 @@ export const JobOrderDialog = ({
       tujuan: data.tujuan || null,
       respond_bc: data.respond_bc || null,
       status_bl: data.status_bl || null,
+      repair: (data as any).repair || null,
       customer_id: data.customer_id || null,
       customer_name: data.customer_name || null,
       notes: data.notes || null,
@@ -523,6 +528,26 @@ export const JobOrderDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Perpanjangan DO</FormLabel>
+                    <FormControl>
+                      <SearchableSelect
+                        value={field.value || ""}
+                        options={perpanjanganDoOptions}
+                        placeholder="Pilih"
+                        searchPlaceholder="Cari..."
+                        onChange={field.onChange}
+                        allowClear={true}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="repair"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Repair</FormLabel>
                     <FormControl>
                       <SearchableSelect
                         value={field.value || ""}
