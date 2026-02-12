@@ -230,7 +230,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         )}
 
         {/* Reimbursement Remaining (Sisa Invoice Reimbursement) */}
-        {invoice.reimbursement_remaining != null && invoice.reimbursement_remaining !== 0 && (
+        {title !== "INVOICE FINAL" && invoice.reimbursement_remaining != null && invoice.reimbursement_remaining !== 0 && (
           <div className="mb-4 text-xs">
             <div className="flex justify-between items-center mb-1">
               <span className="font-bold">SISA INVOICE REIMBURSEMENT :</span>
