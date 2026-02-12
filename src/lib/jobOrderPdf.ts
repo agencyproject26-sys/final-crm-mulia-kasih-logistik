@@ -159,7 +159,7 @@ export const generateJobOrderInvoicePdf = (
   y += rowHeight;
 
   drawInfoRow(doc, "Exp DO", formatDate(jobOrder.exp_do), col1X, y);
-  drawInfoRow(doc, "Status BL", jobOrder.status_bl || "-", col2X, y);
+  drawInfoRow(doc, "Perpanjangan DO", jobOrder.status_bl || "-", col2X, y);
   y += 15;
 
   // Customer Info

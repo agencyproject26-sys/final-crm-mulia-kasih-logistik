@@ -83,11 +83,9 @@ const respondBcOptions: SelectOption[] = [
   { value: "pending", label: "Pending" },
 ];
 
-const statusBlOptions: SelectOption[] = [
-  { value: "pending", label: "Pending" },
-  { value: "received", label: "Received" },
-  { value: "surrendered", label: "Surrendered" },
-  { value: "telex_release", label: "Telex Release" },
+const perpanjanganDoOptions: SelectOption[] = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
 ];
 
 const statusOptions: SelectOption[] = [
@@ -124,7 +122,7 @@ export const JobOrderDialog = ({
       lokasi: "",
       tujuan: "",
       respond_bc: "",
-      status_bl: "pending",
+      status_bl: "",
       customer_id: "",
       customer_name: "",
       notes: "",
@@ -150,7 +148,7 @@ export const JobOrderDialog = ({
           lokasi: jobOrder.lokasi || "",
           tujuan: jobOrder.tujuan || "",
           respond_bc: jobOrder.respond_bc || "",
-          status_bl: jobOrder.status_bl || "pending",
+          status_bl: jobOrder.status_bl || "",
           customer_id: jobOrder.customer_id || "",
           customer_name: jobOrder.customer_name || "",
           notes: jobOrder.notes || "",
@@ -170,7 +168,7 @@ export const JobOrderDialog = ({
           lokasi: "",
           tujuan: "",
           respond_bc: "",
-          status_bl: "pending",
+          status_bl: "",
           customer_id: "",
           customer_name: "",
           notes: "",
@@ -520,15 +518,15 @@ export const JobOrderDialog = ({
                 name="status_bl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status BL</FormLabel>
+                    <FormLabel>Perpanjangan DO</FormLabel>
                     <FormControl>
                       <SearchableSelect
-                        value={field.value || "pending"}
-                        options={statusBlOptions}
-                        placeholder="Pilih status"
-                        searchPlaceholder="Cari status..."
+                        value={field.value || ""}
+                        options={perpanjanganDoOptions}
+                        placeholder="Pilih"
+                        searchPlaceholder="Cari..."
                         onChange={field.onChange}
-                        allowClear={false}
+                        allowClear={true}
                       />
                     </FormControl>
                     <FormMessage />
