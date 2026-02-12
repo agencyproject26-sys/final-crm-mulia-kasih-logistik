@@ -183,7 +183,117 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
 
   const openPreviewDialog = async (invoice: Invoice) => {
     const invoiceWithItems = await getInvoiceWithItems(invoice.id);
-    if (invoiceWithItems) {
+    if (!invoiceWithItems) return;
+
+    if (enableFinalIntegration) {
+      // Auto-fetch latest data from reimbursement & invoice tables
+      try {
+        const invNumber = invoiceWithItems.invoice_number?.trim();
+        let detailedItems: InvoiceItem[] = [];
+        let allDpItems: { label: string; amount: number; date?: string }[] = [];
+
+        // Fetch reimbursement
+        const { data: reimbData } = await supabase
+          .from("invoices_reimbursement")
+          .select("*")
+          .eq("invoice_number", invNumber)
+          .is("deleted_at", null)
+          .maybeSingle();
+
+        if (reimbData) {
+          const { data: reimbItems } = await supabase
+            .from("invoice_reimbursement_items")
+            .select("*")
+            .eq("invoice_id", reimbData.id)
+            .order("created_at", { ascending: true });
+
+          if (reimbItems && reimbItems.length > 0) {
+            reimbItems.forEach(item => {
+              detailedItems.push({ description: `Reimbursement - ${item.description}`, amount: Number(item.amount) || 0 });
+            });
+          } else {
+            detailedItems.push({ description: "Invoice Reimbursement", amount: Number(reimbData.total_amount) || 0 });
+          }
+        }
+
+        // Fetch invoice
+        const { data: invoiceData } = await supabase
+          .from("invoices")
+          .select("*")
+          .eq("invoice_number", invNumber)
+          .is("deleted_at", null)
+          .maybeSingle();
+
+        if (invoiceData) {
+          const { data: invItems } = await supabase
+            .from("invoice_items")
+            .select("*")
+            .eq("invoice_id", invoiceData.id)
+            .order("created_at", { ascending: true });
+
+          if (invItems && invItems.length > 0) {
+            invItems.forEach(item => {
+              detailedItems.push({ description: `Invoice - ${item.description}`, amount: Number(item.amount) || 0 });
+            });
+          } else {
+            detailedItems.push({ description: "Invoice", amount: Number(invoiceData.total_amount) || 0 });
+          }
+        }
+
+        // Fetch DP from invoices matching no_invoice
+        const noInvoice = reimbData?.no_invoice || invoiceData?.no_invoice;
+        if (noInvoice) {
+          const { data: invoicesWithDp } = await supabase
+            .from("invoices")
+            .select("*")
+            .eq("no_invoice", noInvoice.trim())
+            .gt("down_payment", 0)
+            .is("deleted_at", null)
+            .order("invoice_date", { ascending: true });
+
+          if (invoicesWithDp && invoicesWithDp.length > 0) {
+            invoicesWithDp.forEach((inv) => {
+              const savedDp = inv.dp_items as { label: string; amount: number; date?: string }[] | null;
+              if (savedDp && Array.isArray(savedDp) && savedDp.length > 0) {
+                savedDp.forEach(dp => allDpItems.push({ label: dp.label || "DP", amount: Number(dp.amount) || 0, date: dp.date || inv.invoice_date || "" }));
+              } else {
+                allDpItems.push({ label: "DP", amount: Number(inv.down_payment), date: inv.invoice_date || "" });
+              }
+            });
+            allDpItems = allDpItems.map((dp, i) => ({ ...dp, label: `DP ${i + 1}` }));
+          }
+        }
+
+        // Also check saved dp_items on the final invoice itself
+        if (allDpItems.length === 0) {
+          const savedDpItems = invoiceWithItems.dp_items as { label: string; amount: number }[] | null;
+          if (savedDpItems && Array.isArray(savedDpItems) && savedDpItems.length > 0) {
+            allDpItems = savedDpItems;
+          } else if (Number(invoiceWithItems.down_payment) > 0) {
+            allDpItems = [{ label: "DP 1", amount: Number(invoiceWithItems.down_payment) }];
+          }
+        }
+
+        // Use fetched items if available, otherwise fall back to saved items
+        const finalItems = detailedItems.length > 0 ? detailedItems : (invoiceWithItems.items || []);
+
+        setPreviewInvoice({
+          ...invoiceWithItems,
+          items: finalItems,
+          dp_items: allDpItems,
+          reimbursement_remaining: null,
+        });
+      } catch (err) {
+        console.error("Final integration preview error:", err);
+        // Fallback to saved data
+        setPreviewInvoice({
+          ...invoiceWithItems,
+          items: invoiceWithItems.items || [],
+          dp_items: [],
+          reimbursement_remaining: null,
+        });
+      }
+    } else {
       const savedDpItems = invoiceWithItems.dp_items as { label: string; amount: number }[] | null;
       const dpItems = savedDpItems && Array.isArray(savedDpItems) && savedDpItems.length > 0
         ? savedDpItems
@@ -199,8 +309,8 @@ export function InvoicePageContent({ pageTitle, useInvoiceHook, defaultItems, en
         dp_items: dpItems,
         reimbursement_remaining: reimbRemaining,
       });
-      setIsPreviewOpen(true);
     }
+    setIsPreviewOpen(true);
   };
 
   const openDeleteDialog = (invoice: Invoice) => {
