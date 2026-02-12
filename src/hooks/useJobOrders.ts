@@ -19,6 +19,7 @@ export interface JobOrder {
   tujuan: string | null;
   respond_bc: string | null;
   status_bl: string | null;
+  repair: string | null;
   customer_id: string | null;
   customer_name: string | null;
   notes: string | null;
