@@ -26,10 +26,11 @@ function terbilangHelper(n: number): string {
 }
 
 export function terbilang(n: number): string {
-  if (!n || isNaN(n) || n === 0) return 'Nol Rupiah';
+  if (isNaN(n) || n === 0) return 'Nol Rupiah';
+  const prefix = n < 0 ? 'Minus ' : '';
   const raw = terbilangHelper(Math.floor(Math.abs(n))) || '';
   const result = raw.trim().replace(/\s+/g, ' ');
-  return result + ' Rupiah';
+  return prefix + result + ' Rupiah';
 }
 
 export function formatCurrency(amount: number): string {
