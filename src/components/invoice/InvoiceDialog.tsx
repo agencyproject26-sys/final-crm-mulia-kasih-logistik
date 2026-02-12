@@ -94,6 +94,7 @@ export const InvoiceDialog = ({
   const previewRef = useRef<HTMLDivElement>(null);
   const [isSearchingReimbursement, setIsSearchingReimbursement] = useState(false);
   const [reimbursementFound, setReimbursementFound] = useState(false);
+  const [reimbursementRemaining, setReimbursementRemaining] = useState<number | null>(null);
   // Unified final integration state
   const [finalLookupNumber, setFinalLookupNumber] = useState("");
   const [isSearchingFinal, setIsSearchingFinal] = useState(false);
@@ -165,6 +166,7 @@ export const InvoiceDialog = ({
 
       if (data) {
         setReimbursementFound(true);
+        setReimbursementRemaining(Number(data.remaining_amount) || 0);
         // Auto-fill ALL fields from reimbursement - editable
         form.setValue("invoice_number", data.invoice_number || "");
         form.setValue("invoice_date", data.invoice_date || new Date().toISOString().split("T")[0]);
@@ -193,10 +195,12 @@ export const InvoiceDialog = ({
         }
       } else {
         setReimbursementFound(false);
+        setReimbursementRemaining(null);
       }
     } catch (err) {
       console.error("Reimbursement lookup error:", err);
       setReimbursementFound(false);
+      setReimbursementRemaining(null);
     } finally {
       setIsSearchingReimbursement(false);
     }
@@ -418,6 +422,22 @@ export const InvoiceDialog = ({
       } else {
         setDpItems([]);
       }
+      // Auto-fetch reimbursement remaining for edit mode
+      if (!hideReimbursementLookup && !enableFinalIntegration && invoice.invoice_number) {
+        (async () => {
+          try {
+            const { data } = await supabase
+              .from("invoices_reimbursement")
+              .select("remaining_amount")
+              .eq("invoice_number", invoice.invoice_number.trim())
+              .is("deleted_at", null)
+              .maybeSingle();
+            setReimbursementRemaining(data ? Number(data.remaining_amount) || 0 : null);
+          } catch {
+            setReimbursementRemaining(null);
+          }
+        })();
+      }
     } else {
       form.reset({
         invoice_number: generateInvoiceNumber(),
@@ -441,6 +461,7 @@ export const InvoiceDialog = ({
       setItems(getDefaultItems());
       setDpItems([]);
       setReimbursementFound(false);
+      setReimbursementRemaining(null);
       setFinalLookupNumber("");
       setFinalIntegrationResult(null);
     }
@@ -623,6 +644,7 @@ export const InvoiceDialog = ({
     bank_account_name: bankAccountName,
     bank_account_number: bankAccountNumber,
     bank_branch: bankBranch,
+    reimbursement_remaining: reimbursementRemaining,
   };
 
   return (
