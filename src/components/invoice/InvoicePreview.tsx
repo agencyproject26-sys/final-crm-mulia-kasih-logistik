@@ -131,6 +131,8 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               return (
                 <>
                   {reimbItems.length > 0 && (
+                    <>
+                    <p className="font-bold text-xs mb-1">Description Invoice Reimbursement</p>
                     <table className="w-full border border-black mb-4 text-xs">
                       <thead>
                         <tr className="bg-gray-100">
@@ -151,8 +153,11 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                         </tr>
                       </tbody>
                     </table>
+                    </>
                   )}
                   {invoiceItems.length > 0 && (
+                    <>
+                    <p className="font-bold text-xs mb-1">Description Invoice</p>
                     <table className="w-full border border-black mb-4 text-xs">
                       <thead>
                         <tr className="bg-gray-100">
@@ -173,6 +178,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                         </tr>
                       </tbody>
                     </table>
+                    </>
                   )}
                   {otherItems.length > 0 && (
                     <table className="w-full border border-black mb-4 text-xs">
