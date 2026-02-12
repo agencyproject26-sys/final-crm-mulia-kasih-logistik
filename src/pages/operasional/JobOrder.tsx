@@ -81,6 +81,10 @@ const statusLabels: Record<string, string> = {
   original: "Original",
   lc: "LC",
   sea_waybill: "Sea Waybill",
+  pending: "Pending",
+  received: "Received",
+  surrendered: "Surrendered",
+  telex_release: "Telex Release",
 };
 
 export default function JobOrderPage() {
@@ -280,7 +284,7 @@ export default function JobOrderPage() {
                     <TableHead>ETA Kapal</TableHead>
                     <TableHead>Lokasi → Tujuan</TableHead>
                      <TableHead>Status DO</TableHead>
-                     <TableHead>Status</TableHead>
+                     <TableHead>Status BL</TableHead>
                      <TableHead>Respond BC</TableHead>
                     <TableHead>Invoice</TableHead>
                     <TableHead>PDF</TableHead>
