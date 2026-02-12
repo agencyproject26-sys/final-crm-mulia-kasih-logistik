@@ -261,11 +261,13 @@ export const InvoiceDialog = ({
 
         let invoiceItems: { description: string; amount: number }[] = [];
 
-        if (noInvoice) {
+        // Match Invoice by invoice_number (same as reimbursement)
+        const reimbInvoiceNumber = reimbData.invoice_number;
+        if (reimbInvoiceNumber) {
           const { data: invoiceData } = await supabase
             .from("invoices")
             .select("*")
-            .eq("no_invoice", noInvoice.trim())
+            .eq("invoice_number", reimbInvoiceNumber.trim())
             .is("deleted_at", null)
             .maybeSingle();
 
