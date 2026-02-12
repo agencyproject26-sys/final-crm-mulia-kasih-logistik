@@ -202,6 +202,28 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
                       </tbody>
                     </table>
                   )}
+
+                  {/* Summary calculation for Invoice Final */}
+                  <div className="mb-4 text-xs border border-black p-2">
+                    <div className="flex justify-between items-center mb-1">
+                      <span>Description Invoice Reimbursement</span>
+                      <span>Rp {reimbTotal.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span>Description Invoice</span>
+                      <span>Rp {invTotal.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+                    </div>
+                    {downPayment > 0 && (
+                      <div className="flex justify-between items-center mb-1">
+                        <span>Down Payment (DP)</span>
+                        <span>- Rp {downPayment.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center font-bold border-t border-black pt-1 mt-1">
+                      <span>SISA INVOICE</span>
+                      <span>Rp {remainingAmount.toLocaleString("id-ID").replace(/,/g, ".")}</span>
+                    </div>
+                  </div>
                 </>
               );
             })()}
