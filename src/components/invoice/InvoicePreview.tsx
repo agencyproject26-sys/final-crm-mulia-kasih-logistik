@@ -118,26 +118,110 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         </div>
 
         {/* Line Items */}
-        <table className="w-full border border-black mb-4 text-xs">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border-b border-r border-black p-2 text-left">Description</th>
-              <th className="border-b border-black p-2 text-right w-32">(IDR)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.items?.map((item, index) => (
-              <tr key={index}>
-              <td className="border-b border-r border-black p-2">{item.description}</td>
-                <td className="border-b border-black p-2 text-right">Rp {item.amount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+        {title === "INVOICE FINAL" && invoice.items?.some(i => i.description.startsWith("Reimbursement - ") || i.description.startsWith("Invoice - ")) ? (
+          <>
+            {/* Reimbursement Table */}
+            {(() => {
+              const reimbItems = invoice.items?.filter(i => i.description.startsWith("Reimbursement - ")) || [];
+              const invoiceItems = invoice.items?.filter(i => i.description.startsWith("Invoice - ")) || [];
+              const otherItems = invoice.items?.filter(i => !i.description.startsWith("Reimbursement - ") && !i.description.startsWith("Invoice - ")) || [];
+              const reimbTotal = reimbItems.reduce((s, i) => s + (i.amount || 0), 0);
+              const invTotal = invoiceItems.reduce((s, i) => s + (i.amount || 0), 0);
+              const otherTotal = otherItems.reduce((s, i) => s + (i.amount || 0), 0);
+              return (
+                <>
+                  {reimbItems.length > 0 && (
+                    <table className="w-full border border-black mb-4 text-xs">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="border-b border-r border-black p-2 text-left">Description</th>
+                          <th className="border-b border-black p-2 text-right w-32">(IDR)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reimbItems.map((item, index) => (
+                          <tr key={index}>
+                            <td className="border-b border-r border-black p-2">{item.description.replace("Reimbursement - ", "")}</td>
+                            <td className="border-b border-black p-2 text-right">Rp {item.amount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+                          </tr>
+                        ))}
+                        <tr className="font-bold bg-gray-50">
+                          <td className="border-b border-r border-black p-2">TOTAL</td>
+                          <td className="border-b border-black p-2 text-right">Rp {reimbTotal.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  )}
+                  {invoiceItems.length > 0 && (
+                    <table className="w-full border border-black mb-4 text-xs">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="border-b border-r border-black p-2 text-left">Description</th>
+                          <th className="border-b border-black p-2 text-right w-32">(IDR)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoiceItems.map((item, index) => (
+                          <tr key={index}>
+                            <td className="border-b border-r border-black p-2">{item.description.replace("Invoice - ", "")}</td>
+                            <td className="border-b border-black p-2 text-right">Rp {item.amount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+                          </tr>
+                        ))}
+                        <tr className="font-bold bg-gray-50">
+                          <td className="border-b border-r border-black p-2">TOTAL</td>
+                          <td className="border-b border-black p-2 text-right">Rp {invTotal.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  )}
+                  {otherItems.length > 0 && (
+                    <table className="w-full border border-black mb-4 text-xs">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="border-b border-r border-black p-2 text-left">Description</th>
+                          <th className="border-b border-black p-2 text-right w-32">(IDR)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {otherItems.map((item, index) => (
+                          <tr key={index}>
+                            <td className="border-b border-r border-black p-2">{item.description}</td>
+                            <td className="border-b border-black p-2 text-right">Rp {item.amount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+                          </tr>
+                        ))}
+                        <tr className="font-bold bg-gray-50">
+                          <td className="border-b border-r border-black p-2">TOTAL</td>
+                          <td className="border-b border-black p-2 text-right">Rp {otherTotal.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  )}
+                </>
+              );
+            })()}
+          </>
+        ) : (
+          <table className="w-full border border-black mb-4 text-xs">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border-b border-r border-black p-2 text-left">Description</th>
+                <th className="border-b border-black p-2 text-right w-32">(IDR)</th>
               </tr>
-            ))}
-            <tr className="font-bold bg-gray-50">
-              <td className="border-b border-r border-black p-2">TOTAL</td>
-              <td className="border-b border-black p-2 text-right">Rp {totalAmount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
-            </tr>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {invoice.items?.map((item, index) => (
+                <tr key={index}>
+                  <td className="border-b border-r border-black p-2">{item.description}</td>
+                  <td className="border-b border-black p-2 text-right">Rp {item.amount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+                </tr>
+              ))}
+              <tr className="font-bold bg-gray-50">
+                <td className="border-b border-r border-black p-2">TOTAL</td>
+                <td className="border-b border-black p-2 text-right">Rp {totalAmount.toLocaleString("id-ID").replace(/,/g, ".")}</td>
+              </tr>
+            </tbody>
+          </table>
+        )}
 
         {/* Reimbursement Remaining (Sisa Invoice Reimbursement) */}
         {invoice.reimbursement_remaining != null && invoice.reimbursement_remaining !== 0 && (
