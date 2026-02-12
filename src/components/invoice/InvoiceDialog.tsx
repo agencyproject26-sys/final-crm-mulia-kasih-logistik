@@ -106,6 +106,8 @@ export const InvoiceDialog = ({
     reimbursementAmount: number;
     dpCount: number;
   } | null>(null);
+  // Available reimbursement invoices for dropdown
+  const [availableReimbursements, setAvailableReimbursements] = useState<{ invoice_number: string; customer_name: string; total_amount: number }[]>([]);
 
   const FALLBACK_ITEMS: { description: string; amount: number }[] = [
     { description: "Trucking", amount: 0 },
@@ -467,6 +469,24 @@ export const InvoiceDialog = ({
     }
   }, [invoice, form, open]);
 
+  // Fetch available reimbursement invoices for final integration dropdown
+  useEffect(() => {
+    if (enableFinalIntegration && open) {
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from("invoices_reimbursement")
+            .select("invoice_number, customer_name, total_amount")
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false });
+          setAvailableReimbursements(data || []);
+        } catch {
+          setAvailableReimbursements([]);
+        }
+      })();
+    }
+  }, [enableFinalIntegration, open]);
+
   const generateInvoiceNumber = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -765,31 +785,33 @@ export const InvoiceDialog = ({
                         Integrasi Invoice Final
                       </h3>
                       <p className="text-xs text-muted-foreground">
-                        Masukkan Nomor Invoice Reimbursement untuk otomatis mengambil data Reimbursement, Invoice, dan Invoice DP sekaligus
+                        Pilih Invoice Reimbursement untuk otomatis mengambil data Reimbursement, Invoice, dan Invoice DP sekaligus
                       </p>
                       <div className="flex gap-2 items-end">
                         <div className="flex-1">
-                          <FormLabel>Nomor Invoice Reimbursement</FormLabel>
-                          <Input
-                            placeholder="Contoh: INV/MITRA/027115/2026"
+                          <FormLabel>Pilih Invoice Reimbursement</FormLabel>
+                          <Select
                             value={finalLookupNumber}
-                            onChange={(e) => setFinalLookupNumber(e.target.value)}
-                            className="mt-1"
-                          />
+                            onValueChange={(value) => {
+                              setFinalLookupNumber(value);
+                              lookupAllFromReimbursement(value);
+                            }}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Pilih invoice reimbursement..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableReimbursements.map((reimb) => (
+                                <SelectItem key={reimb.invoice_number} value={reimb.invoice_number}>
+                                  {reimb.invoice_number} — {reimb.customer_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => lookupAllFromReimbursement(finalLookupNumber)}
-                          disabled={isSearchingFinal}
-                        >
-                          {isSearchingFinal ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <Search className="h-4 w-4 mr-2" />
-                          )}
-                          Cari Semua
-                        </Button>
+                        {isSearchingFinal && (
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mb-2" />
+                        )}
                       </div>
                       {finalIntegrationResult && (
                         <div className="space-y-1">
