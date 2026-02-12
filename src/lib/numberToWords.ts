@@ -26,8 +26,9 @@ function terbilangHelper(n: number): string {
 }
 
 export function terbilang(n: number): string {
-  if (n === 0) return 'Nol Rupiah';
-  const result = terbilangHelper(Math.floor(n)).trim().replace(/\s+/g, ' ');
+  if (!n || isNaN(n) || n === 0) return 'Nol Rupiah';
+  const raw = terbilangHelper(Math.floor(Math.abs(n))) || '';
+  const result = raw.trim().replace(/\s+/g, ' ');
   return result + ' Rupiah';
 }
 
