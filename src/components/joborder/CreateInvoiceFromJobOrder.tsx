@@ -86,9 +86,10 @@ function CategoryRow({
     }
   };
 
-  const handleView = (fileName: string) => {
-    const { data } = supabase.storage.from(BUCKET).getPublicUrl(`${folderPath}/${fileName}`);
-    setPreviewUrl(data.publicUrl);
+  const handleView = async (fileName: string) => {
+    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(`${folderPath}/${fileName}`, 3600);
+    if (error || !data?.signedUrl) { toast.error("Gagal membuka file"); return; }
+    setPreviewUrl(data.signedUrl);
   };
 
   const handleDownload = async (fileName: string) => {
