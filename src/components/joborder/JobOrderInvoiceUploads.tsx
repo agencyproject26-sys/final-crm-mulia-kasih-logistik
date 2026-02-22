@@ -95,11 +95,15 @@ export function CategoryFileUpload({ jobOrderId, category }: CategoryFileUploadP
     }
   };
 
-  const handleView = (fileName: string) => {
-    const { data } = supabase.storage
+  const handleView = async (fileName: string) => {
+    const { data, error } = await supabase.storage
       .from(BUCKET)
-      .getPublicUrl(`${folderPath}/${fileName}`);
-    setPreviewUrl(data.publicUrl);
+      .createSignedUrl(`${folderPath}/${fileName}`, 3600);
+    if (error || !data?.signedUrl) {
+      toast.error("Gagal membuka file");
+      return;
+    }
+    setPreviewUrl(data.signedUrl);
     setIsPreviewOpen(true);
   };
 

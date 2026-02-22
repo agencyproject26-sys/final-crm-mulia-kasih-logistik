@@ -77,11 +77,15 @@ export function JobOrderFileUpload({ jobOrderId, jobOrderNumber }: JobOrderFileU
     }
   };
 
-  const handleView = (fileName: string) => {
-    const { data } = supabase.storage
+  const handleView = async (fileName: string) => {
+    const { data, error } = await supabase.storage
       .from(BUCKET)
-      .getPublicUrl(`${jobOrderId}/${fileName}`);
-    setPreviewUrl(data.publicUrl);
+      .createSignedUrl(`${jobOrderId}/${fileName}`, 3600);
+    if (error || !data?.signedUrl) {
+      toast.error("Gagal membuka file");
+      return;
+    }
+    setPreviewUrl(data.signedUrl);
   };
 
   const handleDownload = async (fileName: string) => {
