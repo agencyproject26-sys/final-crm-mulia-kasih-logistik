@@ -439,24 +439,23 @@ Deno.serve(async (req) => {
       }
 
       const body = await req.json();
-      const { user_id } = body;
+      const { user_id, new_password } = body;
 
-      if (!user_id) {
-        return new Response(JSON.stringify({ error: "user_id required" }), {
+      if (!user_id || !new_password) {
+        return new Response(JSON.stringify({ error: "user_id and new_password required" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Generate a random password
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-      const specials = "!@#$%&*";
-      let newPassword = "";
-      for (let i = 0; i < 8; i++) {
-        newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+      if (new_password.length < 6) {
+        return new Response(JSON.stringify({ error: "Password minimal 6 karakter" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-      newPassword += specials.charAt(Math.floor(Math.random() * specials.length));
-      newPassword += String(Math.floor(Math.random() * 10));
+
+      const newPassword = new_password;
 
       const { error: updateError } = await adminClient.auth.admin.updateUserById(user_id, {
         password: newPassword,

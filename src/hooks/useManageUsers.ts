@@ -215,11 +215,11 @@ export function useManageUsers() {
   );
 
   const resetPassword = useCallback(
-    async (userId: string): Promise<string | null> => {
+    async (userId: string, newPassword: string): Promise<boolean> => {
       setIsActionLoading(true);
       try {
         const session = (await supabase.auth.getSession()).data.session;
-        if (!session) return null;
+        if (!session) return false;
 
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-users?action=reset-password`,
@@ -230,21 +230,21 @@ export function useManageUsers() {
               apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ user_id: userId }),
+            body: JSON.stringify({ user_id: userId, new_password: newPassword }),
           }
         );
         const result = await res.json();
         if (res.ok) {
           toast.success("Password berhasil direset");
-          return result.new_password;
+          return true;
         } else {
           toast.error(result.error || "Gagal mereset password");
-          return null;
+          return false;
         }
       } catch (err) {
         console.error("Reset password error:", err);
         toast.error("Gagal mereset password");
-        return null;
+        return false;
       } finally {
         setIsActionLoading(false);
       }

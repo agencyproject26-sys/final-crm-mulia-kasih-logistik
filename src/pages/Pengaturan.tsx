@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useManageUsers } from "@/hooks/useManageUsers";
 import { MenuAccessManager } from "@/components/settings/MenuAccessManager";
 import { UserApprovalManager } from "@/components/settings/UserApprovalManager";
-import { Shield, ShieldCheck, UserPlus, Users, Crown, Loader2, AlertTriangle, CheckCircle2, Trash2, KeyRound, Copy, Check } from "lucide-react";
+import { Shield, ShieldCheck, UserPlus, Users, Crown, Loader2, AlertTriangle, CheckCircle2, Trash2, KeyRound, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
@@ -35,8 +35,8 @@ export default function Pengaturan() {
   const [hasLoadedUsers, setHasLoadedUsers] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; email: string } | null>(null);
   const [resetTarget, setResetTarget] = useState<{ id: string; email: string } | null>(null);
-  const [newPassword, setNewPassword] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [manualPassword, setManualPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (myInfo?.isAdmin && !hasLoadedUsers) {
@@ -367,78 +367,67 @@ export default function Pengaturan() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        {/* Reset Password Confirmation Dialog */}
-        <AlertDialog open={!!resetTarget && !newPassword} onOpenChange={(open) => !open && setResetTarget(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reset Password</AlertDialogTitle>
-              <AlertDialogDescription>
-                Apakah Anda yakin ingin mereset password untuk <strong>{resetTarget?.email}</strong>? 
-                Password baru akan di-generate otomatis dan ditampilkan kepada Anda.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Batal</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  if (resetTarget) {
-                    const pwd = await resetPassword(resetTarget.id);
-                    if (pwd) {
-                      setNewPassword(pwd);
-                    } else {
-                      setResetTarget(null);
-                    }
-                  }
-                }}
-              >
-                Reset Password
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* New Password Result Dialog */}
-        <Dialog open={!!newPassword} onOpenChange={(open) => {
+        {/* Reset Password Dialog - Manual Input */}
+        <Dialog open={!!resetTarget} onOpenChange={(open) => {
           if (!open) {
-            setNewPassword(null);
             setResetTarget(null);
-            setCopied(false);
+            setManualPassword("");
+            setShowPassword(false);
           }
         }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Password Berhasil Direset
+                <KeyRound className="h-5 w-5 text-primary" />
+                Reset Password
               </DialogTitle>
               <DialogDescription>
-                Password baru untuk <strong>{resetTarget?.email}</strong>. Salin dan berikan kepada pengguna untuk login.
+                Masukkan password baru untuk <strong>{resetTarget?.email}</strong>. Password minimal 6 karakter.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex items-center gap-2 mt-2">
-              <Input
-                readOnly
-                value={newPassword || ""}
-                className="font-mono text-lg tracking-wider"
-              />
+            <div className="space-y-2 mt-2">
+              <label className="text-sm font-medium">Password Baru</label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={manualPassword}
+                  onChange={(e) => setManualPassword(e.target.value)}
+                  placeholder="Masukkan password baru"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              {manualPassword.length > 0 && manualPassword.length < 6 && (
+                <p className="text-xs text-destructive">Password minimal 6 karakter</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setResetTarget(null); setManualPassword(""); setShowPassword(false); }}>
+                Batal
+              </Button>
               <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  if (newPassword) {
-                    navigator.clipboard.writeText(newPassword);
-                    setCopied(true);
-                    toast.success("Password disalin ke clipboard");
-                    setTimeout(() => setCopied(false), 2000);
+                disabled={manualPassword.length < 6 || isActionLoading}
+                onClick={async () => {
+                  if (resetTarget && manualPassword.length >= 6) {
+                    const success = await resetPassword(resetTarget.id, manualPassword);
+                    if (success) {
+                      setResetTarget(null);
+                      setManualPassword("");
+                      setShowPassword(false);
+                    }
                   }
                 }}
               >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-            <DialogFooter>
-              <Button onClick={() => { setNewPassword(null); setResetTarget(null); setCopied(false); }}>
-                Tutup
+                {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Simpan Password
               </Button>
             </DialogFooter>
           </DialogContent>
