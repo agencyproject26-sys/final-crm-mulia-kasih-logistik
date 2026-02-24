@@ -70,12 +70,37 @@ export interface WarehouseData {
   inactiveItems: number;
 }
 
-export function useDashboardStats() {
+export type DashboardPeriod = "today" | "week" | "month" | "all";
+
+function getPeriodStart(period: DashboardPeriod): string | null {
+  const now = new Date();
+  switch (period) {
+    case "today": {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return start.toISOString();
+    }
+    case "week": {
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      const start = new Date(now.getFullYear(), now.getMonth(), diff);
+      return start.toISOString();
+    }
+    case "month": {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      return start.toISOString();
+    }
+    case "all":
+      return null;
+  }
+}
+
+export function useDashboardStats(period: DashboardPeriod = "all") {
   return useQuery({
-    queryKey: ["dashboard-stats"],
+    queryKey: ["dashboard-stats", period],
     queryFn: async (): Promise<DashboardStats> => {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const periodStart = getPeriodStart(period);
       
       // Fetch all data in parallel
       const [
@@ -94,8 +119,10 @@ export function useDashboardStats() {
         // Total customers
         supabase.from("customers").select("id", { count: "exact", head: true }),
         
-        // Job orders with different statuses
-        supabase.from("job_orders").select("id, status", { count: "exact" }),
+        // Job orders - apply period filter
+        periodStart 
+          ? supabase.from("job_orders").select("id, status", { count: "exact" }).gte("created_at", periodStart)
+          : supabase.from("job_orders").select("id, status", { count: "exact" }),
         
         // Completed this month
         supabase.from("job_orders")
@@ -103,11 +130,15 @@ export function useDashboardStats() {
           .eq("status", "Selesai")
           .gte("updated_at", startOfMonth),
         
-        // Invoices
-        supabase.from("invoices").select("id, status, total_amount, remaining_amount"),
+        // Invoices - apply period filter
+        periodStart
+          ? supabase.from("invoices").select("id, status, total_amount, remaining_amount").gte("invoice_date", periodStart.split("T")[0])
+          : supabase.from("invoices").select("id, status, total_amount, remaining_amount"),
         
-        // Invoice DP
-        supabase.from("invoice_dp").select("id, status, total_amount"),
+        // Invoice DP - apply period filter
+        periodStart
+          ? supabase.from("invoice_dp").select("id, status, total_amount").gte("invoice_date", periodStart.split("T")[0])
+          : supabase.from("invoice_dp").select("id, status, total_amount"),
         
         // Warehouses
         supabase.from("warehouses").select("id, cbm, quantity, status"),
@@ -115,14 +146,20 @@ export function useDashboardStats() {
         // Vendors
         supabase.from("vendors").select("id", { count: "exact", head: true }).is("deleted_at", null),
         
-        // Trackings
-        supabase.from("trackings").select("id, status", { count: "exact" }).is("deleted_at", null),
+        // Trackings - apply period filter
+        periodStart
+          ? supabase.from("trackings").select("id, status", { count: "exact" }).is("deleted_at", null).gte("created_at", periodStart)
+          : supabase.from("trackings").select("id, status", { count: "exact" }).is("deleted_at", null),
 
-        // Quotations
-        supabase.from("quotations").select("id, status", { count: "exact" }).is("deleted_at", null),
+        // Quotations - apply period filter
+        periodStart
+          ? supabase.from("quotations").select("id, status", { count: "exact" }).is("deleted_at", null).gte("created_at", periodStart)
+          : supabase.from("quotations").select("id, status", { count: "exact" }).is("deleted_at", null),
 
-        // Expenses
-        supabase.from("expenses").select("id, amount, expense_date").is("deleted_at", null),
+        // Expenses - apply period filter
+        periodStart
+          ? supabase.from("expenses").select("id, amount, expense_date").is("deleted_at", null).gte("expense_date", periodStart.split("T")[0])
+          : supabase.from("expenses").select("id, amount, expense_date").is("deleted_at", null),
 
         // Trucks
         supabase.from("trucks").select("id, status", { count: "exact" }).is("deleted_at", null),

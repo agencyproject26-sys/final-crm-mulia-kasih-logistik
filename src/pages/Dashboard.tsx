@@ -6,7 +6,10 @@ import { FinanceChart } from "@/components/dashboard/FinanceChart";
 import { TruckUtilization } from "@/components/dashboard/TruckUtilization";
 import { WarehouseOccupancy } from "@/components/dashboard/WarehouseOccupancy";
 import { OutstandingInvoices } from "@/components/dashboard/OutstandingInvoices";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useDashboardStats, type DashboardPeriod } from "@/hooks/useDashboardStats";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "lucide-react";
 import {
   Users,
   Package,
@@ -36,12 +39,35 @@ const formatRupiah = (value: number) => {
 };
 
 export default function Dashboard() {
-  const { data: stats, isLoading } = useDashboardStats();
+  const [period, setPeriod] = useState<DashboardPeriod>("all");
+  const { data: stats, isLoading } = useDashboardStats(period);
   const navigate = useNavigate();
+
+  const periodOptions: { value: DashboardPeriod; label: string }[] = [
+    { value: "today", label: "Hari Ini" },
+    { value: "week", label: "Minggu Ini" },
+    { value: "month", label: "Bulan Ini" },
+    { value: "all", label: "Semua" },
+  ];
 
   if (isLoading) {
     return (
       <MainLayout title="Dashboard" subtitle="Selamat datang di Sistem Manajemen PT Mulia Kasih Logistik">
+        <div className="flex items-center gap-2 mb-6">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground mr-1">Periode:</span>
+          {periodOptions.map((opt) => (
+            <Button
+              key={opt.value}
+              size="sm"
+              variant={period === opt.value ? "default" : "outline"}
+              onClick={() => setPeriod(opt.value)}
+              className="text-xs h-7"
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-xl" />
@@ -58,6 +84,23 @@ export default function Dashboard() {
 
   return (
     <MainLayout title="Dashboard" subtitle="Selamat datang di Sistem Manajemen PT Mulia Kasih Logistik">
+      {/* Period Filter */}
+      <div className="flex items-center gap-2 mb-6">
+        <Calendar className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground mr-1">Periode:</span>
+        {periodOptions.map((opt) => (
+          <Button
+            key={opt.value}
+            size="sm"
+            variant={period === opt.value ? "default" : "outline"}
+            onClick={() => setPeriod(opt.value)}
+            className="text-xs h-7"
+          >
+            {opt.label}
+          </Button>
+        ))}
+      </div>
+
       {/* Master Data & Sales */}
       <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Master Data & Sales</h3>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
