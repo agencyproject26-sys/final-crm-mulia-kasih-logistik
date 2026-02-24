@@ -214,6 +214,44 @@ export function useManageUsers() {
     [fetchUsers]
   );
 
+  const resetPassword = useCallback(
+    async (userId: string): Promise<string | null> => {
+      setIsActionLoading(true);
+      try {
+        const session = (await supabase.auth.getSession()).data.session;
+        if (!session) return null;
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-users?action=reset-password`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ user_id: userId }),
+          }
+        );
+        const result = await res.json();
+        if (res.ok) {
+          toast.success("Password berhasil direset");
+          return result.new_password;
+        } else {
+          toast.error(result.error || "Gagal mereset password");
+          return null;
+        }
+      } catch (err) {
+        console.error("Reset password error:", err);
+        toast.error("Gagal mereset password");
+        return null;
+      } finally {
+        setIsActionLoading(false);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     fetchMyRoles();
   }, [fetchMyRoles]);
@@ -229,5 +267,6 @@ export function useManageUsers() {
     assignRole,
     removeRole,
     deleteUser,
+    resetPassword,
   };
 }

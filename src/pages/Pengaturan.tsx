@@ -6,13 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useManageUsers } from "@/hooks/useManageUsers";
 import { MenuAccessManager } from "@/components/settings/MenuAccessManager";
 import { UserApprovalManager } from "@/components/settings/UserApprovalManager";
-import { Shield, ShieldCheck, UserPlus, Users, Crown, Loader2, AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
+import { Shield, ShieldCheck, UserPlus, Users, Crown, Loader2, AlertTriangle, CheckCircle2, Trash2, KeyRound, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
+import { toast } from "sonner";
 
 export default function Pengaturan() {
   const {
@@ -25,11 +28,15 @@ export default function Pengaturan() {
     assignRole,
     removeRole,
     deleteUser,
+    resetPassword,
   } = useManageUsers();
 
   const [selectedRole, setSelectedRole] = useState<Record<string, string>>({});
   const [hasLoadedUsers, setHasLoadedUsers] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; email: string } | null>(null);
+  const [resetTarget, setResetTarget] = useState<{ id: string; email: string } | null>(null);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (myInfo?.isAdmin && !hasLoadedUsers) {
@@ -261,6 +268,15 @@ export default function Pengaturan() {
                               </Button>
                               <Button
                                 size="sm"
+                                variant="outline"
+                                disabled={isActionLoading || user.id === myInfo?.user_id}
+                                onClick={() => setResetTarget({ id: user.id, email: user.email })}
+                                title="Reset password"
+                              >
+                                <KeyRound className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
                                 variant="destructive"
                                 disabled={isActionLoading || user.id === myInfo?.user_id}
                                 onClick={() => setDeleteTarget({ id: user.id, email: user.email })}
@@ -351,6 +367,82 @@ export default function Pengaturan() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        {/* Reset Password Confirmation Dialog */}
+        <AlertDialog open={!!resetTarget && !newPassword} onOpenChange={(open) => !open && setResetTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset Password</AlertDialogTitle>
+              <AlertDialogDescription>
+                Apakah Anda yakin ingin mereset password untuk <strong>{resetTarget?.email}</strong>? 
+                Password baru akan di-generate otomatis dan ditampilkan kepada Anda.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  if (resetTarget) {
+                    const pwd = await resetPassword(resetTarget.id);
+                    if (pwd) {
+                      setNewPassword(pwd);
+                    } else {
+                      setResetTarget(null);
+                    }
+                  }
+                }}
+              >
+                Reset Password
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* New Password Result Dialog */}
+        <Dialog open={!!newPassword} onOpenChange={(open) => {
+          if (!open) {
+            setNewPassword(null);
+            setResetTarget(null);
+            setCopied(false);
+          }
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                Password Berhasil Direset
+              </DialogTitle>
+              <DialogDescription>
+                Password baru untuk <strong>{resetTarget?.email}</strong>. Salin dan berikan kepada pengguna untuk login.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center gap-2 mt-2">
+              <Input
+                readOnly
+                value={newPassword || ""}
+                className="font-mono text-lg tracking-wider"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (newPassword) {
+                    navigator.clipboard.writeText(newPassword);
+                    setCopied(true);
+                    toast.success("Password disalin ke clipboard");
+                    setTimeout(() => setCopied(false), 2000);
+                  }
+                }}
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => { setNewPassword(null); setResetTarget(null); setCopied(false); }}>
+                Tutup
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
