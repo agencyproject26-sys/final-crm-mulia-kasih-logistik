@@ -29,6 +29,19 @@ export interface DashboardStats {
   
   // Tracking stats
   activeTrackings: number;
+  totalTrackings: number;
+
+  // Quotation stats
+  totalQuotations: number;
+  activeQuotations: number;
+
+  // Expense stats
+  totalExpenses: number;
+  monthlyExpenses: number;
+
+  // Truck stats
+  totalTrucks: number;
+  availableTrucks: number;
 }
 
 export interface RecentOrder {
@@ -74,6 +87,9 @@ export function useDashboardStats() {
         warehousesResult,
         vendorsResult,
         trackingsResult,
+        quotationsResult,
+        expensesResult,
+        trucksResult,
       ] = await Promise.all([
         // Total customers
         supabase.from("customers").select("id", { count: "exact", head: true }),
@@ -97,10 +113,19 @@ export function useDashboardStats() {
         supabase.from("warehouses").select("id, cbm, quantity, status"),
         
         // Vendors
-        supabase.from("vendors").select("id", { count: "exact", head: true }),
+        supabase.from("vendors").select("id", { count: "exact", head: true }).is("deleted_at", null),
         
         // Trackings
-        supabase.from("trackings").select("id, status", { count: "exact" }),
+        supabase.from("trackings").select("id, status", { count: "exact" }).is("deleted_at", null),
+
+        // Quotations
+        supabase.from("quotations").select("id, status", { count: "exact" }).is("deleted_at", null),
+
+        // Expenses
+        supabase.from("expenses").select("id, amount, expense_date").is("deleted_at", null),
+
+        // Trucks
+        supabase.from("trucks").select("id, status", { count: "exact" }).is("deleted_at", null),
       ]);
 
       // Process job orders
@@ -140,6 +165,25 @@ export function useDashboardStats() {
         t.status && !["Selesai", "Completed"].includes(t.status)
       ).length;
 
+      // Process quotations
+      const quotations = quotationsResult.data || [];
+      const activeQuotations = quotations.filter(q => 
+        q.status && !["Ditolak", "Rejected", "Expired"].includes(q.status)
+      ).length;
+
+      // Process expenses
+      const expenses = expensesResult.data || [];
+      const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const monthlyExpenses = expenses
+        .filter(e => e.expense_date >= startOfMonth)
+        .reduce((sum, e) => sum + (e.amount || 0), 0);
+
+      // Process trucks
+      const trucks = trucksResult.data || [];
+      const availableTrucks = trucks.filter(t => 
+        t.status === "Tersedia" || t.status === "Available"
+      ).length;
+
       return {
         totalCustomers: customersResult.count || 0,
         activeOrders,
@@ -155,6 +199,13 @@ export function useDashboardStats() {
         totalCBM,
         totalVendors: vendorsResult.count || 0,
         activeTrackings,
+        totalTrackings: trackings.length,
+        totalQuotations: quotations.length,
+        activeQuotations,
+        totalExpenses,
+        monthlyExpenses,
+        totalTrucks: trucks.length,
+        availableTrucks,
       };
     },
   });
