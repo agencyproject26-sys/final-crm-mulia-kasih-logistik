@@ -31,18 +31,31 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
+        setChecking(false);
       }
     });
 
-    // Check if already in recovery from URL hash
+    // Also check current session - if user arrived via recovery link,
+    // session may already be established
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // User has a valid session from the recovery link
+        setIsRecovery(true);
+      }
+      setChecking(false);
+    });
+
+    // Check URL hash for recovery type
     const hash = window.location.hash;
     if (hash.includes("type=recovery")) {
       setIsRecovery(true);
+      setChecking(false);
     }
 
     return () => subscription.unsubscribe();
@@ -69,6 +82,14 @@ export default function ResetPassword() {
       setIsLoading(false);
     }
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!isRecovery && !success) {
     return (
