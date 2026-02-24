@@ -229,7 +229,7 @@ export default function Auth() {
                   setIsLoading(true);
                   try {
                     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                      redirectTo: `${window.location.origin}/reset-password`,
+                      redirectTo: `https://crm.mklogistikcs.com/reset-password`,
                     });
                     if (error) {
                       toast.error("Gagal mengirim email reset: " + error.message);
