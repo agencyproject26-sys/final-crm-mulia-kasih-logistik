@@ -429,6 +429,53 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ACTION: reset-password - Admin resets a user's password
+    if (action === "reset-password") {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const body = await req.json();
+      const { user_id } = body;
+
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Generate a random password
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+      const specials = "!@#$%&*";
+      let newPassword = "";
+      for (let i = 0; i < 8; i++) {
+        newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      newPassword += specials.charAt(Math.floor(Math.random() * specials.length));
+      newPassword += String(Math.floor(Math.random() * 10));
+
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(user_id, {
+        password: newPassword,
+      });
+
+      if (updateError) {
+        console.error("Reset password error:", updateError);
+        return new Response(JSON.stringify({ error: updateError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`Admin ${caller.email} reset password for user ${user_id}`);
+      return new Response(JSON.stringify({ success: true, new_password: newPassword }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
