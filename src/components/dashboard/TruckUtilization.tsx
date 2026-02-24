@@ -1,78 +1,84 @@
-import { Progress } from "@/components/ui/progress";
-import { Truck } from "lucide-react";
+import { Truck, Loader2 } from "lucide-react";
+import { useTruckUtilData } from "@/hooks/useDashboardCharts";
+import { Badge } from "@/components/ui/badge";
 
-interface TruckData {
-  id: string;
-  plate: string;
-  driver: string;
-  utilization: number;
-  status: "active" | "maintenance" | "idle";
-}
-
-const trucks: TruckData[] = [
-  { id: "TRK-001", plate: "B 1234 KLM", driver: "Ahmad Yani", utilization: 92, status: "active" },
-  { id: "TRK-002", plate: "B 5678 KLM", driver: "Budi Santoso", utilization: 78, status: "active" },
-  { id: "TRK-003", plate: "B 9012 KLM", driver: "Cahyo Wibowo", utilization: 65, status: "active" },
-  { id: "TRK-004", plate: "B 3456 KLM", driver: "Dedi Kurniawan", utilization: 45, status: "idle" },
-  { id: "TRK-005", plate: "B 7890 KLM", driver: "Eko Prasetyo", utilization: 0, status: "maintenance" },
-];
-
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   active: "Aktif",
+  Tersedia: "Tersedia",
+  Available: "Tersedia",
   maintenance: "Maintenance",
+  Maintenance: "Maintenance",
   idle: "Idle",
+  "Tidak Tersedia": "Tidak Tersedia",
 };
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   active: "text-success",
+  Tersedia: "text-success",
+  Available: "text-success",
   maintenance: "text-destructive",
+  Maintenance: "text-destructive",
   idle: "text-warning",
+  "Tidak Tersedia": "text-warning",
 };
 
 export function TruckUtilization() {
-  const avgUtilization = Math.round(
-    trucks.filter(t => t.status === "active").reduce((sum, t) => sum + t.utilization, 0) / 
-    trucks.filter(t => t.status === "active").length
-  );
+  const { data: trucks, isLoading } = useTruckUtilData();
+
+  const totalTrucks = trucks?.length || 0;
+  const availableTrucks = trucks?.filter(
+    (t) => t.status === "Tersedia" || t.status === "Available" || t.status === "active"
+  ).length || 0;
 
   return (
     <div className="rounded-xl border border-border bg-card p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="font-display font-semibold text-lg">Utilisasi Truk</h3>
-          <p className="text-sm text-muted-foreground">Performa armada bulan ini</p>
+          <p className="text-sm text-muted-foreground">Data armada truk</p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold font-display text-secondary">{avgUtilization}%</p>
-          <p className="text-xs text-muted-foreground">Rata-rata utilisasi</p>
+          <p className="text-2xl font-bold font-display text-secondary">{availableTrucks}/{totalTrucks}</p>
+          <p className="text-xs text-muted-foreground">Tersedia</p>
         </div>
       </div>
-      
-      <div className="space-y-4">
-        {trucks.map((truck) => (
-          <div key={truck.id} className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <Truck className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-sm">{truck.plate}</p>
-                  <span className={`text-xs ${statusColors[truck.status]}`}>
-                    ({statusLabels[truck.status]})
-                  </span>
-                </div>
-                <span className="text-sm font-medium">{truck.utilization}%</span>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : trucks && trucks.length > 0 ? (
+        <div className="space-y-3">
+          {trucks.slice(0, 8).map((truck) => (
+            <div key={truck.id} className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <Truck className="h-5 w-5 text-muted-foreground" />
               </div>
-              <Progress 
-                value={truck.utilization} 
-                className="h-2"
-              />
-              <p className="text-xs text-muted-foreground mt-1">{truck.driver}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm">{truck.plate}</p>
+                    <span className={`text-xs ${statusColors[truck.status] || "text-muted-foreground"}`}>
+                      ({statusLabels[truck.status] || truck.status})
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{truck.type}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">{truck.driver}</p>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+          {trucks.length > 8 && (
+            <p className="text-xs text-muted-foreground text-center pt-2">
+              +{trucks.length - 8} truk lainnya
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center py-8 text-muted-foreground">
+          Belum ada data truk
+        </div>
+      )}
     </div>
   );
 }
