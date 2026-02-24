@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import logoMkl from "@/assets/logo-mkl.png";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,6 +39,8 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -144,22 +146,32 @@ export default function Auth() {
           {/* Password */}
           <div className="space-y-2">
             <Label htmlFor="auth-password" className="text-base font-semibold">Password</Label>
-            <Input
-              id="auth-password"
-              type="password"
-              placeholder={
-                mode === "register"
-                  ? "Min 8 karakter, huruf besar, kecil, angka, spesial"
-                  : "••••••••"
-              }
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && mode === "login") handleSubmit();
-              }}
-              className="rounded-xl h-12"
-            />
+            <div className="relative">
+              <Input
+                id="auth-password"
+                type={showPassword ? "text" : "password"}
+                placeholder={
+                  mode === "register"
+                    ? "Min 8 karakter, huruf besar, kecil, angka, spesial"
+                    : "••••••••"
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && mode === "login") handleSubmit();
+                }}
+                className="rounded-xl h-12 pr-10"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {mode === "register" && (
               <p className="text-sm text-muted-foreground">
                 Password harus minimal 8 karakter dengan huruf besar, huruf kecil, angka, dan karakter spesial.
@@ -173,18 +185,28 @@ export default function Auth() {
               <Label htmlFor="auth-confirm-password" className="text-base font-semibold">
                 Konfirmasi Password
               </Label>
-              <Input
-                id="auth-confirm-password"
-                type="password"
-                placeholder="Ulangi password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSubmit();
-                }}
-                className="rounded-xl h-12"
-              />
+              <div className="relative">
+                <Input
+                  id="auth-confirm-password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Ulangi password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isLoading}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSubmit();
+                  }}
+                  className="rounded-xl h-12 pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           )}
 
