@@ -210,42 +210,6 @@ export default function Auth() {
             </div>
           )}
 
-          {/* Forgot Password */}
-          {mode === "login" && (
-            <div className="text-right">
-              <button
-                type="button"
-                className="text-sm text-primary hover:underline"
-                onClick={async () => {
-                  if (!email) {
-                    toast.error("Masukkan email terlebih dahulu");
-                    return;
-                  }
-                  const validation = z.string().email().safeParse(email);
-                  if (!validation.success) {
-                    toast.error("Format email tidak valid");
-                    return;
-                  }
-                  setIsLoading(true);
-                  try {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                      redirectTo: `https://crm.mklogistikcs.com/reset-password`,
-                    });
-                    if (error) {
-                      toast.error("Gagal mengirim email reset: " + error.message);
-                    } else {
-                      toast.success("Link reset password telah dikirim ke email Anda. Silakan cek inbox/spam.");
-                    }
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-                disabled={isLoading}
-              >
-                Lupa Password?
-              </button>
-            </div>
-          )}
 
           {/* Submit Button */}
           <Button
