@@ -178,6 +178,42 @@ export function useManageUsers() {
     [fetchUsers]
   );
 
+  const deleteUser = useCallback(
+    async (userId: string) => {
+      setIsActionLoading(true);
+      try {
+        const session = (await supabase.auth.getSession()).data.session;
+        if (!session) return;
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-users?action=delete-user`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ user_id: userId }),
+          }
+        );
+        const result = await res.json();
+        if (res.ok) {
+          toast.success(result.message || "Pengguna berhasil dihapus");
+          await fetchUsers();
+        } else {
+          toast.error(result.error || "Gagal menghapus pengguna");
+        }
+      } catch (err) {
+        console.error("Delete user error:", err);
+        toast.error("Gagal menghapus pengguna");
+      } finally {
+        setIsActionLoading(false);
+      }
+    },
+    [fetchUsers]
+  );
+
   useEffect(() => {
     fetchMyRoles();
   }, [fetchMyRoles]);
@@ -192,5 +228,6 @@ export function useManageUsers() {
     setupFirstAdmin,
     assignRole,
     removeRole,
+    deleteUser,
   };
 }

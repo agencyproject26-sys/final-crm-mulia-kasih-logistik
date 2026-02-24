@@ -380,6 +380,55 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ACTION: delete-user - Admin deletes a user account
+    if (action === "delete-user") {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const body = await req.json();
+      const { user_id } = body;
+
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Prevent admin from deleting themselves
+      if (user_id === caller.id) {
+        return new Response(JSON.stringify({ error: "Tidak dapat menghapus akun sendiri" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Delete related data first
+      await adminClient.from("user_menu_access").delete().eq("user_id", user_id);
+      await adminClient.from("user_roles").delete().eq("user_id", user_id);
+      await adminClient.from("user_approvals").delete().eq("user_id", user_id);
+
+      // Delete the auth user
+      const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(user_id);
+
+      if (deleteUserError) {
+        console.error("Delete user error:", deleteUserError);
+        return new Response(JSON.stringify({ error: deleteUserError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`Admin ${caller.email} deleted user ${user_id}`);
+      return new Response(JSON.stringify({ success: true, message: "Pengguna berhasil dihapus" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
