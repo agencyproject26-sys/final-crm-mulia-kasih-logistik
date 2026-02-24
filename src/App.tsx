@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Pelanggan from "./pages/master/Pelanggan";
 import Vendor from "./pages/master/Vendor";
 import Truk from "./pages/master/Truk";
@@ -43,6 +44,7 @@ const App = () => (
         <Routes>
           {/* Auth */}
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
