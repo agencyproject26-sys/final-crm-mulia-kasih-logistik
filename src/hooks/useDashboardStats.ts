@@ -117,31 +117,32 @@ export function useDashboardStats(period: DashboardPeriod = "all") {
         trucksResult,
       ] = await Promise.all([
         // Total customers
-        supabase.from("customers").select("id", { count: "exact", head: true }),
+        supabase.from("customers").select("id", { count: "exact", head: true }).is("deleted_at", null),
         
         // Job orders - apply period filter
         periodStart 
-          ? supabase.from("job_orders").select("id, status", { count: "exact" }).gte("created_at", periodStart)
-          : supabase.from("job_orders").select("id, status", { count: "exact" }),
+          ? supabase.from("job_orders").select("id, status", { count: "exact" }).is("deleted_at", null).gte("created_at", periodStart)
+          : supabase.from("job_orders").select("id, status", { count: "exact" }).is("deleted_at", null),
         
         // Completed this month
         supabase.from("job_orders")
           .select("id", { count: "exact", head: true })
+          .is("deleted_at", null)
           .eq("status", "Selesai")
           .gte("updated_at", startOfMonth),
         
         // Invoices - apply period filter
         periodStart
-          ? supabase.from("invoices").select("id, status, total_amount, remaining_amount").gte("invoice_date", periodStart.split("T")[0])
-          : supabase.from("invoices").select("id, status, total_amount, remaining_amount"),
+          ? supabase.from("invoices").select("id, status, total_amount, remaining_amount").is("deleted_at", null).gte("invoice_date", periodStart.split("T")[0])
+          : supabase.from("invoices").select("id, status, total_amount, remaining_amount").is("deleted_at", null),
         
         // Invoice DP - apply period filter
         periodStart
-          ? supabase.from("invoice_dp").select("id, status, total_amount").gte("invoice_date", periodStart.split("T")[0])
-          : supabase.from("invoice_dp").select("id, status, total_amount"),
+          ? supabase.from("invoice_dp").select("id, status, total_amount").is("deleted_at", null).gte("invoice_date", periodStart.split("T")[0])
+          : supabase.from("invoice_dp").select("id, status, total_amount").is("deleted_at", null),
         
         // Warehouses
-        supabase.from("warehouses").select("id, cbm, quantity, status"),
+        supabase.from("warehouses").select("id, cbm, quantity, status").is("deleted_at", null),
         
         // Vendors
         supabase.from("vendors").select("id", { count: "exact", head: true }).is("deleted_at", null),
@@ -255,6 +256,7 @@ export function useRecentOrders(limit: number = 5) {
       const { data, error } = await supabase
         .from("job_orders")
         .select("id, job_order_number, customer_name, lokasi, tujuan, status, created_at")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(limit);
 
@@ -271,6 +273,7 @@ export function useOutstandingInvoices(limit: number = 5) {
       const { data, error } = await supabase
         .from("invoices")
         .select("id, invoice_number, customer_name, remaining_amount, invoice_date, status")
+        .is("deleted_at", null)
         .neq("status", "Lunas")
         .gt("remaining_amount", 0)
         .order("invoice_date", { ascending: true })
@@ -288,7 +291,8 @@ export function useWarehouseStats() {
     queryFn: async (): Promise<WarehouseData> => {
       const { data, error } = await supabase
         .from("warehouses")
-        .select("id, cbm, quantity, status");
+        .select("id, cbm, quantity, status")
+        .is("deleted_at", null);
 
       if (error) throw error;
       
