@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useManageUsers } from "@/hooks/useManageUsers";
 import { MenuAccessManager } from "@/components/settings/MenuAccessManager";
 import { UserApprovalManager } from "@/components/settings/UserApprovalManager";
-import { Shield, ShieldCheck, UserPlus, Users, Crown, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Shield, ShieldCheck, UserPlus, Users, Crown, Loader2, AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
@@ -23,10 +24,12 @@ export default function Pengaturan() {
     setupFirstAdmin,
     assignRole,
     removeRole,
+    deleteUser,
   } = useManageUsers();
 
   const [selectedRole, setSelectedRole] = useState<Record<string, string>>({});
   const [hasLoadedUsers, setHasLoadedUsers] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; email: string } | null>(null);
 
   useEffect(() => {
     if (myInfo?.isAdmin && !hasLoadedUsers) {
@@ -256,6 +259,15 @@ export default function Pengaturan() {
                                   <UserPlus className="h-3 w-3" />
                                 )}
                               </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={isActionLoading || user.id === myInfo?.user_id}
+                                onClick={() => setDeleteTarget({ id: user.id, email: user.email })}
+                                title={user.id === myInfo?.user_id ? "Tidak dapat menghapus akun sendiri" : "Hapus pengguna"}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -312,6 +324,33 @@ export default function Pengaturan() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Delete User Confirmation Dialog */}
+        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Hapus Pengguna</AlertDialogTitle>
+              <AlertDialogDescription>
+                Apakah Anda yakin ingin menghapus akun <strong>{deleteTarget?.email}</strong>? 
+                Tindakan ini tidak dapat dibatalkan. Semua data role, akses menu, dan akun pengguna akan dihapus permanen.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (deleteTarget) {
+                    deleteUser(deleteTarget.id);
+                    setDeleteTarget(null);
+                  }
+                }}
+              >
+                Hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </MainLayout>
   );
